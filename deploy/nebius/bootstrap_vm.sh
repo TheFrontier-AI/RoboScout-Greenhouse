@@ -9,7 +9,7 @@ echo "== GPU"; nvidia-smi --query-gpu=name,driver_version,memory.total --format=
 if ! command -v docker >/dev/null; then
   echo "== installing docker"; curl -fsSL https://get.docker.com | sudo sh; sudo usermod -aG docker "$USER"
 fi
-if ! docker info 2>/dev/null | grep -qi nvidia; then
+if ! sudo docker info 2>/dev/null | grep -qi nvidia; then   # sudo: a fresh user may not be in the docker group yet
   echo "== installing NVIDIA container toolkit"
   curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor --yes -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
   curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \

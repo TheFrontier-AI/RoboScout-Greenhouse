@@ -1,6 +1,32 @@
 # Side (plant) cameras in the R180 env: what is needed (for Astra)
 
-**Now:** `physical_ai_runtime/sensor_env.py` (`SensorStopEnv`) only wires `front_rgb` (320x180) into `obs`.
+## Update verified 2026-10-28
+
+The original request below is retained as history. `SensorStopEnv` now exposes six real
+`obs['plant_rgb']` images with separate timestamps and freshness checks. Public left/right
+names follow robot forward **-Y**: public left uses authored USD `plant_right_*`; public
+right uses authored USD `plant_left_*`. Protected USD prims were not renamed.
+
+Native reset accepts `start_pose`, `start_offset`, `friction_scale`, `obstacle_enabled`,
+`obstacle_position`, `max_steps`, and `task_mode`. Default `max_steps=None` removes the
+300-step limit; `task_mode='navigation'` disables the approach-and-stop objective but
+retains bounds, tip, and obstacle collision checks.
+
+Evidence: `../../robot_design/r1_v3/diy_r50/physical_ai_r180/side_camera_runtime_2026-10-28/`
+contains `native_api_result.json`, `native_api_realism_result.json`, `camera_axis_audit.json`,
+and reproducible `check_native_api.py` / `check_realism_api.py`.
+The step-301 check sets the evaluator counter to 300 then executes one real physics step;
+it is **not a continuous 301-step navigation rollout**. Native sensor tests passed; the
+navigation wrapper still needs an end-to-end run. Eleven evaluator/geometry unit tests pass.
+
+For the updated material scene use `C2_R180_Realism_Sensor_Fixture.usda` from that folder.
+The runtime now applies the scene renderSettings (including fractionalCutoutOpacity).
+Actual six-camera frames show leaves again. Film/lighting realism remains incomplete.
+Rendering every physics substep is still expensive; no performance improvement is claimed.
+
+## Original request
+
+**At request time:** `physical_ai_runtime/sensor_env.py` (`SensorStopEnv`) only wires `front_rgb` (320x180) into `obs`.
 The six plant cameras are already authored in `physical_ai_r180/robot_sensors.usda` under
 `/Robot/Physics_Base/Sensors/`:
 

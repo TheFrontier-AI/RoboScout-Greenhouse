@@ -212,7 +212,9 @@ def inspect_image(image_bytes: bytes, meta: dict, client=None, model: str | None
     for _ in range(2):
         resp = client.chat.completions.create(model=model, messages=messages, temperature=0.2, top_p=0.95,
                                               max_tokens=4096, **extra)
-        text = resp.choices[0].message.content or ""
+        msg = resp.choices[0].message
+        # vLLM's qwen3 reasoning parser puts the whole reply in `reasoning` when the model emits no </think>
+        text = msg.content or getattr(msg, "reasoning_content", None) or getattr(msg, "reasoning", None) or ""
         try:
             return parse_finding(text, meta)
         except ParseError as e:

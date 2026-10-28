@@ -16,7 +16,7 @@ OBSTACLE_PRIM = "/TestFixtures/removable_front_obstacle"                        
 OBSTACLE_HALF_DEPTH_M = 0.09
 FRICTION_PRIM = "/Robot/Materials/ContactEstimate"                               # robot contact material 0.7 / 0.6
 BASE_FRICTION = (0.7, 0.6)                                                       # static, dynamic
-SIDE_CAMERA_PRIMS = {f"mast_{side}_{h}": f"/Robot/Physics_Base/Sensors/plant_{side}_{h}"
+SIDE_CAMERA_PRIMS = {f"mast_{side}_{h}": f"/Robot/Physics_Base/Sensors/plant_{'right' if side == 'left' else 'left'}_{h}"
                      for side in ("left", "right") for h in ("low", "mid", "high")}
 STRIP_HALF_M, BODY_HALF_W, BODY_HALF_LEN = 0.38, 0.26395, 0.375                  # as Astra's route/evaluator checks
 DEFAULT_R180_DIR = "/home/passin/Documents/Blender/TheFarm/robot_design/r1_v3/diy_r50/physical_ai_r180"

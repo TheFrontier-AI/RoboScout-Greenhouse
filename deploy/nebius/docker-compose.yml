@@ -3,7 +3,7 @@
 #   cp .env.example .env && docker compose up -d --build
 services:
   eyes:                       # Cosmos Reason behind an OpenAI-compatible API (also the Serverless Endpoint image)
-    build: { context: ../.., dockerfile: cloud/eyes/Dockerfile }
+    build: { context: ../../cloud/eyes }
     env_file: .env
     # Shares the one 96 GB GPU with Isaac Sim → 8B at ~35 % memory. For a dedicated GPU/endpoint use
     # COSMOS_MODEL=nvidia/Cosmos-Reason2-32B GPU_MEM_UTIL=0.92 (BF16 weights alone are ~66 GB).
