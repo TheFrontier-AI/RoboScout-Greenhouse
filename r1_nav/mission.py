@@ -8,10 +8,19 @@ HEADLAND_OFFSET_M = 2.0        # how far beyond the aisle head the robot waits/t
 
 @dataclass(frozen=True)
 class Leg:
-    kind: str                  # drive_in | reverse_out | transit | dock
+    kind: str                  # drive_in | reverse_out | transit | dock | hold | stop | discover (+ SiteLeg kinds)
     aisle_id: str | None
     target_metre: float | None
     note: str = ""
+
+
+@dataclass(frozen=True)
+class SiteLeg(Leg):
+    """Farm-level leg between greenhouses (kinds: exit_house | site_transit | enter_house), site-map node ids."""
+    house: str | None = None
+    from_node: str | None = None
+    to_node: str | None = None
+    length_m: float | None = None
 
 
 def go_to(amap: AisleMap, aisle_id: str, metre: float) -> list[Leg]:

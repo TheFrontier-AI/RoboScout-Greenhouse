@@ -25,7 +25,8 @@ Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. 
 ## Repo map
 | Path | What |
 |---|---|
-| `r1_nav/` | Aisle map, mission legs, BOOK LiDAR aisle-centring controller, goal validation (`commands.py`), 7-camera schedule (`cameras.py`) |
+| `r1_nav/` | Aisle map, mission legs, BOOK LiDAR aisle-centring controller, goal validation (`commands.py`), 7-camera schedule (`cameras.py`), farm site map between greenhouses (`site_map.py`) |
+| `cloud/maps/`, `scripts/extract_site_map_v18.py` | Site-map drafts from the V18 model, a farmer's sketch (Nemotron VL) or a drone top-down; human confirms before use ([docs/SITE_MAP_th.md](docs/SITE_MAP_th.md)) |
 | `sim/`, `scripts/run_demo_sim.py` | Leg executor (STUCK, rear stop, heading damping), cloud link with offline outbox, Isaac wrapper, kinematic fake backend |
 | `scripts/run_eval_job.py`, `jobs/isaac_eval/` | Batch evaluation (wet floor / obstacle / offsets) as a GPU job |
 | `agent/robot_api.py` | Goal hub between HERMES, the robot and Cosmos; writes the dashboard data |

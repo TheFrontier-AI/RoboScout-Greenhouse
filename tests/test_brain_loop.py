@@ -12,10 +12,13 @@ def test_disease_triggers_one_revisit_and_merges_nearby():
     assert len(due) == 1 and abs(due[0].metre - 15.0) < 1e-9
 
 
-def test_single_low_suspect_waits_for_second():
+def test_single_suspect_triggers_one_revisit():
+    # live run 28 Oct: Nemotron-VL flagged the leaf-spot test plant once (0.40) while Cosmos said healthy
     spots = []
-    assert cluster([f(8.0, "suspect", 0.3)], spots) == []
-    assert len(cluster([f(8.4, "suspect", 0.3)], spots)) == 1
+    due = cluster([f(15.13, "suspect", 0.4)], spots)
+    assert len(due) == 1
+    due[0].state = "revisiting"                                     # what run() does after sending the revisit
+    assert cluster([f(15.3, "suspect", 0.4)], spots) == []          # merged into the same spot, no second revisit
 
 
 def test_revisit_confirms_or_clears():

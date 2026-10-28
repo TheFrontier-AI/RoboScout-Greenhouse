@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))     # repo root, fo
 
 API = os.environ.get("ROBOT_API_URL", "http://127.0.0.1:8090")
 MERGE_M, DISEASE_CONF, BATTERY_MIN = 1.0, 0.6, 25
+SUSPECT_MIN = 1               # two-eye screening is tuned for recall: one suspect shot is enough to go back and look
 REVISIT_SHOTS = 6             # all side cameras fire on a revisit hold (r1_nav.cameras.SIDE_CAMERAS)
 
 
@@ -59,7 +60,7 @@ def cluster(findings: list[dict], spots: list[Spot]) -> list[Spot]:
         s.labels += [i.get("label", "?") for i in f.get("issues", [])]
         s.best = max(s.best, conf if f["status"] == "disease" else 0.0)
         s.n_suspect += f["status"] == "suspect"
-    return [s for s in spots if s.state == "new" and (s.best >= DISEASE_CONF or s.n_suspect >= 2)]
+    return [s for s in spots if s.state == "new" and (s.best >= DISEASE_CONF or s.n_suspect >= SUSPECT_MIN)]
 
 
 def judge_revisit(findings: list[dict], spot: Spot, need: int = REVISIT_SHOTS) -> None:

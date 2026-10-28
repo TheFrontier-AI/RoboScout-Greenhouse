@@ -14,7 +14,7 @@ from r1_nav.mission import Leg
 # r1_nav.controller expects 0 = forward, +pi/2 = left, so scans are rotated by -R180_LIDAR_FORWARD_RAD.
 R180_LIDAR_FORWARD_RAD = -math.pi / 2
 INTO_AISLE_HEADING_DEG = -90.0  # house frame (0 = +X, CCW): aisles run from the door toward -Y
-NOT_SIMULATED = ("transit", "dock", "discover")
+NOT_SIMULATED = ("transit", "dock", "discover", "exit_house", "site_transit", "enter_house")
 STATUSES = ("idle", "running", "done", "stuck", "aborted")
 
 

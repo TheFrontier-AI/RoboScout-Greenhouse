@@ -4,7 +4,7 @@ Skills that HERMES (Hermes Agent + Nemotron on Nebius Token Factory) loads to ru
 Hermes skill (`SKILL.md` + optional `references/`). Hermes reads skills from `~/.hermes/skills/`, so link
 each folder there:
 ```bash
-for s in r1-robot-control r1-motion-policy plant-disease-diagnosis greenhouse-watering; do
+for s in r1-robot-control farm-site-map r1-motion-policy plant-disease-diagnosis greenhouse-watering; do
   ln -sfn "$PWD/agent/hermes_skills/$s" ~/.hermes/skills/$s
 done
 ```
@@ -12,6 +12,7 @@ done
 | Skill | What it does | Talks to |
 |---|---|---|
 | [`r1-robot-control`](r1-robot-control/SKILL.md) | Picks goals (discover, survey, revisit, dock) through the robot API; goals only, never wheels | `POST /command`, `GET /status /findings /map /health` |
+| [`farm-site-map`](farm-site-map/SKILL.md) | Builds/edits the farm site map (V18, drone, farmer sketch, robot), shows drafts and gets a human to confirm before cross-house moves | `python3 -m r1_nav.site_map`, `python -m cloud.maps.sketch` |
 | [`r1-motion-policy`](r1-motion-policy/SKILL.md) | Picks the task mode and speed (inspect, stop-and-go, revisit, transit, watering) from camera blur/overlap math and the safety limits; proposes `speed_mps`/`mode` API fields | same API (no new fields used today) |
 | [`plant-disease-diagnosis`](plant-disease-diagnosis/SKILL.md) | Aggregates `/findings` per spot, decides revisits, confirms with a second model (Nemotron 3.5 Super VL or Cosmos Reason 2 32B), writes the Thai/English farmer report; tomato reference table | `/findings`, `cloud/eyes/inspect.py` |
 | [`greenhouse-watering`](greenhouse-watering/SKILL.md) | Plans spot watering (dose, dwell, pump duty, speed) from R1's designed water hardware; **refuses to water** until a `water` command exists | none (planning only) |

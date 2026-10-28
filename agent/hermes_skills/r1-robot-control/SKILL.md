@@ -1,14 +1,14 @@
 ---
 name: r1-robot-control
 description: "Command the R1 greenhouse robot via its robot API: pick goals, react to Cosmos plant findings, revisit, dock."
-version: 0.1.0
+version: 0.2.0
 author: TheFarm R1 team
 license: Apache-2.0
 platforms: [linux, macos]
 metadata:
   hermes:
     tags: [Robotics, Greenhouse, Physical AI, Nemotron, Cosmos, Navigation]
-    related_skills: []
+    related_skills: [farm-site-map]
 prerequisites:
   commands: [curl]
 ---
@@ -38,13 +38,23 @@ Commands (the robot validates every command against its confirmed map and replie
 | cmd | fields | meaning |
 |---|---|---|
 | `discover_house` | – | unknown house: robot maps it with SLAM and probes every aisle opening |
-| `survey_house` | `house` | drive every traversable aisle (forward in, reverse out), images every 0.5 m |
+| `survey_house` | `house`, `map_source`? | drive every traversable aisle (forward in, reverse out), images every 0.5 m. A **different** house than the current one first drives there along the confirmed site map (see `go_to_house`), then surveys it (or runs `discover` if that house has no aisle map yet), then returns to the dock |
+| `go_to_house` | `house`, `map_source`? | leave the current house, follow the confirmed site map to the target door, enter. `map_source` = `v18` \| `drone` \| `hand_sketch` \| `robot` picks which confirmed site map to use (default: newest confirmed) |
 | `survey_aisle` | `aisle` | one aisle end to end |
 | `go_to` | `aisle`, `metre` | stop at a point (metre 0 = door end) |
 | `revisit` | `aisle`, `metre` | go there and hold so all 6 side cameras capture (purpose=revisit) |
 | `return_to_dock` | – | go back and charge |
 | `stop` | – | halt now (clears queued goals) |
 Always include a short `reasoning` string — it is shown to the farmer and the judges.
+
+Farm-level example (robot is in tunnel-09, farmer asks "survey greenhouse B"):
+```bash
+curl -s -X POST $ROBOT_API_URL/command -H 'Content-Type: application/json' \
+     -d '{"cmd":"survey_house","house":"south-greenhouse-block-01","map_source":"v18","reasoning":"farmer asked for block 01; route on confirmed site map"}'
+```
+The reply's `reason` lists the route (node ids, metres) and any **route notes** (e.g. "wet after watering",
+"do not pass 7-9am"): tell the farmer about them. Legs `exit_house` / `site_transit` / `enter_house` carry
+`from_node`, `to_node`, `length_m`. House ids come from the site map (`farm-site-map` skill), never invented.
 
 ## Decision Procedure
 1. `GET /health`. If `map` is null → send `discover_house`, then wait until status is `done`; ask the human to confirm the map.
@@ -62,3 +72,8 @@ Always include a short `reasoning` string — it is shown to the farmer and the 
 - If a command is `rejected`, read the reason and adapt; don't resend it unchanged.
 - If `pose_confidence` < 0.5 on a finding, don't pin it to a metre; revisit the aisle instead.
 - If status is `stuck`: send `stop`, report it, and ask a human before trying again.
+- Farm-level moves only on a **confirmed** site map. A draft (from V18, drone, a farmer sketch, or a robot recording)
+  is rejected with "not confirmed": show the draft to the human (farm-site-map skill), ask them to confirm it, and
+  never confirm it yourself. A map in pixel units ("no metric scale") needs ≥ 2 anchors first.
+- If a cross-house command is rejected for "no route" (closed or too-narrow path), tell the farmer which path is the
+  problem and ask; don't try another map source just to get around a closed path.

@@ -1,0 +1,2210 @@
+{
+ "schema_version": 1,
+ "frame": "site_world_z_up_metres",
+ "metadata": {
+  "source": "v18",
+  "created": "2026-10-28T14:47:37+00:00",
+  "confirmed_by": null,
+  "confirmed_at": null,
+  "scale_known": true,
+  "anchors_used": [],
+  "revision": 1,
+  "source_detail": {
+   "glb": "/home/passin/Documents/Blender/TheFarm/robot_design/r1_v3/farm_integration/latest_delivery/prototype/assets/farm-realistic-v18.glb",
+   "glb_sha256": "30573a39d46ece94c53088ddb0bc5cab3a27174e749d468d258d196289f53437",
+   "layout": "/home/passin/Documents/Blender/TheFarm/robot_design/r1_v3/farm_integration/latest_delivery/prototype/site-layout-v5.json",
+   "aisle_maps": [
+    "/home/passin/Documents/Blender/TheFarm/r1_greenhouse_nav/data/tunnel09_aisle_map_v18.json"
+   ],
+   "conversion": "glTF Y-up → Z-up: (x, y, z) = (x, -z, y)",
+   "status": "Draft from illustrative model; blueprint scale provisional; not surveyed. Edge widths unknown.",
+   "estimated_doors": [
+    "east-greenhouse-6x38-1",
+    "east-greenhouse-6x38-2"
+   ]
+  }
+ },
+ "nodes": [
+  {
+   "id": "comment-7-concrete-house/door",
+   "kind": "door",
+   "xy": [
+    214.727,
+    156.667
+   ],
+   "house": "comment-7-concrete-house",
+   "heading_deg": 270.0,
+   "label": "Reference7 wider concrete-ring greenhouse (estimated)",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "comment-7-concrete-house/apron",
+   "kind": "junction",
+   "xy": [
+    214.727,
+    158.667
+   ],
+   "label": "Reference7 wider concrete-ring greenhouse (estimated) apron",
+   "door": "comment-7-concrete-house/door"
+  },
+  {
+   "id": "east-greenhouse-6x38-1/door",
+   "kind": "door",
+   "xy": [
+    437.07,
+    143.82
+   ],
+   "house": "east-greenhouse-6x38-1",
+   "heading_deg": 0.0,
+   "label": "East Greenhouse 6X38 1",
+   "door_estimated": true,
+   "door_from": "estimated: long-axis end facing the other greenhouses",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "east-greenhouse-6x38-1/apron",
+   "kind": "junction",
+   "xy": [
+    435.07,
+    143.82
+   ],
+   "label": "East Greenhouse 6X38 1 apron",
+   "door": "east-greenhouse-6x38-1/door"
+  },
+  {
+   "id": "east-greenhouse-6x38-2/door",
+   "kind": "door",
+   "xy": [
+    437.07,
+    132.697
+   ],
+   "house": "east-greenhouse-6x38-2",
+   "heading_deg": 0.0,
+   "label": "East Greenhouse 6X38 2",
+   "door_estimated": true,
+   "door_from": "estimated: long-axis end facing the other greenhouses",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "east-greenhouse-6x38-2/apron",
+   "kind": "junction",
+   "xy": [
+    435.07,
+    132.697
+   ],
+   "label": "East Greenhouse 6X38 2 apron",
+   "door": "east-greenhouse-6x38-2/door"
+  },
+  {
+   "id": "south-greenhouse-block-01/door",
+   "kind": "door",
+   "xy": [
+    255.217,
+    79.587
+   ],
+   "house": "south-greenhouse-block-01",
+   "heading_deg": 270.0,
+   "label": "South Greenhouse Block 01",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "south-greenhouse-block-01/apron",
+   "kind": "junction",
+   "xy": [
+    255.217,
+    81.587
+   ],
+   "label": "South Greenhouse Block 01 apron",
+   "door": "south-greenhouse-block-01/door"
+  },
+  {
+   "id": "south-greenhouse-block-02/door",
+   "kind": "door",
+   "xy": [
+    286.614,
+    79.587
+   ],
+   "house": "south-greenhouse-block-02",
+   "heading_deg": 270.0,
+   "label": "South Greenhouse Block 02",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "south-greenhouse-block-02/apron",
+   "kind": "junction",
+   "xy": [
+    286.614,
+    81.587
+   ],
+   "label": "South Greenhouse Block 02 apron",
+   "door": "south-greenhouse-block-02/door"
+  },
+  {
+   "id": "south-greenhouse-block-03/door",
+   "kind": "door",
+   "xy": [
+    320.808,
+    82.72
+   ],
+   "house": "south-greenhouse-block-03",
+   "heading_deg": 270.0,
+   "label": "South Greenhouse Block 03",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "south-greenhouse-block-03/apron",
+   "kind": "junction",
+   "xy": [
+    320.808,
+    84.72
+   ],
+   "label": "South Greenhouse Block 03 apron",
+   "door": "south-greenhouse-block-03/door"
+  },
+  {
+   "id": "south-greenhouse-block-04/door",
+   "kind": "door",
+   "xy": [
+    353.138,
+    82.72
+   ],
+   "house": "south-greenhouse-block-04",
+   "heading_deg": 270.0,
+   "label": "South Greenhouse Block 04",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "south-greenhouse-block-04/apron",
+   "kind": "junction",
+   "xy": [
+    353.138,
+    84.72
+   ],
+   "label": "South Greenhouse Block 04 apron",
+   "door": "south-greenhouse-block-04/door"
+  },
+  {
+   "id": "south-greenhouse-block-05/door",
+   "kind": "door",
+   "xy": [
+    255.217,
+    44.807
+   ],
+   "house": "south-greenhouse-block-05",
+   "heading_deg": 270.0,
+   "label": "South Greenhouse Block 05",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "south-greenhouse-block-05/apron",
+   "kind": "junction",
+   "xy": [
+    255.217,
+    46.807
+   ],
+   "label": "South Greenhouse Block 05 apron",
+   "door": "south-greenhouse-block-05/door"
+  },
+  {
+   "id": "south-greenhouse-block-06/door",
+   "kind": "door",
+   "xy": [
+    286.614,
+    44.807
+   ],
+   "house": "south-greenhouse-block-06",
+   "heading_deg": 270.0,
+   "label": "South Greenhouse Block 06",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "south-greenhouse-block-06/apron",
+   "kind": "junction",
+   "xy": [
+    286.614,
+    46.807
+   ],
+   "label": "South Greenhouse Block 06 apron",
+   "door": "south-greenhouse-block-06/door"
+  },
+  {
+   "id": "south-greenhouse-block-07/door",
+   "kind": "door",
+   "xy": [
+    320.808,
+    44.807
+   ],
+   "house": "south-greenhouse-block-07",
+   "heading_deg": 270.0,
+   "label": "South Greenhouse Block 07",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "south-greenhouse-block-07/apron",
+   "kind": "junction",
+   "xy": [
+    320.808,
+    46.807
+   ],
+   "label": "South Greenhouse Block 07 apron",
+   "door": "south-greenhouse-block-07/door"
+  },
+  {
+   "id": "south-greenhouse-block-08/door",
+   "kind": "door",
+   "xy": [
+    353.138,
+    44.807
+   ],
+   "house": "south-greenhouse-block-08",
+   "heading_deg": 270.0,
+   "label": "South Greenhouse Block 08",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "south-greenhouse-block-08/apron",
+   "kind": "junction",
+   "xy": [
+    353.138,
+    46.807
+   ],
+   "label": "South Greenhouse Block 08 apron",
+   "door": "south-greenhouse-block-08/door"
+  },
+  {
+   "id": "south-greenhouse-block-09/door",
+   "kind": "door",
+   "xy": [
+    389.509,
+    44.807
+   ],
+   "house": "south-greenhouse-block-09",
+   "heading_deg": 270.0,
+   "label": "South Greenhouse Block 09",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "greenhouse_block"
+  },
+  {
+   "id": "south-greenhouse-block-09/apron",
+   "kind": "junction",
+   "xy": [
+    389.509,
+    46.807
+   ],
+   "label": "South Greenhouse Block 09 apron",
+   "door": "south-greenhouse-block-09/door"
+  },
+  {
+   "id": "tunnel-01/door",
+   "kind": "door",
+   "xy": [
+    122.945,
+    156.667
+   ],
+   "house": "tunnel-01",
+   "heading_deg": 270.0,
+   "label": "Tunnel 01",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-01/apron",
+   "kind": "junction",
+   "xy": [
+    122.945,
+    158.667
+   ],
+   "label": "Tunnel 01 apron",
+   "door": "tunnel-01/door"
+  },
+  {
+   "id": "tunnel-02/door",
+   "kind": "door",
+   "xy": [
+    131.96,
+    156.667
+   ],
+   "house": "tunnel-02",
+   "heading_deg": 270.0,
+   "label": "Tunnel 02",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-02/apron",
+   "kind": "junction",
+   "xy": [
+    131.96,
+    158.667
+   ],
+   "label": "Tunnel 02 apron",
+   "door": "tunnel-02/door"
+  },
+  {
+   "id": "tunnel-03/door",
+   "kind": "door",
+   "xy": [
+    140.975,
+    156.667
+   ],
+   "house": "tunnel-03",
+   "heading_deg": 270.0,
+   "label": "Tunnel 03",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-03/apron",
+   "kind": "junction",
+   "xy": [
+    140.975,
+    158.667
+   ],
+   "label": "Tunnel 03 apron",
+   "door": "tunnel-03/door"
+  },
+  {
+   "id": "tunnel-04/door",
+   "kind": "door",
+   "xy": [
+    149.99,
+    156.667
+   ],
+   "house": "tunnel-04",
+   "heading_deg": 270.0,
+   "label": "Tunnel 04",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-04/apron",
+   "kind": "junction",
+   "xy": [
+    149.99,
+    158.667
+   ],
+   "label": "Tunnel 04 apron",
+   "door": "tunnel-04/door"
+  },
+  {
+   "id": "tunnel-05/door",
+   "kind": "door",
+   "xy": [
+    159.005,
+    156.667
+   ],
+   "house": "tunnel-05",
+   "heading_deg": 270.0,
+   "label": "Tunnel 05",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-05/apron",
+   "kind": "junction",
+   "xy": [
+    159.005,
+    158.667
+   ],
+   "label": "Tunnel 05 apron",
+   "door": "tunnel-05/door"
+  },
+  {
+   "id": "tunnel-06/door",
+   "kind": "door",
+   "xy": [
+    168.02,
+    156.667
+   ],
+   "house": "tunnel-06",
+   "heading_deg": 270.0,
+   "label": "Tunnel 06",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-06/apron",
+   "kind": "junction",
+   "xy": [
+    168.02,
+    158.667
+   ],
+   "label": "Tunnel 06 apron",
+   "door": "tunnel-06/door"
+  },
+  {
+   "id": "tunnel-07/door",
+   "kind": "door",
+   "xy": [
+    177.035,
+    156.667
+   ],
+   "house": "tunnel-07",
+   "heading_deg": 270.0,
+   "label": "Tunnel 07",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-07/apron",
+   "kind": "junction",
+   "xy": [
+    177.035,
+    158.667
+   ],
+   "label": "Tunnel 07 apron",
+   "door": "tunnel-07/door"
+  },
+  {
+   "id": "tunnel-08/door",
+   "kind": "door",
+   "xy": [
+    186.05,
+    156.667
+   ],
+   "house": "tunnel-08",
+   "heading_deg": 270.0,
+   "label": "Tunnel 08",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-08/apron",
+   "kind": "junction",
+   "xy": [
+    186.05,
+    158.667
+   ],
+   "label": "Tunnel 08 apron",
+   "door": "tunnel-08/door"
+  },
+  {
+   "id": "tunnel-09/door",
+   "kind": "door",
+   "xy": [
+    195.065,
+    156.667
+   ],
+   "house": "tunnel-09",
+   "heading_deg": 270.0,
+   "label": "Tunnel 09",
+   "door_estimated": false,
+   "door_from": "aisle map entry convention (house-local +Y)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-09/apron",
+   "kind": "junction",
+   "xy": [
+    195.065,
+    158.667
+   ],
+   "label": "Tunnel 09 apron",
+   "door": "tunnel-09/door"
+  },
+  {
+   "id": "tunnel-10/door",
+   "kind": "door",
+   "xy": [
+    204.08,
+    156.667
+   ],
+   "house": "tunnel-10",
+   "heading_deg": 270.0,
+   "label": "Tunnel 10",
+   "door_estimated": false,
+   "door_from": "authored entrance view preset (side the camera looks in through)",
+   "feature_kind": "tunnel_greenhouse"
+  },
+  {
+   "id": "tunnel-10/apron",
+   "kind": "junction",
+   "xy": [
+    204.08,
+    158.667
+   ],
+   "label": "Tunnel 10 apron",
+   "door": "tunnel-10/door"
+  },
+  {
+   "id": "road/01",
+   "kind": "waypoint",
+   "xy": [
+    98.543,
+    312.393
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/02",
+   "kind": "waypoint",
+   "xy": [
+    98.543,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/03",
+   "kind": "waypoint",
+   "xy": [
+    98.543,
+    121.887
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/04",
+   "kind": "waypoint",
+   "xy": [
+    98.543,
+    4.387
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/05",
+   "kind": "waypoint",
+   "xy": [
+    122.945,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/06",
+   "kind": "waypoint",
+   "xy": [
+    131.96,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/07",
+   "kind": "waypoint",
+   "xy": [
+    140.975,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/08",
+   "kind": "waypoint",
+   "xy": [
+    149.99,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/09",
+   "kind": "waypoint",
+   "xy": [
+    159.005,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/10",
+   "kind": "waypoint",
+   "xy": [
+    168.02,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/11",
+   "kind": "waypoint",
+   "xy": [
+    177.035,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/12",
+   "kind": "waypoint",
+   "xy": [
+    186.05,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/13",
+   "kind": "waypoint",
+   "xy": [
+    195.065,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/14",
+   "kind": "waypoint",
+   "xy": [
+    204.08,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/15",
+   "kind": "waypoint",
+   "xy": [
+    214.727,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/16",
+   "kind": "waypoint",
+   "xy": [
+    231.902,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/17",
+   "kind": "waypoint",
+   "xy": [
+    434.583,
+    161.993
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/18",
+   "kind": "waypoint",
+   "xy": [
+    -1.554,
+    4.387
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/19",
+   "kind": "waypoint",
+   "xy": [
+    480.28,
+    4.387
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/20",
+   "kind": "waypoint",
+   "xy": [
+    231.902,
+    81.587
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/21",
+   "kind": "waypoint",
+   "xy": [
+    231.902,
+    46.807
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/22",
+   "kind": "waypoint",
+   "xy": [
+    231.902,
+    7.207
+   ],
+   "label": "road"
+  },
+  {
+   "id": "road/23",
+   "kind": "waypoint",
+   "xy": [
+    89.217,
+    121.887
+   ],
+   "label": "road"
+  },
+  {
+   "id": "dock",
+   "kind": "dock",
+   "xy": [
+    197.065,
+    157.667
+   ],
+   "label": "dock near tunnel-09",
+   "dock_offset_house_local": [
+    2.0,
+    1.0
+   ],
+   "dock_estimated": true
+  }
+ ],
+ "edges": [
+  {
+   "a": "comment-7-concrete-house/door",
+   "b": "comment-7-concrete-house/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "east-greenhouse-6x38-1/door",
+   "b": "east-greenhouse-6x38-1/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "east-greenhouse-6x38-2/door",
+   "b": "east-greenhouse-6x38-2/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "south-greenhouse-block-01/door",
+   "b": "south-greenhouse-block-01/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "south-greenhouse-block-02/door",
+   "b": "south-greenhouse-block-02/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "south-greenhouse-block-03/door",
+   "b": "south-greenhouse-block-03/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "south-greenhouse-block-04/door",
+   "b": "south-greenhouse-block-04/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "south-greenhouse-block-05/door",
+   "b": "south-greenhouse-block-05/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "south-greenhouse-block-06/door",
+   "b": "south-greenhouse-block-06/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "south-greenhouse-block-07/door",
+   "b": "south-greenhouse-block-07/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "south-greenhouse-block-08/door",
+   "b": "south-greenhouse-block-08/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "south-greenhouse-block-09/door",
+   "b": "south-greenhouse-block-09/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-01/door",
+   "b": "tunnel-01/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-02/door",
+   "b": "tunnel-02/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-03/door",
+   "b": "tunnel-03/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-04/door",
+   "b": "tunnel-04/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-05/door",
+   "b": "tunnel-05/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-06/door",
+   "b": "tunnel-06/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-07/door",
+   "b": "tunnel-07/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-08/door",
+   "b": "tunnel-08/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-09/door",
+   "b": "tunnel-09/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "tunnel-10/door",
+   "b": "tunnel-10/apron",
+   "length_m": 2.0,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "door apron (headland in front of the door), not measured"
+  },
+  {
+   "a": "road/01",
+   "b": "road/02",
+   "length_m": 150.4,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-main-vertical (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-main-vertical"
+  },
+  {
+   "a": "road/02",
+   "b": "road/03",
+   "length_m": 40.107,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-main-vertical (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-main-vertical"
+  },
+  {
+   "a": "road/03",
+   "b": "road/04",
+   "length_m": 117.5,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-main-vertical (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-main-vertical"
+  },
+  {
+   "a": "road/02",
+   "b": "road/05",
+   "length_m": 24.403,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/05",
+   "b": "road/06",
+   "length_m": 9.015,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/06",
+   "b": "road/07",
+   "length_m": 9.015,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/07",
+   "b": "road/08",
+   "length_m": 9.015,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/08",
+   "b": "road/09",
+   "length_m": 9.015,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/09",
+   "b": "road/10",
+   "length_m": 9.015,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/10",
+   "b": "road/11",
+   "length_m": 9.015,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/11",
+   "b": "road/12",
+   "length_m": 9.015,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/12",
+   "b": "road/13",
+   "length_m": 9.015,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/13",
+   "b": "road/14",
+   "length_m": 9.015,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/14",
+   "b": "road/15",
+   "length_m": 10.647,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/15",
+   "b": "road/16",
+   "length_m": 17.175,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/16",
+   "b": "road/17",
+   "length_m": 202.681,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-central-cross (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-central-cross"
+  },
+  {
+   "a": "road/18",
+   "b": "road/04",
+   "length_m": 100.097,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-south-cross (drawn width ~5.62 m, provisional scale; material unknown)",
+   "road": "road-south-cross"
+  },
+  {
+   "a": "road/04",
+   "b": "road/19",
+   "length_m": 381.737,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-south-cross (drawn width ~5.62 m, provisional scale; material unknown)",
+   "road": "road-south-cross"
+  },
+  {
+   "a": "road/16",
+   "b": "road/20",
+   "length_m": 80.407,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-branch-vertical (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-branch-vertical"
+  },
+  {
+   "a": "road/20",
+   "b": "road/21",
+   "length_m": 34.78,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-branch-vertical (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-branch-vertical"
+  },
+  {
+   "a": "road/21",
+   "b": "road/22",
+   "length_m": 39.6,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-branch-vertical (drawn width ~5.93 m, provisional scale; material unknown)",
+   "road": "road-branch-vertical"
+  },
+  {
+   "a": "road/03",
+   "b": "road/23",
+   "length_m": 9.326,
+   "width_m": null,
+   "surface": "road",
+   "notes": [],
+   "blocked": false,
+   "provenance": "blueprint road road-office-access (drawn width ~3.75 m, provisional scale; material unknown)",
+   "road": "road-office-access"
+  },
+  {
+   "a": "comment-7-concrete-house/apron",
+   "b": "road/15",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "east-greenhouse-6x38-1/apron",
+   "b": "road/17",
+   "length_m": 18.18,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (18.2 m), not surveyed"
+  },
+  {
+   "a": "east-greenhouse-6x38-2/apron",
+   "b": "road/17",
+   "length_m": 29.301,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (29.3 m), not surveyed"
+  },
+  {
+   "a": "south-greenhouse-block-01/apron",
+   "b": "road/20",
+   "length_m": 23.315,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-branch-vertical (23.3 m), not surveyed"
+  },
+  {
+   "a": "south-greenhouse-block-05/apron",
+   "b": "road/21",
+   "length_m": 23.315,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-branch-vertical (23.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-01/apron",
+   "b": "road/05",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-02/apron",
+   "b": "road/06",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-03/apron",
+   "b": "road/07",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-04/apron",
+   "b": "road/08",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-05/apron",
+   "b": "road/09",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-06/apron",
+   "b": "road/10",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-07/apron",
+   "b": "road/11",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-08/apron",
+   "b": "road/12",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-09/apron",
+   "b": "road/13",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "tunnel-10/apron",
+   "b": "road/14",
+   "length_m": 3.327,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "straight link to road road-central-cross (3.3 m), not surveyed"
+  },
+  {
+   "a": "south-greenhouse-block-02/apron",
+   "b": "south-greenhouse-block-01/apron",
+   "length_m": 31.397,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "nearest-neighbour straight link (31.4 m), not surveyed"
+  },
+  {
+   "a": "south-greenhouse-block-02/apron",
+   "b": "south-greenhouse-block-03/apron",
+   "length_m": 34.338,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "nearest-neighbour straight link (34.3 m), not surveyed"
+  },
+  {
+   "a": "south-greenhouse-block-04/apron",
+   "b": "south-greenhouse-block-03/apron",
+   "length_m": 32.33,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "nearest-neighbour straight link (32.3 m), not surveyed"
+  },
+  {
+   "a": "south-greenhouse-block-06/apron",
+   "b": "south-greenhouse-block-05/apron",
+   "length_m": 31.397,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "nearest-neighbour straight link (31.4 m), not surveyed"
+  },
+  {
+   "a": "south-greenhouse-block-06/apron",
+   "b": "south-greenhouse-block-07/apron",
+   "length_m": 34.195,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "nearest-neighbour straight link (34.2 m), not surveyed"
+  },
+  {
+   "a": "south-greenhouse-block-08/apron",
+   "b": "south-greenhouse-block-07/apron",
+   "length_m": 32.33,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "nearest-neighbour straight link (32.3 m), not surveyed"
+  },
+  {
+   "a": "south-greenhouse-block-08/apron",
+   "b": "south-greenhouse-block-09/apron",
+   "length_m": 36.371,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "nearest-neighbour straight link (36.4 m), not surveyed"
+  },
+  {
+   "a": "dock",
+   "b": "tunnel-09/apron",
+   "length_m": 2.236,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [],
+   "blocked": false,
+   "provenance": "dock beside the door apron; position is a placeholder"
+  }
+ ],
+ "layers": [],
+ "landmarks": [
+  {
+   "id": "central-south-cultivation",
+   "kind": "cultivation_plot",
+   "label": "Central South Cultivation",
+   "xy": [
+    164.601,
+    60.317
+   ],
+   "size_m": [
+    127.764,
+    106.22
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "comment-7-concrete-house",
+   "kind": "greenhouse_block",
+   "label": "Reference7 wider concrete-ring greenhouse (estimated)",
+   "xy": [
+    214.727,
+    137.24
+   ],
+   "size_m": [
+    9.792,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": null
+  },
+  {
+   "id": "east-compound",
+   "kind": "compound",
+   "label": "East Compound",
+   "xy": [
+    457.587,
+    137.083
+   ],
+   "size_m": [
+    45.386,
+    55.46
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "east-greenhouse-6x38-1",
+   "kind": "tunnel_greenhouse",
+   "label": "East Greenhouse 6X38 1",
+   "xy": [
+    457.121,
+    143.82
+   ],
+   "size_m": [
+    40.101,
+    6.267
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "east-greenhouse-6x38-2",
+   "kind": "tunnel_greenhouse",
+   "label": "East Greenhouse 6X38 2",
+   "xy": [
+    457.121,
+    132.697
+   ],
+   "size_m": [
+    40.101,
+    6.58
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "east-north-service",
+   "kind": "service_building",
+   "label": "East North Service",
+   "xy": [
+    449.349,
+    156.197
+   ],
+   "size_m": [
+    17.719,
+    10.34
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "east-south-service",
+   "kind": "service_building",
+   "label": "East South Service",
+   "xy": [
+    454.168,
+    118.283
+   ],
+   "size_m": [
+    27.977,
+    9.713
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "east-utilities",
+   "kind": "utility_pad",
+   "label": "East Utilities",
+   "xy": [
+    468.467,
+    156.197
+   ],
+   "size_m": [
+    19.273,
+    12.847
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "northeast-open-parcel",
+   "kind": "cultivation_plot",
+   "label": "Northeast Open Parcel",
+   "xy": [
+    333.398,
+    238.76
+   ],
+   "size_m": [
+    196.775,
+    147.893
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "northwest-open-plot",
+   "kind": "cultivation_plot",
+   "label": "Northwest Open Plot",
+   "xy": [
+    46.629,
+    235.157
+   ],
+   "size_m": [
+    96.367,
+    155.1
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "office-compound",
+   "kind": "compound",
+   "label": "Office Compound",
+   "xy": [
+    63.105,
+    121.73
+   ],
+   "size_m": [
+    52.225,
+    60.473
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "office-service-block",
+   "kind": "service_building",
+   "label": "Office Service Block",
+   "xy": [
+    64.97,
+    137.083
+   ],
+   "size_m": [
+    44.764,
+    22.873
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "office-south-building",
+   "kind": "service_building",
+   "label": "Office South Building",
+   "xy": [
+    48.805,
+    107.473
+   ],
+   "size_m": [
+    10.569,
+    20.053
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "office-south-yard",
+   "kind": "courtyard",
+   "label": "Office South Yard",
+   "xy": [
+    65.125,
+    107.317
+   ],
+   "size_m": [
+    45.075,
+    22.247
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "pond-grid-1",
+   "kind": "pond",
+   "label": "Pond Grid 1",
+   "xy": [
+    145.172,
+    258.657
+   ],
+   "size_m": [
+    49.116,
+    50.447
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "pond-grid-2",
+   "kind": "pond",
+   "label": "Pond Grid 2",
+   "xy": [
+    199.884,
+    258.657
+   ],
+   "size_m": [
+    49.116,
+    50.447
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "pond-grid-3",
+   "kind": "pond",
+   "label": "Pond Grid 3",
+   "xy": [
+    145.172,
+    203.197
+   ],
+   "size_m": [
+    49.116,
+    52.327
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "pond-grid-4",
+   "kind": "pond",
+   "label": "Pond Grid 4",
+   "xy": [
+    199.884,
+    203.197
+   ],
+   "size_m": [
+    49.116,
+    52.327
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "pond-nursery-rack",
+   "kind": "nursery_plot",
+   "label": "Pond Nursery Rack",
+   "xy": [
+    155.12,
+    172.49
+   ],
+   "size_m": [
+    27.356,
+    7.833
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "pond-service-linear",
+   "kind": "service_building",
+   "label": "Pond Service Linear",
+   "xy": [
+    130.562,
+    174.057
+   ],
+   "size_m": [
+    16.165,
+    4.7
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "pond-service-west",
+   "kind": "service_building",
+   "label": "Pond Service West",
+   "xy": [
+    112.687,
+    172.02
+   ],
+   "size_m": [
+    6.528,
+    9.4
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "south-greenhouse-block-01",
+   "kind": "greenhouse_block",
+   "label": "South Greenhouse Block 01",
+   "xy": [
+    264.543,
+    64.233
+   ],
+   "size_m": [
+    24.869,
+    30.707
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "south-greenhouse-block-02",
+   "kind": "greenhouse_block",
+   "label": "South Greenhouse Block 02",
+   "xy": [
+    295.94,
+    64.233
+   ],
+   "size_m": [
+    24.869,
+    30.707
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "south-greenhouse-block-03",
+   "kind": "greenhouse_block",
+   "label": "South Greenhouse Block 03",
+   "xy": [
+    330.134,
+    67.367
+   ],
+   "size_m": [
+    24.869,
+    30.707
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "south-greenhouse-block-04",
+   "kind": "greenhouse_block",
+   "label": "South Greenhouse Block 04",
+   "xy": [
+    362.464,
+    67.367
+   ],
+   "size_m": [
+    24.869,
+    30.707
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "south-greenhouse-block-05",
+   "kind": "greenhouse_block",
+   "label": "South Greenhouse Block 05",
+   "xy": [
+    264.543,
+    29.297
+   ],
+   "size_m": [
+    24.869,
+    31.02
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "south-greenhouse-block-06",
+   "kind": "greenhouse_block",
+   "label": "South Greenhouse Block 06",
+   "xy": [
+    295.94,
+    29.297
+   ],
+   "size_m": [
+    24.869,
+    31.02
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "south-greenhouse-block-07",
+   "kind": "greenhouse_block",
+   "label": "South Greenhouse Block 07",
+   "xy": [
+    330.134,
+    29.297
+   ],
+   "size_m": [
+    24.869,
+    31.02
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "south-greenhouse-block-08",
+   "kind": "greenhouse_block",
+   "label": "South Greenhouse Block 08",
+   "xy": [
+    362.464,
+    29.297
+   ],
+   "size_m": [
+    24.869,
+    31.02
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "south-greenhouse-block-09",
+   "kind": "greenhouse_block",
+   "label": "South Greenhouse Block 09",
+   "xy": [
+    398.834,
+    29.297
+   ],
+   "size_m": [
+    24.869,
+    31.02
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "south-service-1",
+   "kind": "service_building",
+   "label": "South Service 1",
+   "xy": [
+    274.49,
+    88.517
+   ],
+   "size_m": [
+    19.895,
+    6.58
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "south-service-2",
+   "kind": "service_building",
+   "label": "South Service 2",
+   "xy": [
+    336.351,
+    95.253
+   ],
+   "size_m": [
+    20.517,
+    6.267
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "south-service-3",
+   "kind": "service_building",
+   "label": "South Service 3",
+   "xy": [
+    362.153,
+    95.253
+   ],
+   "size_m": [
+    21.139,
+    6.267
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "south-small-pavilion",
+   "kind": "pavilion",
+   "label": "South Small Pavilion",
+   "xy": [
+    385.778,
+    95.097
+   ],
+   "size_m": [
+    8.082,
+    6.58
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "southeast-long-outlined-feature",
+   "kind": "unclassified_plot",
+   "label": "Southeast Long Outlined Feature",
+   "xy": [
+    457.898,
+    59.22
+   ],
+   "size_m": [
+    38.547,
+    90.867
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "southwest-open-parcel",
+   "kind": "cultivation_plot",
+   "label": "Southwest Open Parcel",
+   "xy": [
+    46.629,
+    79.587
+   ],
+   "size_m": [
+    96.367,
+    144.76
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "medium"
+  },
+  {
+   "id": "tunnel-01",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 01",
+   "xy": [
+    122.945,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "tunnel-02",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 02",
+   "xy": [
+    131.96,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "tunnel-03",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 03",
+   "xy": [
+    140.975,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "tunnel-04",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 04",
+   "xy": [
+    149.99,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "tunnel-05",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 05",
+   "xy": [
+    159.005,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "tunnel-06",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 06",
+   "xy": [
+    168.02,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "tunnel-07",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 07",
+   "xy": [
+    177.035,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "tunnel-08",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 08",
+   "xy": [
+    186.05,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "tunnel-09",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 09",
+   "xy": [
+    195.065,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "tunnel-10",
+   "kind": "tunnel_greenhouse",
+   "label": "Tunnel 10",
+   "xy": [
+    204.08,
+    137.24
+   ],
+   "size_m": [
+    6.528,
+    38.853
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "upper-water-long",
+   "kind": "pond",
+   "label": "Upper Water Long",
+   "xy": [
+    172.528,
+    300.33
+   ],
+   "size_m": [
+    103.828,
+    25.38
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "high"
+  },
+  {
+   "id": "west-small-pad",
+   "kind": "utility_pad",
+   "label": "West Small Pad",
+   "xy": [
+    29.843,
+    126.43
+   ],
+   "size_m": [
+    6.839,
+    6.58
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  },
+  {
+   "id": "west-small-pavilion",
+   "kind": "pavilion",
+   "label": "West Small Pavilion",
+   "xy": [
+    27.822,
+    107.787
+   ],
+   "size_m": [
+    10.88,
+    10.653
+   ],
+   "yaw_deg": -0.0,
+   "confidence": "low"
+  }
+ ]
+}
