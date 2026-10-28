@@ -114,6 +114,9 @@ class ExecutorConfig:
     min_speed_frac: float = 0.3
     stuck_window_s: float = 5.0         # wheels commanded but pose advanced < stuck_min_progress_m in this window
     stuck_min_progress_m: float = 0.05
+    stuck_min_wheel_rad_s: float = 0.3   # mean wheel command over the window; below it the robot was mostly stopped
+    stuck_scan_change_m: float = 0.03    # 90th-percentile beam range change over the window; below it nothing moved
+                                         # (farm_full run: moving >= 0.70 m, blocked at a door <= 0.002 m)
     blocked_timeout_s: float | None = 60.0   # obstacle still there after this → aborted (None = wait forever)
     hold_s: float = REVISIT_HOLD_S
     hold_capture_after_s: float = 1.0   # let the robot settle before the revisit shots
@@ -166,6 +169,7 @@ class LegExecutor:
         self.xy: tuple[float, float] | None = None       # scene-frame dead-reckoned position (set by set_xy)
         self._fixes: list[tuple[float, float, float]] = []
         self._cmd_hist: list[tuple[float, float]] = []
+        self._scans: list[tuple[float, list[float]]] = []    # raw planar scans over the stuck window
         self._wheels = None
         self._reset_leg()
 
@@ -217,6 +221,10 @@ class LegExecutor:
     def step(self, obs) -> tuple[list[float], list[dict]]:
         self.metre, self.heading, self.confidence = self.pose.update(obs)
         self._dead_reckon(obs)
+        if "lidar_m" in obs:
+            t_s = float(obs["timestamp_s"])
+            self._scans.append((t_s, [float(r) for r in obs["lidar_m"]]))
+            self._scans = [x for x in self._scans if t_s - x[0] <= self.cfg.stuck_window_s + 0.5]
         events: list[dict] = []
         for e in getattr(self.pose, "events", [])[self._pose_events_seen:]:
             events.append(e)
@@ -366,10 +374,21 @@ class LegExecutor:
         self._cmd_hist = [c for c in self._cmd_hist if t - c[0] <= self.cfg.stuck_window_s + 0.5]
 
     def _scan_says_stuck(self, t: float) -> bool:
+        """Wheels driven forward/backward for the whole window while the robot did not move. Two independent views:
+        the raw scan itself barely changed (no map or odometry involved), or the scan-to-map fixes did not advance."""
         w = self.cfg.stuck_window_s
-        if len(self._fixes) < 10 or not self._cmd_hist or t - self._cmd_hist[0][0] < w - 0.2:
+        if not self._cmd_hist or t - self._cmd_hist[0][0] < w - 0.2:
             return False
-        if min(c[1] for c in self._cmd_hist if t - c[0] <= w) < 0.8:   # stopped / shooting / spinning: not stuck
+        cmds = [c[1] for c in self._cmd_hist if t - c[0] <= w]
+        if sum(cmds) / len(cmds) < self.cfg.stuck_min_wheel_rad_s:     # mostly stopped / holding / spinning in place
+            return False
+        old = [s for s in self._scans if t - s[0] >= w - 0.3]
+        if old and self._scans:
+            a, b = old[0][1], self._scans[-1][1]
+            d = [abs(x - y) for x, y in zip(a, b) if math.isfinite(x) and math.isfinite(y)]
+            if len(d) >= 40 and sorted(d)[int(len(d) * 0.9)] < self.cfg.stuck_scan_change_m:
+                return True
+        if len(self._fixes) < 10 or min(cmds) < 0.8:
             return False
         old = [f for f in self._fixes if t - f[0] >= w - 0.3]
         if not old:

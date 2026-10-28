@@ -115,8 +115,11 @@ def add_yard_ground(stage, centre=(4.5, -16.0), size=(80.0, 90.0), top_z: float 
 
 def prepare_farm_run(stage, tunnels=("09", "10"), crops: bool = True, res: str = "8k", seed: int = 7, log=print) -> dict:
     from sim.scene_collision import add_crop_collision
-    report = {"open_ends": open_tunnel_ends(stage, tunnels), "yard_ground": add_yard_ground(stage),
-              "collision": add_crop_collision(stage, tunnels, plants=not crops)}
+    # collision first: open_tunnel_ends then switches off every wall/door-frame mesh collider (tunnel-10's are only
+    # created here) and stands in the box walls with the doorway gap (farm_full, 29 Oct: tunnel-10's back door frame
+    # was still solid because its collider was added after the switch-off)
+    collision = add_crop_collision(stage, tunnels, plants=not crops)
+    report = {"open_ends": open_tunnel_ends(stage, tunnels), "yard_ground": add_yard_ground(stage), "collision": collision}
     if crops:
         from sim.crop_swap import swap_crops
         report["crops"] = swap_crops(stage, tunnels, seed=seed, res=res)

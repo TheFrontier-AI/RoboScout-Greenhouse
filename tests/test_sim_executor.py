@@ -217,3 +217,30 @@ def test_scan_based_stuck_detection_when_wheels_spin_in_place():
     obs = dict(obs, timestamp_s=9.0)
     cmd, ev = ex.step(obs)
     assert ex.status == "stuck" and "LiDAR" in ex.reason and cmd == [0.0, 0.0]
+
+
+def test_raw_scan_stuck_detection_with_plant_stops_and_no_map_fixes():
+    """farm_full (29 Oct): blocked at a doorway, wheels spinning between plant stops, odometry 'drove' 30 m and the
+    scan-to-map fixes were rejected. The unchanged raw scan alone must call it stuck."""
+    ex = LegExecutor(WheelImuOdometry(metre=0.0), "tunnel-09", ExecutorConfig())
+    sim = FakeR180Sim(); obs, _ = sim.reset()
+    ex.load([Leg("drive_in", A, 20.0)], "survey")
+    for k in range(60):
+        t = 1.0 + 0.1 * k
+        ex._scans.append((t, list(obs["lidar_m"])))
+        ex.note_command(t, [0.0, 0.0] if k % 20 < 5 else [1.9, 1.9])    # stop to shoot, drive, stop, ...
+    cmd, _ = ex.step(dict(obs, timestamp_s=7.0))
+    assert ex.status == "stuck" and cmd == [0.0, 0.0]
+
+
+def test_no_stuck_when_scan_changes_between_plant_stops():
+    ex = LegExecutor(WheelImuOdometry(metre=0.0), "tunnel-09", ExecutorConfig())
+    sim = FakeR180Sim(); obs, _ = sim.reset()
+    ex.load([Leg("drive_in", A, 20.0)], "survey")
+    base = [float(r) for r in obs["lidar_m"]]
+    for k in range(60):
+        t = 1.0 + 0.1 * k
+        ex._scans.append((t, [r - 0.012 * k if math.isfinite(r) else r for r in base]))
+        ex.note_command(t, [0.0, 0.0] if k % 20 < 5 else [1.9, 1.9])
+    ex.step(dict(obs, timestamp_s=7.0, lidar_m=[r - 0.72 if math.isfinite(r) else r for r in base]))
+    assert ex.status != "stuck"
