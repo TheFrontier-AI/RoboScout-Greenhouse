@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "map_id": "v18-tunnel-09-bed-aisles-r1",
+  "source": {
+    "glb_sha256": "30573a39d46ece94c53088ddb0bc5cab3a27174e749d468d258d196289f53437",
+    "feature_id": "tunnel-09",
+    "path": "assets/farm-realistic-v18.glb",
+    "anchor_node": "SiteV18-Anchor-tunnel-09",
+    "bed_node": "SiteV18-Building-tunnel-09-Beds",
+    "floor_nodes": [
+      "SiteV18-Building-tunnel-09-Corridor-Ground",
+      "SiteV18-Building-tunnel-09-Corridor-Aisle"
+    ]
+  },
+  "frame": "blender_z_up_metres",
+  "provenance": {
+    "status": "Illustrative model geometry; blueprint scale provisional; not surveyed",
+    "clearance_scope": "Bed-envelope to bed-envelope only; crops, netting, irrigation, hardware and robot traversability unverified",
+    "extent": "Common longitudinal overlap of adjacent bed envelopes",
+    "entry": "Positive house-local Y, identified by authored native entrance view preset; start is the entry-side bed edge",
+    "distance_origin": "Metre 0 is exactly each aisle start; increasing toward end",
+    "floor": "Highest authored Corridor-Ground/Corridor-Aisle triangle at five samples per centerline",
+    "extraction": "Decode all POSITION vertices and indexed triangles; resolve full GLB scene hierarchy; convert Y-up to native Z-up; separate four bed x intervals"
+  },
+  "house_local_to_world": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      195.065185546875
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      137.24000549316406
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "house_world_to_local": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      -195.065185546875
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      -137.24000549316406
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "bed_bounds_local_m": [
+    {
+      "min": [
+        -2.303704023361206,
+        -19.020666122436523,
+        0.007000000216066837
+      ],
+      "max": [
+        -1.743704080581665,
+        19.020666122436523,
+        0.17099103331565857
+      ]
+    },
+    {
+      "min": [
+        -1.1939308643341064,
+        -19.020666122436523,
+        0.007000000216066837
+      ],
+      "max": [
+        -0.6339309215545654,
+        19.020666122436523,
+        0.17096413671970367
+      ]
+    },
+    {
+      "min": [
+        0.6339309215545654,
+        -19.020666122436523,
+        0.007000000216066837
+      ],
+      "max": [
+        1.1939308643341064,
+        19.020666122436523,
+        0.17099376022815704
+      ]
+    },
+    {
+      "min": [
+        1.743704080581665,
+        -19.020666122436523,
+        0.007000000216066837
+      ],
+      "max": [
+        2.303704023361206,
+        19.020666122436523,
+        0.17097096145153046
+      ]
+    }
+  ],
+  "aisles": [
+    {
+      "id": "tunnel-09/aisle-01",
+      "label": "ทางเดิน 1",
+      "length_m": 38.04133224487305,
+      "clearance_m": 0.5497732162475586,
+      "start": [
+        193.59636807441711,
+        156.2606716156006,
+        0.008999999612569809
+      ],
+      "end": [
+        193.59636807441711,
+        118.21933937072754,
+        0.008999999612569809
+      ],
+      "start_local": [
+        -1.4688174724578857,
+        19.020666122436523,
+        0.008999999612569809
+      ],
+      "end_local": [
+        -1.4688174724578857,
+        -19.020666122436523,
+        0.008999999612569809
+      ],
+      "adjacent_bed_rows": [
+        1,
+        2
+      ],
+      "floor_height_local_m": 0.008999999612569809
+    },
+    {
+      "id": "tunnel-09/aisle-02",
+      "label": "ทางเดิน 2",
+      "length_m": 38.04133224487305,
+      "clearance_m": 1.2678618431091309,
+      "start": [
+        195.065185546875,
+        156.2606716156006,
+        0.03200000151991844
+      ],
+      "end": [
+        195.065185546875,
+        118.21933937072754,
+        0.03200000151991844
+      ],
+      "start_local": [
+        0.0,
+        19.020666122436523,
+        0.03200000151991844
+      ],
+      "end_local": [
+        0.0,
+        -19.020666122436523,
+        0.03200000151991844
+      ],
+      "adjacent_bed_rows": [
+        2,
+        3
+      ],
+      "floor_height_local_m": 0.03200000151991844
+    },
+    {
+      "id": "tunnel-09/aisle-03",
+      "label": "ทางเดิน 3",
+      "length_m": 38.04133224487305,
+      "clearance_m": 0.5497732162475586,
+      "start": [
+        196.53400301933289,
+        156.2606716156006,
+        0.008999999612569809
+      ],
+      "end": [
+        196.53400301933289,
+        118.21933937072754,
+        0.008999999612569809
+      ],
+      "start_local": [
+        1.4688174724578857,
+        19.020666122436523,
+        0.008999999612569809
+      ],
+      "end_local": [
+        1.4688174724578857,
+        -19.020666122436523,
+        0.008999999612569809
+      ],
+      "adjacent_bed_rows": [
+        3,
+        4
+      ],
+      "floor_height_local_m": 0.008999999612569809
+    }
+  ]
+}
