@@ -5,6 +5,21 @@ from __future__ import annotations
 from pathlib import Path
 
 PANEL_PATH = "/TestFixtures/disease_panel"
+PLANT_PATH = "/TestFixtures/disease_plant"
+
+
+def add_plant_asset(stage, frame, metre: float, side: str, asset: str | Path, bed_lateral_m: float = 0.72,
+                    bed_top_z: float = 0.17, yaw_deg: float = 0.0) -> str:
+    """Reference a 3-D plant asset (Z-up, metres, base at origin; e.g. Astra's library_baked/Tomato_SYNTHETIC_*)
+    on the bed edge at an aisle metre. side as in add_disease_panel. Runtime-only: the scene files are not modified."""
+    from pxr import Gf, UsdGeom
+    cx, cy = frame.to_scene(metre, -bed_lateral_m if side == "right" else bed_lateral_m)
+    UsdGeom.Xform.Define(stage, "/TestFixtures")
+    x = UsdGeom.Xform.Define(stage, PLANT_PATH)
+    x.GetPrim().GetReferences().AddReference(str(Path(asset).resolve()))
+    x.AddTranslateOp().Set(Gf.Vec3d(cx, cy, bed_top_z))
+    x.AddRotateZOp().Set(yaw_deg)
+    return PLANT_PATH
 
 
 def add_disease_panel(stage, frame, metre: float, side: str, texture: str | Path,

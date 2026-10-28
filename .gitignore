@@ -8,3 +8,6 @@ coverage_run_log.json
 runs/
 outbox/
 *.ply
+.venv-vision/
+vision_data/
+NEBIUS_SERVER*

@@ -17,7 +17,7 @@ import zlib
 from pathlib import Path
 
 
-def encode_image(rgb, quality: int = 85) -> tuple[bytes, str]:
+def encode_image(rgb, quality: int = 95) -> tuple[bytes, str]:
     """HxWx3 uint8 (numpy array or nested lists) → (bytes, mime). JPEG via PIL; stdlib PNG fallback without PIL."""
     try:
         from PIL import Image

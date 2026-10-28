@@ -79,6 +79,8 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--disease-metre", type=float, help="labelled test fixture: diseased-foliage panel at this metre")
     ap.add_argument("--disease-side", choices=("left", "right"), default="right")
+    ap.add_argument("--disease-asset", help="3-D plant USD (e.g. Astra's Tomato_SYNTHETIC_*/asset.usda) instead of the panel")
+    ap.add_argument("--start-metre", type=float, help="start the robot at this aisle metre (env start_offset)")
     args = ap.parse_args()
 
     amap = AisleMap.load(args.map)
@@ -95,16 +97,23 @@ def main() -> int:
     if not sim.has_side_cameras:
         log("WARNING: no side (plant) cameras in this env; side-camera captures use front_rgb as a PLACEHOLDER "
             "(meta.image_source = front_rgb_placeholder). See sim/SIDE_CAMERAS_TODO.md")
-    obs, info = sim.reset(seed=args.seed, obstacle_metre=args.obstacle_metre)
+    extra = {"start_offset": (args.start_metre - sim.start_metre, 0.0, 0.0)} if args.start_metre is not None else {}
+    obs, info = sim.reset(seed=args.seed, obstacle_metre=args.obstacle_metre, **extra)
+    if args.start_metre is not None:
+        sim.start_metre = args.start_metre
     if info.get("unsupported"):
         log(f"WARNING env could not apply: {info['unsupported']}")
     if args.disease_metre is not None and sim.backend == "isaac":
-        from sim.anomaly import add_disease_panel
-        from sim.make_disease_texture import make
-        tex = Path(args.outbox).parent / "disease_panel.png"; tex.parent.mkdir(parents=True, exist_ok=True)
-        make().save(tex)
-        log(f"TEST FIXTURE: diseased-foliage panel at metre {args.disease_metre} ({args.disease_side}) "
-            f"→ {add_disease_panel(sim.stage, sim.frame, args.disease_metre, args.disease_side, tex)}")
+        from sim.anomaly import add_disease_panel, add_plant_asset
+        if args.disease_asset:
+            log(f"TEST FIXTURE: synthetic abnormal plant {Path(args.disease_asset).parent.name} at metre {args.disease_metre} "
+                f"({args.disease_side}) → {add_plant_asset(sim.stage, sim.frame, args.disease_metre, args.disease_side, args.disease_asset)}")
+        else:
+            from sim.make_disease_texture import make
+            tex = Path(args.outbox).parent / "disease_panel.png"; tex.parent.mkdir(parents=True, exist_ok=True)
+            make().save(tex)
+            log(f"TEST FIXTURE: diseased-foliage panel at metre {args.disease_metre} ({args.disease_side}) "
+                f"→ {add_disease_panel(sim.stage, sim.frame, args.disease_metre, args.disease_side, tex)}")
     ex = LegExecutor(WheelImuOdometry(metre=sim.start_metre), amap.house_id, ExecutorConfig())
     log(f"backend={sim.backend} aisle={aisle.id} start_metre={sim.start_metre:.2f} knobs={sim.knobs}")
 

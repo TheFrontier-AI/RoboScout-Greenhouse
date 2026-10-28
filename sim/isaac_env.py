@@ -11,7 +11,9 @@ from pathlib import Path
 SCENE_ORIGIN_XY = (195.065185546875, 153.0)
 ROBOT_START_SCENE_XY = (0.0, 0.0)
 STAGES = {"default": "greenhouse/sensor_stop_fixture.usda",                      # what r180_env.make_env loads
-          "photo": "scene_fix_2026-10-28/sensor_stop_fixture_pt.usda"}          # photo-matched (README criteria)
+          "photo": "scene_fix_2026-10-28/sensor_stop_fixture_pt.usda",          # photo-matched (README criteria)
+          "realism": "tomato_realism_2026-10-28/C2_R180_Interior_PT_Sensor_Fixture.usda"}  # Astra review: PT ISO400
+REVIEW_RUNTIME_DIR = "tomato_realism_2026-10-28"   # sensor_env_review.py: Astra's validated derived runtime (read-only)
 OBSTACLE_PRIM = "/TestFixtures/removable_front_obstacle"                         # cube 0.65 x 0.18 x 0.70 m
 OBSTACLE_HALF_DEPTH_M = 0.09
 FRICTION_PRIM = "/Robot/Materials/ContactEstimate"                               # robot contact material 0.7 / 0.6
@@ -92,10 +94,17 @@ class R180Sim:
         for p in (d, d.parent / "physical_ai_runtime"):
             if str(p) not in sys.path:
                 sys.path.insert(0, str(p))
-        from sensor_env import SensorStopEnv                     # noqa: E402  (Isaac; needs a running SimulationApp)
+        if stage == "realism":                                    # Astra's review runtime goes with the review scene
+            sys.path.insert(0, str(d / REVIEW_RUNTIME_DIR))
+            from sensor_env_review import SensorStopEnv           # noqa: E402
+        else:
+            from sensor_env import SensorStopEnv                  # noqa: E402  (Isaac; needs a running SimulationApp)
         stage_path = Path(STAGES.get(stage, stage))
         stage_path = stage_path if stage_path.is_absolute() else d / stage_path
-        self.env = SensorStopEnv(app, stage_path=stage_path, aisle_half_width=STRIP_HALF_M, body_half_length=BODY_HALF_LEN, plant_cameras=side_cameras)
+        res = os.environ.get("R1_PLANT_RES")                      # "WIDTHxHEIGHT", e.g. 360x640 or 1080x1920 (real C260)
+        kw = {"plant_resolution": tuple(int(v) for v in res.lower().split("x"))} if res else {}
+        self.env = SensorStopEnv(app, stage_path=stage_path, aisle_half_width=STRIP_HALF_M, body_half_length=BODY_HALF_LEN,
+                                 plant_cameras=side_cameras, **kw)
         self.stage, self.frame = self.env.stage, SceneFrame(aisle, house_xy)
         self.start_metre = self.frame.start_metre
         self.knobs = self._detect_knobs()
