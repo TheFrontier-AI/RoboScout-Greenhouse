@@ -45,7 +45,13 @@ We are building R1, a narrow differential-drive robot with six side cameras. It 
   - A 17 KB/s uplink to the cloud was solved with zstd plus 48 parallel streams.
 
 ## Accomplishments
-- The full loop runs end to end: survey → detect → HERMES revisits → confirm → report, with real NVIDIA models on Nebius.
+- The full loop runs end to end with real NVIDIA models on Nebius: survey → detect → HERMES revisits → confirm or clear → report.
+- **Final run** (RTX PRO 6000, Astra's realism scene, gated runtime about 6 s/step, cameras at 1080×1920):
+  - **84 screened frames, 0 false alarms.**
+  - **Nemotron-VL flagged the subtle test plant at 15.13 m.** Cosmos-8B missed it.
+  - HERMES sent a revisit with its reasoning.
+  - Both eyes saw the six still shots as healthy, so the spot was **cleared**. The report says so honestly and asks a person to check.
+- An earlier run, with a more visible test lesion, was **confirmed** on revisit (early blight 0.89–0.99).
 - About 80 offline tests.
 - Every live failure became a regression test.
 
@@ -61,4 +67,4 @@ We are building R1, a narrow differential-drive robot with six side cameras. It 
 
 ## Links
 - Repo: https://github.com/TheFrontier-AI/RoboScout-Greenhouse (Apache-2.0)
-- Video: <YouTube link>
+- Video: <YouTube link> (file: TheFarm/r1_runs/RoboFarm_demo_v3.mp4, 2:19)

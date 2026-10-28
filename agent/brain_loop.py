@@ -46,6 +46,7 @@ class Spot:
     best: float = 0.0
     n_suspect: int = 0
     state: str = "new"         # new | revisiting | confirmed | cleared
+    by: list[str] = field(default_factory=list)   # which eyes flagged it (finding meta.votes)
 
 
 def cluster(findings: list[dict], spots: list[Spot]) -> list[Spot]:
@@ -60,6 +61,7 @@ def cluster(findings: list[dict], spots: list[Spot]) -> list[Spot]:
         s.labels += [i.get("label", "?") for i in f.get("issues", [])]
         s.best = max(s.best, conf if f["status"] == "disease" else 0.0)
         s.n_suspect += f["status"] == "suspect"
+        s.by += [m for m, v in (f.get("meta") or {}).get("votes", {}).items() if v in ("disease", "suspect") and m not in s.by]
     return [s for s in spots if s.state == "new" and (s.best >= DISEASE_CONF or s.n_suspect >= SUSPECT_MIN)]
 
 
@@ -108,7 +110,8 @@ def run(house: str, poll_s: float = 3.0, survey_until: float | None = None) -> s
         for s in cluster(res["findings"], spots):
             s.state = "revisiting"
             send({"cmd": "revisit", "house": house, "aisle": s.aisle, "metre": round(s.metre, 1)},
-                 f"Cosmos flagged {', '.join(sorted(set(s.labels)))} near {s.aisle} metre {s.metre:.1f}")
+                 f"{' and '.join(s.by) or 'the plant-inspection model'} flagged {', '.join(sorted(set(s.labels)))} "
+                 f"near {s.aisle} metre {s.metre:.1f}")
         if st.get("state") == "stuck":
             stuck += 1; send({"cmd": "stop"}, "robot reports it is stuck; holding for a human")
             if stuck >= 2:
