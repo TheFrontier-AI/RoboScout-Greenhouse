@@ -1,12 +1,5 @@
-"""Wrapper around Astra's R180 SensorStopEnv (diy_r50/physical_ai_runtime/sensor_env.py) for long aisle runs and
-batch evaluation. Isaac modules are imported lazily, so the pure geometry here is importable (and tested) without Isaac.
-
-What the env natively offers (read 2026-10-28): `SensorStopEnv(app, stage_path=, aisle_half_width=, body_half_length=)`,
-`reset(*, seed=None, options={'obstacle_y': -2.0|-2.8|-3.2})`, `step([l, r])` → (obs, reward, terminated, truncated, info).
-Its evaluator truncates at 300 steps and terminates on any approach to the fixed obstacle, so this wrapper swaps in a
-GroundTruthEvaluator after every reset (evaluation-only world pose → info["gt"], never into obs). Friction, obstacle
-placement, start offset and side cameras are applied from outside the env by editing the stage: all UNVERIFIED until
-run on Isaac (see knobs / unsupported lists in reset())."""
+"""R180 navigation wrapper. Native env owns reset knobs, six synchronized plant cameras,
+robot-relative side mapping, and optional episode limit. GT is evaluation-only info."""
 from __future__ import annotations
 import json
 import math
@@ -102,7 +95,7 @@ class R180Sim:
         from sensor_env import SensorStopEnv                     # noqa: E402  (Isaac; needs a running SimulationApp)
         stage_path = Path(STAGES.get(stage, stage))
         stage_path = stage_path if stage_path.is_absolute() else d / stage_path
-        self.env = SensorStopEnv(app, stage_path=stage_path, aisle_half_width=STRIP_HALF_M, body_half_length=BODY_HALF_LEN)
+        self.env = SensorStopEnv(app, stage_path=stage_path, aisle_half_width=STRIP_HALF_M, body_half_length=BODY_HALF_LEN, plant_cameras=side_cameras)
         self.stage, self.frame = self.env.stage, SceneFrame(aisle, house_xy)
         self.start_metre = self.frame.start_metre
         self.knobs = self._detect_knobs()
@@ -125,56 +118,26 @@ class R180Sim:
                 "ground_truth": True}
 
     def _attach_side_cameras(self) -> None:
-        # The six plant cameras are authored prims in robot_sensors.usda but SensorStopEnv only wires front_rgb.
-        # UNVERIFIED: adding Camera objects before world.reset mirrors how the env adds front_rgb.
-        try:
-            from isaacsim.sensors.camera import Camera
-            for name, path in SIDE_CAMERA_PRIMS.items():
-                if self.stage.GetPrimAtPath(path):
-                    self.side_cams[name] = self.env.world.scene.add(
-                        Camera(prim_path=path, name=name, resolution=(180, 320), frequency=30))  # portrait 9:16
-            self.has_side_cameras = len(self.side_cams) == len(SIDE_CAMERA_PRIMS)
-        except Exception as e:                                     # keep running on front_rgb placeholders
-            self.log(f"WARNING side cameras not attached ({e}); side captures will use front_rgb placeholders")
-            self.side_cams, self.has_side_cameras = {}, False
+        self.side_cams={name:self.env.plant_cameras[name.replace('mast_','plant_')] for name in SIDE_CAMERA_PRIMS if name.replace('mast_','plant_') in self.env.plant_cameras}
+        self.has_side_cameras=len(self.side_cams)==6
 
     # ---- episode -------------------------------------------------------------------------------------------------
     def reset(self, seed=None, friction_scale: float | None = None, obstacle_metre: float | None = None,
               start_offset: tuple[float, float, float] = (0.0, 0.0, 0.0), jam_metre: float | None = None):
         """obstacle_metre: centre of the test box along the aisle (None = removed). start_offset: (along m, lateral m, yaw deg)."""
-        from pxr import Gf
-        unsupported = []
-        if jam_metre is not None:
-            unsupported.append("jam_metre")
-        if friction_scale is not None:
-            if self.knobs["friction_scale"]:                       # edit target is the session layer (set by env)
-                p = self.stage.GetPrimAtPath(FRICTION_PRIM)
-                p.GetAttribute("physics:staticFriction").Set(BASE_FRICTION[0] * friction_scale)
-                p.GetAttribute("physics:dynamicFriction").Set(BASE_FRICTION[1] * friction_scale)
-            else:
-                unsupported.append("friction_scale")
-        offset_applied = self._set_start_default(start_offset) if any(start_offset) else True
-        obs, info = self.env.reset(seed=seed, options={"obstacle_y": -2.8})
-        face = None
-        if self.knobs["obstacle"]:
-            if obstacle_metre is None:
-                pos = (0.0, 0.0, -50.0)                            # park the box under the floor
-            else:
-                sx, sy = self.frame.to_scene(obstacle_metre)
-                pos, face = (sx, sy, 0.35), obstacle_metre - OBSTACLE_HALF_DEPTH_M
-            self.stage.GetPrimAtPath(OBSTACLE_PRIM).GetAttribute("xformOp:translate").Set(Gf.Vec3d(*pos))
-        elif obstacle_metre is not None:
-            unsupported.append("obstacle")
-        if not offset_applied:
-            offset_applied = self._teleport(start_offset)
-            if not offset_applied:
-                unsupported.append("start_offset")
-        self.env.evaluator = GroundTruthEvaluator(self.frame, face)
-        info = {"termination": None}
-        for _ in range(self.settle_steps):                        # fresh sweep/images after stage edits
-            obs, _, _, _, info = self.env.step([0.0, 0.0])
-        return obs, {"backend": self.backend, "gt": info.get("gt"), "unsupported": unsupported,
-                     "start_metre": self.start_metre}
+        unsupported=['jam_metre'] if jam_metre is not None else []
+        options={'start_offset':start_offset,'friction_scale':1.0 if friction_scale is None else friction_scale,
+                 'obstacle_enabled':obstacle_metre is not None,'task_mode':'navigation','max_steps':None}
+        if obstacle_metre is not None:
+            sx,sy=self.frame.to_scene(obstacle_metre);options['obstacle_position']=(sx,sy,.35)
+        obs,info=self.env.reset(seed=seed,options=options)
+        for _ in range(self.settle_steps):
+            obs,_,terminated,truncated,info=self.env.step([0.,0.])
+            if terminated or truncated:raise RuntimeError('Reset settling ended episode: '+str(info))
+        self._last_obs=obs
+        pos,quat=self.env.robot.get_world_poses()
+        return obs,{'backend':self.backend,'gt':ground_truth(pos[0],quat[0],self.frame),'unsupported':unsupported,
+                    'start_metre':self.start_metre,'plant_camera_mapping':self.env.plant_camera_paths}
 
     def _set_start_default(self, start_offset) -> bool:
         robot = self.env.robot
@@ -216,18 +179,16 @@ class R180Sim:
         return pos, q
 
     def step(self, action):
-        return self.env.step([float(action[0]), float(action[1])])
+        obs,reward,terminated,truncated,info=self.env.step([float(action[0]),float(action[1])])
+        self._last_obs=obs
+        pos,quat=self.env.robot.get_world_poses();info=dict(info)
+        info['gt']=ground_truth(pos[0],quat[0],self.frame)
+        return obs,reward,terminated,truncated,info
 
     def side_images(self) -> dict:
-        out = {}
-        for name, cam in self.side_cams.items():
-            try:
-                rgba = cam.get_rgba()
-                if rgba is not None and getattr(rgba, "ndim", 0) == 3 and rgba.size:
-                    out[name] = rgba[:, :, :3]
-            except Exception:
-                pass
-        return out
+        # No front-camera substitution. Every returned image has a native side sensor.
+        obs=getattr(self,'_last_obs',{})
+        return {name.replace('plant_','mast_'):image for name,image in obs.get('plant_rgb',{}).items()}
 
     def close(self):
         self.env.close()

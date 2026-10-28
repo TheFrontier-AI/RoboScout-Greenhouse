@@ -1,6 +1,6 @@
-# R1 Zero-Map Greenhouse Agent
+# RoboScout-Greenhouse
 
-**A greenhouse robot that enters a house it has never seen, maps it, finds sick plants, and decides by itself where to look again.**
+**R1 is our greenhouse robot: it enters a house it has never seen, maps it, finds sick plants, and decides by itself where to look again.**
 Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. Thai docs: [README_th.md](README_th.md).
 
 - **Brain — HERMES:** [Hermes Agent](https://github.com/NousResearch/hermes-agent) is the agent runtime, running **NVIDIA Nemotron 3** on **Nebius Token Factory**. It picks goals (survey, revisit, dock), never wheel speeds.
