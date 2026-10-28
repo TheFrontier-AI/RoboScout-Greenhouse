@@ -1,4 +1,4 @@
-# RoboScout-Greenhouse
+# RoboFarm
 
 **R1 is our greenhouse robot: it enters a house it has never seen, maps it, finds sick plants, and decides by itself where to look again.**
 Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. Thai docs: [README_th.md](README_th.md).
