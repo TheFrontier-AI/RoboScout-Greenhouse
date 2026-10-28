@@ -4,8 +4,11 @@ runtime misbehaves during the demo; the robot API cannot tell the difference.
 
   ROBOT_API_URL=http://127.0.0.1:8090 python3 agent/brain_loop.py --house tunnel-09"""
 from __future__ import annotations
-import argparse, json, os, time, urllib.request
+import argparse, json, os, sys, time, urllib.request
 from dataclasses import dataclass, field
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))     # repo root, for cloud.brain when run as a script
 
 API = os.environ.get("ROBOT_API_URL", "http://127.0.0.1:8090")
 MERGE_M, DISEASE_CONF, BATTERY_MIN = 1.0, 0.6, 25
@@ -27,7 +30,8 @@ def _nemotron(prompt: str, fallback: str) -> str:
         from cloud.brain.token_factory import chat
         out = chat([{"role": "system", "content": "You are HERMES, a concise greenhouse robot planner."},
                     {"role": "user", "content": prompt}])
-        return (out if isinstance(out, str) else out.choices[0].message.content).strip() or fallback
+        text = out if isinstance(out, str) else getattr(out, "content", None)   # cloud.brain.token_factory.Reply
+        return (text or "").strip() or fallback
     except Exception:
         return fallback
 
@@ -72,7 +76,7 @@ def wait_idle(poll_s: float) -> dict:
         time.sleep(poll_s)
 
 
-def run(house: str, poll_s: float = 3.0) -> str:
+def run(house: str, poll_s: float = 3.0, survey_until: float | None = None) -> str:
     since, findings, spots, stuck = 0, [], [], 0
 
     def send(cmd: dict, why: str) -> dict:
@@ -82,7 +86,12 @@ def run(house: str, poll_s: float = 3.0) -> str:
     if not _get("/health").get("map"):
         send({"cmd": "discover_house"}, "no map of this greenhouse yet, mapping it first"); wait_idle(poll_s)
         print("discovered; confirm the map then POST {'cmd':'set_map','path':...}"); return ""
-    send({"cmd": "survey_house", "house": house}, "daily inspection of every reachable aisle")
+    if survey_until is None:
+        send({"cmd": "survey_house", "house": house}, "daily inspection of every reachable aisle")
+    else:                                     # demo / partial survey: inspect the first part of the first reachable aisle
+        aisle = next(a["id"] for a in _get("/map")["aisles"] if a["traversable"])
+        send({"cmd": "go_to", "house": house, "aisle": aisle, "metre": survey_until},
+             f"inspect {aisle} from the door to metre {survey_until:g}")
     while True:
         time.sleep(poll_s)
         res = _get(f"/findings?since={since}"); since = res["next"]; findings += res["findings"]
@@ -113,4 +122,5 @@ def run(house: str, poll_s: float = 3.0) -> str:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--house", default="tunnel-09"); ap.add_argument("--poll", type=float, default=3.0)
-    a = ap.parse_args(); run(a.house, a.poll)
+    ap.add_argument("--survey-until", type=float, help="partial survey: go_to this metre of the first reachable aisle")
+    a = ap.parse_args(); run(a.house, a.poll, a.survey_until)

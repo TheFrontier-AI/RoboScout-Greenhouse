@@ -114,7 +114,9 @@ def test_odometry_tracks_metre_and_confidence_decays():
     odo = WheelImuOdometry(metre=2.0)
     base = {"imu_accel_gyro": [0, 0, 9.81, 0, 0, 0.0]}
     odo.update({**base, "timestamp_s": 0.0, "wheel_position_velocity": [0.0] * 8})
-    m, h, c = odo.update({**base, "timestamp_s": 1.0, "wheel_position_velocity": [10.0] * 4 + [0.0] * 4})
+    for k in range(1, 41):                                    # 40 × 0.25 rad = 10 rad; Isaac wraps shaft angles at ±pi
+        a = (0.25 * k + math.pi) % (2 * math.pi) - math.pi
+        m, h, c = odo.update({**base, "timestamp_s": 0.1 * k, "wheel_position_velocity": [a] * 4 + [0.0] * 4})
     assert m == pytest.approx(2.0 + 1.27) and h == pytest.approx(-90.0) and c < 1.0
 
 

@@ -36,8 +36,9 @@ def parse_args(argv=None):
     p.add_argument("--crop-fov", type=float, default=100.0, help="horizontal FOV of the pinhole crop, degrees")
     p.add_argument("--width", type=int, default=0, help="resize extracted frames to this width (0 = keep)")
     p.add_argument("--fallback-max-frames", type=int, default=300, help="VGGT single-pass frame cap")
-    p.add_argument("--up", choices=("cam-y", "cam-z"), default="cam-y",
-                   help="gravity hint: cam-y = forward-looking cameras (robot), cam-z = nadir drone camera")
+    p.add_argument("--up", choices=("cam-y", "cam-z", "plane"), default="cam-y",
+                   help="gravity hint: cam-y = forward-looking cameras (robot), cam-z = nadir drone camera, "
+                        "plane = normal of the dominant ground plane (oblique drone video)")
     p.add_argument("--max-points", type=int, default=4_000_000)
     p.add_argument("--conf-percentile", type=float, default=30.0, help="drop the lowest-confidence N%% of points")
     p.add_argument("--grid-px", type=int, default=1024, help="long side of the top-down image")
@@ -232,9 +233,15 @@ def write_ply(path, pts, cols):
         f.write(rec.tobytes())
 
 
-def up_vector(poses, mode="cam-y"):
-    """World 'up' from camera orientations (OpenCV cams: +y down, +z forward)."""
-    axis = poses[:, :3, 1] if mode == "cam-y" else poses[:, :3, 2]
+def up_vector(poses, mode="cam-y", pts=None):
+    """World 'up' from camera orientations (OpenCV cams: +y down, +z forward), or for mode='plane' the
+    least-variance axis of the point cloud (ground plane normal), signed to agree with the cameras' -y."""
+    if mode == "plane" and pts is not None and len(pts) > 100:
+        sample = pts[np.random.default_rng(0).choice(len(pts), min(len(pts), 200_000), replace=False)]
+        w, V = np.linalg.eigh(np.cov((sample - sample.mean(0)).T))
+        n = V[:, 0]
+        return n if n @ -poses[:, :3, 1].mean(0) >= 0 else -n
+    axis = poses[:, :3, 1] if mode in ("cam-y", "plane") else poses[:, :3, 2]
     v = -axis.mean(0)
     n = np.linalg.norm(v)
     return v / n if n > 1e-9 else np.array([0.0, 0.0, 1.0])
@@ -345,7 +352,7 @@ def main(argv=None):
     (out / "trajectory.json").write_text(json.dumps(
         {"convention": "T_world_cam, OpenCV camera (x right, y down, z forward), world = first camera",
          "frames": trajectory_records(frames, poses)}, indent=1))
-    up = up_vector(poses, args.up)
+    up = up_vector(poses, args.up, pts)
     hmap, occ, cpx, tmeta = topdown(pts, poses, up, args.grid_px)
     save_topdown_png(out / "topdown.png", hmap, cpx)
     import cv2

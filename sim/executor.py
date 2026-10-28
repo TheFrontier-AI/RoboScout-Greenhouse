@@ -69,12 +69,13 @@ class WheelImuOdometry:
 
     def update(self, obs) -> tuple[float, float, float]:
         wpv, t = obs["wheel_position_velocity"], float(obs["timestamp_s"])
-        wheel = sum(float(x) for x in wpv[:4]) / 4.0      # LF, RF, LR, RR shaft angles (rad), + = forward
+        wheel = [float(x) for x in wpv[:4]]                # LF, RF, LR, RR shaft angles (rad), + = forward; wrap at ±pi
         if self._wheel is not None:
             dt = t - self._t
             if 0.0 < dt < 1.0:
                 self.heading += math.degrees(self.gsign * float(obs["imu_accel_gyro"][self.gz]) * dt)
-            d = (wheel - self._wheel) * self.r
+            # per-wheel delta unwrapped to (-pi, pi]: one control step turns a wheel far less than half a revolution
+            d = sum((w - p + math.pi) % (2 * math.pi) - math.pi for w, p in zip(wheel, self._wheel)) / 4.0 * self.r
             self.metre += d * math.cos(math.radians(self.heading - INTO_AISLE_HEADING_DEG))
             self.travelled += abs(d)
         self._wheel, self._t = wheel, t

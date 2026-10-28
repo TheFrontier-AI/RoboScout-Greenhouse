@@ -77,6 +77,8 @@ def main() -> int:
     ap.add_argument("--idle-exit-s", type=float, default=0.0, help="online: exit after this long idle (0 = never)")
     ap.add_argument("--obstacle-metre", type=float, help="place the test box at this aisle metre (SAFETY clip); default none")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--disease-metre", type=float, help="labelled test fixture: diseased-foliage panel at this metre")
+    ap.add_argument("--disease-side", choices=("left", "right"), default="right")
     args = ap.parse_args()
 
     amap = AisleMap.load(args.map)
@@ -96,6 +98,13 @@ def main() -> int:
     obs, info = sim.reset(seed=args.seed, obstacle_metre=args.obstacle_metre)
     if info.get("unsupported"):
         log(f"WARNING env could not apply: {info['unsupported']}")
+    if args.disease_metre is not None and sim.backend == "isaac":
+        from sim.anomaly import add_disease_panel
+        from sim.make_disease_texture import make
+        tex = Path(args.outbox).parent / "disease_panel.png"; tex.parent.mkdir(parents=True, exist_ok=True)
+        make().save(tex)
+        log(f"TEST FIXTURE: diseased-foliage panel at metre {args.disease_metre} ({args.disease_side}) "
+            f"→ {add_disease_panel(sim.stage, sim.frame, args.disease_metre, args.disease_side, tex)}")
     ex = LegExecutor(WheelImuOdometry(metre=sim.start_metre), amap.house_id, ExecutorConfig())
     log(f"backend={sim.backend} aisle={aisle.id} start_metre={sim.start_metre:.2f} knobs={sim.knobs}")
 
@@ -198,6 +207,9 @@ def main() -> int:
                 ex.abort("max sim time"); log("max sim time reached"); break
     except KeyboardInterrupt:
         ex.abort("interrupted"); log("interrupted")
+    except Exception as e:                                    # SimulationApp.close() exits the process: log before it
+        import traceback
+        ex.abort(f"error: {e!r}"); log("ERROR " + traceback.format_exc()); code = 3
     finally:
         publish()
         if link.enabled:
