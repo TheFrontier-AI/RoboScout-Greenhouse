@@ -51,12 +51,13 @@ def test_drive_in_stops_within_tolerance_and_stays_centred():
     assert all(abs(c) <= 2.0 for cmd in cmds for c in cmd)
 
 
-def test_side_cameras_every_half_metre_front_every_two():
-    ex, ev, _, _ = run([Leg("drive_in", A, 6.0)])
+def test_side_cameras_at_every_plant_while_stopped_front_every_two():
+    ex, ev, cmds, gts = run([Leg("drive_in", A, 6.0)])
     caps = kinds(ev, "capture")
     side = [c["meta"]["metre"] for c in caps if c["camera"] == SIDE_CAMERAS[0]]
     front = [c for c in caps if c["camera"] == FRONT_CAMERA]
-    assert len(side) == 10 and all(0.45 <= b - a <= 0.6 for a, b in zip(side, side[1:]))
+    assert len(side) == 11 and all(0.4 <= b - a <= 0.55 for a, b in zip(side, side[1:]))   # 0.45 m plant pitch
+    assert sum(1 for c in cmds if c == [0.0, 0.0]) >= 11 * 4                                 # stood still >= 0.5 s per shot
     assert len(front) == 3 and all(c["meta"]["purpose"] == "navigate" for c in front)
     assert len({c["meta"]["frame_id"] for c in caps}) == len(caps)
 
@@ -103,8 +104,9 @@ def test_external_abort_and_status_dict():
     obs, _ = sim.reset()
     ex = LegExecutor(WheelImuOdometry(metre=3.0), "tunnel-09")
     assert ex.step(obs) == ([0.0, 0.0], []) and ex.status == "idle"
-    ex.load([Leg("drive_in", A, 9.0)], "go_to")
-    cmd, _ = ex.step(obs)
+    ex.load([Leg("drive_in", A, 9.0)], "go_to", )
+    for _ in range(8):                                   # first stop-to-shoot at the start metre, then it drives
+        cmd, _ = ex.step(obs); obs, *_ = sim.step(cmd)
     assert cmd[0] > 0 and ex.status_dict()["state"] == "drive_in" and ex.status_dict()["legs_remaining"] == 1
     ex.abort("stop command")
     assert ex.step(obs)[0] == [0.0, 0.0] and ex.status_dict()["state"] == "aborted"
@@ -124,3 +126,53 @@ def test_drive_in_to_a_metre_behind_the_robot_reverses_to_it():
     ex, ev, cmds, gts = run([Leg("drive_in", A, 6.0), Leg("drive_in", A, 3.0)])
     assert ex.status == "done" and abs(gts[-1]["metre"] - 3.0) <= 0.15
     assert kinds(ev, "note") and cmds[-2][0] < 0
+
+
+def test_turn_around_spins_180_verifies_with_lidar_then_drives_out_forward():
+    ex, ev, cmds, gts = run([Leg("drive_in", A, 8.0), Leg("turn_around", A, 8.0), Leg("drive_out", A, 2.0)], max_steps=8000)
+    assert ex.status == "done", ex.reason
+    chk = kinds(ev, "turn_check")[0]
+    assert chk["ok"] and abs(chk["gyro_turned_deg"] - 180) <= 2.5 and abs(chk["lidar_yaw_deg"]) <= 4
+    assert abs(gts[-1]["metre"] - 2.0) <= 0.15 and abs(abs(gts[-1]["yaw_deg"]) - 180) < 6
+    assert min(g["clearance_bed_m"] for g in gts) > 0.0
+    out = [c for c in kinds(ev, "capture") if c["meta"]["metre"] < 7.5 and c["camera"] == SIDE_CAMERAS[0]]
+    assert len(out) >= 10                                 # second camera pass on the way out
+    assert not any(c[0] < 0 and c[1] < 0 for c in cmds)   # never reversed
+
+
+def test_turn_refused_when_spin_circle_is_blocked():
+    sim = FakeR180Sim(aisle_length_m=20.0, start_metre=1.0, bed_half_m=0.45)   # 0.9 m aisle: a spin needs ~1.02 m
+    obs, _ = sim.reset()
+    ex = LegExecutor(WheelImuOdometry(metre=1.0), "tunnel-09")
+    ex.load([Leg("turn_around", A, 1.0)], "survey")
+    cmd, ev = ex.step(obs)
+    assert cmd == [0.0, 0.0] and ex.status == "aborted" and "no room to turn" in ex.reason
+
+
+def test_end_wall_pose_check_corrects_wheel_slip():
+    sim = FakeR180Sim(aisle_length_m=20.0, start_metre=1.0, end_wall_metre=20.4)
+    obs, _ = sim.reset(friction_scale=0.45)                # wet floor: wheels over-read ~7 %
+    cfg = ExecutorConfig(end_wall_metre=20.4)
+    ex = LegExecutor(WheelImuOdometry(metre=1.0), "tunnel-09", cfg)
+    ex.load([Leg("drive_in", A, 19.0)], "survey")
+    ev, gt = [], None
+    for _ in range(9000):
+        if not ex.busy:
+            break
+        cmd, e = ex.step(obs); ev += e
+        obs, _, _, _, info = sim.step(cmd); gt = info["gt"]
+    checks = kinds(ev, "pose_check")
+    assert checks and checks[0]["corrected"] and checks[0]["error_m"] > 0.3   # odometry ran ahead of the truth
+    assert ex.status == "done" and abs(gt["metre"] - 19.0) <= 0.15            # stopped at the real metre anyway
+
+
+def test_large_pose_disagreement_stops_the_robot():
+    sim = FakeR180Sim(aisle_length_m=20.0, start_metre=1.0, end_wall_metre=20.4)
+    obs, _ = sim.reset(friction_scale=0.1)                 # 25 % slip: odometry far off
+    ex = LegExecutor(WheelImuOdometry(metre=1.0), "tunnel-09", ExecutorConfig(end_wall_metre=20.4))
+    ex.load([Leg("drive_in", A, 19.0)], "survey")
+    for _ in range(9000):
+        if not ex.busy:
+            break
+        cmd, _ = ex.step(obs); obs, *_ = sim.step(cmd)
+    assert ex.status == "aborted" and "position" in ex.reason

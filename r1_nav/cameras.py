@@ -8,6 +8,7 @@ SIDE_CAMERAS = ("mast_left_low", "mast_left_mid", "mast_left_high",
 FRONT_CAMERA = "front"
 ALL_CAMERAS = SIDE_CAMERAS + (FRONT_CAMERA,)
 SIDE_STEP_M = 0.5              # plant-inspection spacing (README success criterion 3)
+PLANT_PITCH_M = 0.45           # tomato pitch in the rows (84 plants per 38 m): stop-to-shoot spacing
 FRONT_STEP_M = 2.0             # navigation check spacing (cloud verifies the robot moved/turned as commanded)
 
 
@@ -27,10 +28,11 @@ class FrameMeta:
         return asdict(self)
 
 
-def due_cameras(metre: float, last_side_m: float | None, last_front_m: float | None) -> list[str]:
+def due_cameras(metre: float, last_side_m: float | None, last_front_m: float | None,
+                side_step_m: float = SIDE_STEP_M) -> list[str]:
     """Cameras that should capture now, given the metres of the previous side/front captures."""
     due: list[str] = []
-    if last_side_m is None or abs(metre - last_side_m) >= SIDE_STEP_M - 1e-9:
+    if last_side_m is None or abs(metre - last_side_m) >= side_step_m - 1e-9:
         due += SIDE_CAMERAS
     if last_front_m is None or abs(metre - last_front_m) >= FRONT_STEP_M - 1e-9:
         due.append(FRONT_CAMERA)

@@ -16,8 +16,9 @@ class FakeR180Sim:
     backend = "fake"
 
     def __init__(self, aisle_length_m: float = 38.04, bed_half_m: float = 0.634, start_metre: float = 3.26,
-                 dt: float = 0.1, side_cameras: bool = True):
+                 dt: float = 0.1, side_cameras: bool = True, end_wall_metre: float | None = None):
         self.L, self.W, self.start_metre, self.dt = aisle_length_m, bed_half_m, start_metre, dt
+        self.end_wall = end_wall_metre             # far end wall across the aisle (None = open)
         self.has_side_cameras = side_cameras
         self.knobs = {"seed": True, "friction_scale": True, "obstacle": True, "start_offset": True, "ground_truth": True}
         self.angles = [-math.pi + 2 * math.pi * i / N_BEAMS for i in range(N_BEAMS)]   # raw R180 azimuths
@@ -78,6 +79,8 @@ class FakeR180Sim:
                 best = min(best, (self.W - ly) / sn)
             elif sn < -1e-6:
                 best = min(best, (self.W + ly) / -sn)
+            if self.end_wall is not None and cs > 1e-6:
+                best = min(best, (self.end_wall - lx) / cs)
             if self.obstacle is not None and cs > 1e-6:
                 d = (self.obstacle - 0.09 - lx) / cs
                 if d > 0 and abs(ly + d * sn) < 0.325:

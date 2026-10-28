@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from typing import Protocol
-from r1_nav.cameras import FRONT_CAMERA, SIDE_CAMERAS, due_cameras, frame_meta
+from r1_nav.cameras import FRONT_CAMERA, PLANT_PITCH_M, SIDE_CAMERAS, due_cameras, frame_meta
 from r1_nav.commands import REVISIT_HOLD_S
 from r1_nav.controller import MAX_WHEEL_RAD_S, WHEEL_RADIUS_M, ControllerConfig, sector_min, wheel_command
 from r1_nav.mission import Leg
@@ -51,6 +51,23 @@ class PoseSource(Protocol):
         ...
 
 
+def front_wall_range(ranges, angles, half: float = math.radians(3)) -> float | None:
+    """Median LiDAR range straight ahead (r1_nav angles), None if nothing returns."""
+    return _window_median(ranges, angles, 0.0, half)
+
+
+def spin_clearance_ok(ranges, angles, lidar_ahead_m: float, radius_m: float, self_m: float) -> tuple[bool, float]:
+    """Is the circle swept by a spin in place (about the body centre) free? LiDAR sits lidar_ahead_m ahead of centre;
+    returns closer than self_m are the robot's own body. Returns (ok, closest obstacle distance from the centre)."""
+    closest = 99.0
+    for r, a in zip(ranges, angles):
+        if r < self_m or r >= 11.9:
+            continue
+        x, y = lidar_ahead_m + r * math.cos(a), r * math.sin(a)
+        closest = min(closest, math.hypot(x, y))
+    return closest > radius_m, closest
+
+
 class WheelImuOdometry:
     """Fallback pose: mean wheel angle x radius along the aisle, heading from integrated gyro z.
     Wheel slip (wet floor) is invisible to it, so confidence decays with distance travelled since the last reset."""
@@ -60,6 +77,10 @@ class WheelImuOdometry:
         self.r, self.gz, self.gsign = wheel_radius_m, gyro_z_index, gyro_sign
         self.drift_per_m, self.min_conf = drift_per_m, min_confidence
         self.reset(metre, heading_deg)
+
+    def correct(self, metre: float) -> None:
+        """Re-anchor the along-aisle position to an external fix (LiDAR landmark); drift restarts from here."""
+        self.metre, self.travelled = float(metre), 0.0
 
     def reset(self, metre: float, heading_deg: float | None = None) -> None:
         self.metre, self.travelled = float(metre), 0.0
@@ -102,6 +123,23 @@ class ExecutorConfig:
     # -k_heading * yaw, yaw measured from the bed walls with the LiDAR (gyro/odometry heading as fallback).
     k_heading: float = 2.0              # wheel-speed difference (rad/s) per rad of yaw relative to the aisle axis
     wall_max_m: float = 3.0             # wall samples farther than this are ignored (open headland, gaps)
+    # Inspection: stop at every plant so all six side cameras get a still, sharp frame (no motion blur).
+    stop_to_shoot: bool = True
+    shoot_settle_s: float = 0.5
+    side_step_m: float = PLANT_PITCH_M
+    # Turn around in place (wide aisles): wheel speed, finish tolerance, LiDAR alignment check after the spin.
+    spin_wheel_rad_s: float = 1.0
+    spin_tolerance_deg: float = 2.0
+    spin_radius_m: float = 0.46         # half-diagonal of the 0.528 x 0.75 m body
+    spin_margin_m: float = 0.05
+    spin_lidar_max_yaw_deg: float = 4.0  # after the spin the bed walls must look parallel again (LiDAR)
+    lidar_ahead_m: float = 0.34
+    # Position checks against map landmarks (warehouse-style: odometry is checked, not trusted).
+    end_wall_metre: float | None = None  # aisle metre of the far end wall (from the map); None = no check
+    pose_check_every_m: float = 0.5
+    pose_check_max_range_m: float = 8.0  # C1 reaches 12 m; a short window lets a slipping robot stop short unchecked
+    pose_correct_max_m: float = 1.0     # larger disagreement: do not trust either, report and stop
+    pose_check_max_yaw_deg: float = 3.0
     controller: ControllerConfig = field(default_factory=ControllerConfig)
 
 
@@ -167,6 +205,11 @@ class LegExecutor:
             return [0.0, 0.0], events
         if leg.kind == "hold":
             return self._hold(leg, t, events), events
+        if leg.kind == "turn_around":
+            return self._turn(leg, obs, t, events), events
+        if leg.kind == "drive_out":
+            self._reverse = False
+            return self._drive(leg, obs, t, events, reverse=False, outward=True), events
         if leg.kind in ("drive_in", "reverse_out"):
             if self._reverse is None:
                 self._reverse = leg.kind == "reverse_out"
@@ -184,6 +227,9 @@ class LegExecutor:
         self._last_side = self._last_front = None
         self._held_capture = False
         self._reverse = None
+        self._shoot_since = None
+        self._spin_start = self._spin_done_t = None
+        self._last_check = None
 
     def _finish(self, events: list[dict], **info) -> None:
         events.append({"type": "leg_done", "index": self.i, "leg": self.legs[self.i].__dict__,
@@ -207,10 +253,11 @@ class LegExecutor:
             self._finish(events, held_s=round(t - self._t0, 2))
         return [0.0, 0.0]
 
-    def _drive(self, leg: Leg, obs, t: float, events: list[dict], reverse: bool) -> list[float]:
+    def _drive(self, leg: Leg, obs, t: float, events: list[dict], reverse: bool, outward: bool = False) -> list[float]:
         c = self.cfg
         self.aisle = leg.aisle_id or self.aisle
-        remaining = (self.metre - leg.target_metre) if reverse else (leg.target_metre - self.metre)
+        decreasing = reverse or outward                       # metre falls when backing up or driving out after a turn
+        remaining = (self.metre - leg.target_metre) if decreasing else (leg.target_metre - self.metre)
         if remaining <= c.stop_lead_m:
             err = self.metre - leg.target_metre
             self._finish(events, error_m=round(err, 3), within_tolerance=abs(err) <= c.tolerance_m)
@@ -239,7 +286,21 @@ class LegExecutor:
             return self._terminal("stuck", f"no progress for {c.stuck_window_s:.0f} s with wheels commanded", events)
         yaw = wall_yaw(ranges, angles, c.wall_max_m)
         if yaw is None:
-            yaw = math.radians((self.heading - INTO_AISLE_HEADING_DEG + 180) % 360 - 180)
+            ref = INTO_AISLE_HEADING_DEG + (180.0 if outward else 0.0)
+            yaw = math.radians((self.heading - ref + 180) % 360 - 180)
+        if not decreasing and not self._pose_check(ranges, angles, yaw, t, events):
+            return self._terminal("aborted", "position disagreement: odometry vs LiDAR end wall beyond "
+                                  f"{c.pose_correct_max_m:.1f} m, waiting for help", events)
+        if c.stop_to_shoot and not reverse:
+            due = due_cameras(self.metre, self._last_side, self._last_front, c.side_step_m)
+            if any(cam != FRONT_CAMERA for cam in due):
+                if self._shoot_since is None:
+                    self._shoot_since = t
+                if t - self._shoot_since < c.shoot_settle_s:
+                    self._anchor = (t, self.metre)            # standing still on purpose: not stuck
+                    return [0.0, 0.0]
+                self._capture(due, t, "inspect", events)
+                self._shoot_since = None
         damp = max(-c.controller.max_diff_rad_s, min(c.controller.max_diff_rad_s, -c.k_heading * yaw))
         cmd = [cmd[0] - damp / 2, cmd[1] + damp / 2]
         scale = max(1.0, abs(cmd[0]) / MAX_WHEEL_RAD_S, abs(cmd[1]) / MAX_WHEEL_RAD_S)
@@ -248,8 +309,62 @@ class LegExecutor:
             if self._last_front is None or abs(self.metre - self._last_front) >= 2.0 - 1e-9:
                 self._capture((FRONT_CAMERA,), t, "navigate", events)
         else:
-            self._capture(due_cameras(self.metre, self._last_side, self._last_front), t, "inspect", events)
+            self._capture(due_cameras(self.metre, self._last_side, self._last_front, c.side_step_m), t, "inspect", events)
         return [cmd[0] * frac, cmd[1] * frac]
+
+    def _pose_check(self, ranges, angles, yaw: float, t: float, events: list[dict]) -> bool:
+        """Compare odometry with the far end wall seen by the LiDAR (map landmark); correct small drift, report all.
+        Returns False when the two disagree by more than pose_correct_max_m."""
+        c = self.cfg
+        if c.end_wall_metre is None or abs(math.degrees(yaw)) > c.pose_check_max_yaw_deg:
+            return True
+        if self._last_check is not None and abs(self.metre - self._last_check) < c.pose_check_every_m:
+            return True
+        r = front_wall_range(ranges, angles)
+        if r is None or r > c.pose_check_max_range_m:
+            return True
+        lidar_metre = c.end_wall_metre - c.lidar_ahead_m - r * math.cos(yaw)
+        err = self.metre - lidar_metre
+        self._last_check = self.metre
+        ok = abs(err) <= c.pose_correct_max_m
+        events.append({"type": "pose_check", "landmark": "end_wall", "odometry_metre": round(self.metre, 3),
+                       "lidar_metre": round(lidar_metre, 3), "error_m": round(err, 3), "corrected": ok, "t": t})
+        if ok and hasattr(self.pose, "correct"):
+            self.pose.correct(lidar_metre)
+            self.metre = lidar_metre
+        return ok
+
+    def _turn(self, leg: Leg, obs, t: float, events: list[dict]) -> list[float]:
+        """Spin 180 deg in place on the gyro, refuse if the swept circle is not clear, then verify with the LiDAR."""
+        c = self.cfg
+        self.aisle = leg.aisle_id or self.aisle
+        ranges, angles = scan_from_obs(obs, c.lidar_forward_rad)
+        if self._spin_start is None:
+            ok, closest = spin_clearance_ok(ranges, angles, c.lidar_ahead_m, c.spin_radius_m + c.spin_margin_m, 0.25)
+            if not ok:
+                return self._terminal("aborted", f"no room to turn: obstacle {closest:.2f} m from centre "
+                                      f"(needs {c.spin_radius_m + c.spin_margin_m:.2f} m)", events)
+            self._spin_start = self.heading
+            events.append({"type": "turn_start", "heading_deg": round(self.heading, 1), "closest_m": round(closest, 3), "t": t})
+        turned = self.heading - self._spin_start
+        remaining = 180.0 - turned
+        if self._spin_done_t is None:
+            if abs(remaining) > c.spin_tolerance_deg:
+                w = c.spin_wheel_rad_s * max(0.25, min(1.0, abs(remaining) / 30.0)) * (1 if remaining > 0 else -1)
+                self._anchor = (t, self.metre)
+                return [-w, w]                                    # left turn: right wheel forward
+            self._spin_done_t = t
+        if t - self._spin_done_t < 0.5:                           # settle, then check alignment with the bed walls
+            return [0.0, 0.0]
+        lidar_yaw = wall_yaw(ranges, angles, c.wall_max_m)
+        lidar_ok = lidar_yaw is not None and abs(math.degrees(lidar_yaw)) <= c.spin_lidar_max_yaw_deg
+        events.append({"type": "turn_check", "gyro_turned_deg": round(turned, 1),
+                       "lidar_yaw_deg": None if lidar_yaw is None else round(math.degrees(lidar_yaw), 2),
+                       "ok": lidar_ok, "t": t})
+        if not lidar_ok:
+            return self._terminal("aborted", "turn not verified by LiDAR (bed walls not parallel)", events)
+        self._finish(events, turned_deg=round(turned, 1))
+        return [0.0, 0.0]
 
     def _capture(self, cameras, t: float, purpose: str, events: list[dict]) -> None:
         for cam in cameras:

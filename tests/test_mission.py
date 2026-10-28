@@ -28,10 +28,16 @@ def test_point_at_runs_from_door_into_house():
         a.point_at(40.0)
 
 
-def test_survey_house_has_no_uturn_and_reports_skipped():
+def test_survey_house_turns_around_in_the_wide_aisle_and_reports_skipped():
     m = AisleMap.load(MAP)
     legs, skipped = survey_house(m)
     kinds = [l.kind for l in legs]
-    assert kinds == ["transit", "drive_in", "reverse_out", "dock"]
+    assert kinds == ["transit", "drive_in", "turn_around", "drive_out", "dock"]     # 1.27 m aisle fits a 1.04 m spin
     assert {a.id for a in skipped} == {"tunnel-09/aisle-01", "tunnel-09/aisle-03"}
-    assert abs(coverage_distance_m(legs, m) - (38.04 + 38.04 + 2.0)) < 0.05
+    assert abs(coverage_distance_m(legs, m) - 2 * (38.04 - 0.8) - 0.5) < 0.05
+
+
+def test_narrow_or_no_turn_survey_reverses_out():
+    m = AisleMap.load(MAP)
+    assert [l.kind for l in survey_aisle(m, "tunnel-09/aisle-02", turnaround=False)] == ["transit", "drive_in", "reverse_out"]
+    assert m.get("tunnel-09/aisle-02").turnable() and not m.get("tunnel-09/aisle-01").traversable()

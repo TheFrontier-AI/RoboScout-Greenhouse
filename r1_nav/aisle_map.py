@@ -1,10 +1,12 @@
 """Aisle map of one greenhouse, loaded from the team's r1-aisle-map.json (house-local metres, Z up, door at +Y)."""
 from __future__ import annotations
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
 ROBOT_WIDTH_M = 0.528          # R180 visual bounds (robot_design/.../visual_bounds.json)
+ROBOT_LENGTH_M = 0.75          # bumper to bumper (BODY_HALF_LEN 0.375)
 SIDE_MARGIN_M = 0.06           # required clearance each side
 
 
@@ -24,6 +26,11 @@ class Aisle:
 
     def traversable(self, robot_width_m: float = ROBOT_WIDTH_M, margin_m: float = SIDE_MARGIN_M) -> bool:
         return self.clearance_m >= robot_width_m + 2 * margin_m
+
+    def turnable(self, robot_width_m: float = ROBOT_WIDTH_M, robot_length_m: float = ROBOT_LENGTH_M,
+                 margin_m: float = SIDE_MARGIN_M) -> bool:
+        """Room to spin 180 deg in place: the body's swept circle (half-diagonal radius) plus margin both sides."""
+        return self.clearance_m >= 2 * math.hypot(robot_width_m / 2, robot_length_m / 2) + 2 * margin_m
 
     def point_at(self, metre: float) -> tuple[float, float, float]:
         """House-local point `metre` metres into the aisle from its head (0 = head)."""
