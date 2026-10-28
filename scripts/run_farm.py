@@ -63,7 +63,8 @@ def main() -> int:
     ap.add_argument("--outbox", type=Path, default=Path("/runs/outbox"))
     ap.add_argument("--plant-res", default=os.environ.get("R1_PLANT_RES", "1080x1920"))
     ap.add_argument("--crop-res", default="2k", choices=("2k", "8k"))
-    ap.add_argument("--chase-every", type=int, default=2); ap.add_argument("--front-every", type=int, default=10)
+    ap.add_argument("--chase-every", type=int, default=2); ap.add_argument("--front-every", type=int, default=5)
+    ap.add_argument("--front-res", default="1280x720", help="front camera (navigation + visual SLAM / MapAnything input)")
     ap.add_argument("--max-sim-s", type=float, default=7200.0); ap.add_argument("--idle-exit-s", type=float, default=600.0)
     ap.add_argument("--only", choices=("09", "10", "both"), default="both", help="survey just one house (testing)")
     ap.add_argument("--max-steps", type=int, default=0, help="stop after N control steps (testing)")
@@ -88,7 +89,8 @@ def main() -> int:
         import numpy as np
         Env = make_fast_env(GatedRenderSensorEnv)
         w, h = (int(v) for v in a.plant_res.split("x"))
-        env = Env(app, stage_path=STAGE, aisle_half_width=0.38, body_half_length=0.375, plant_cameras=True, plant_resolution=(w, h))
+        env = Env(app, stage_path=STAGE, aisle_half_width=0.38, body_half_length=0.375, plant_cameras=True, plant_resolution=(w, h),
+                  front_resolution=tuple(int(v) for v in a.front_res.split("x")))
         houses = HOUSES if a.only == "both" else [x for x in HOUSES if x[0].startswith(f"tunnel-{a.only}")]
         report = prepare_farm_run(env.stage, tunnels=tuple(x[0][7:9] for x in HOUSES), res=a.crop_res, log=log)
         (rec / "scene_prep.json").write_text(json.dumps(report, indent=1, default=str))

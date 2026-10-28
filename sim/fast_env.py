@@ -21,11 +21,18 @@ def make_fast_env(base_cls):
         physics_render = True                                    # the C1 LiDAR bins need a render tick per physics step;
                                                                  # all camera products are disabled, so this is cheap
 
-        def __init__(self, *a, **kw):
+        def __init__(self, *a, front_resolution=None, **kw):
             super().__init__(*a, **kw)
+            self.front_resolution = front_resolution             # the base env's 320x180 is too small for visual SLAM;
             self.want = {"side": False, "front": False, "extra": False}
             self.extra_products = []                             # hydra textures of runner-owned render products
             self.render_seconds = 0.0
+
+        def reset(self, *a, **kw):
+            out = super().reset(*a, **kw)
+            if self.front_resolution and tuple(self.camera.get_resolution()) != tuple(self.front_resolution):
+                self.camera.set_resolution(tuple(self.front_resolution))   # render product exists only after reset
+            return out
 
         def set_evaluator(self, evaluator):
             self.evaluator = evaluator
