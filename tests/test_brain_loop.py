@@ -22,4 +22,12 @@ def test_revisit_confirms_or_clears():
     s = Spot("tunnel-09/aisle-02", 15.0, state="revisiting")
     judge_revisit([f(15.2, "disease", purpose="revisit")], s); assert s.state == "confirmed"
     s2 = Spot("tunnel-09/aisle-02", 8.0, state="revisiting")
-    judge_revisit([f(8.1, "healthy", purpose="revisit")], s2); assert s2.state == "cleared"
+    judge_revisit([f(8.1, "healthy", purpose="revisit")] * 6, s2); assert s2.state == "cleared"
+
+
+def test_early_healthy_shots_from_other_bed_do_not_clear():
+    # live run 2026-10-28: left-bed revisit shots (healthy) arrived before the right-bed ones (disease)
+    s = Spot("tunnel-09/aisle-02", 15.0, state="revisiting")
+    shots = [f(15.03, "healthy", purpose="revisit")] * 3
+    judge_revisit(shots, s); assert s.state == "revisiting"
+    judge_revisit(shots + [f(15.03, "disease", 0.89, purpose="revisit")], s); assert s.state == "confirmed"

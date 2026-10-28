@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))     # repo root, fo
 
 API = os.environ.get("ROBOT_API_URL", "http://127.0.0.1:8090")
 MERGE_M, DISEASE_CONF, BATTERY_MIN = 1.0, 0.6, 25
+REVISIT_SHOTS = 6             # all side cameras fire on a revisit hold (r1_nav.cameras.SIDE_CAMERAS)
 
 
 def _get(path: str):
@@ -61,11 +62,16 @@ def cluster(findings: list[dict], spots: list[Spot]) -> list[Spot]:
     return [s for s in spots if s.state == "new" and (s.best >= DISEASE_CONF or s.n_suspect >= 2)]
 
 
-def judge_revisit(findings: list[dict], spot: Spot) -> None:
+def judge_revisit(findings: list[dict], spot: Spot, need: int = REVISIT_SHOTS) -> None:
+    """Decide only once every side camera's revisit shot is back (they arrive one by one; an early healthy
+    shot from the other bed must not clear the spot). Any disease/suspect revisit shot confirms it."""
     near = [f for f in findings if f.get("purpose") == "revisit" and f.get("aisle") == spot.aisle
             and abs(f.get("metre", 1e9) - spot.metre) <= MERGE_M]
-    if near:
-        spot.state = "confirmed" if any(f.get("status") in ("disease", "suspect") for f in near) else "cleared"
+    if any(f.get("status") in ("disease", "suspect") for f in near):
+        spot.state = "confirmed"
+        spot.labels += [i.get("label", "?") for f in near for i in f.get("issues", [])]
+    elif len(near) >= need:
+        spot.state = "cleared"
 
 
 def wait_idle(poll_s: float) -> dict:
@@ -77,7 +83,7 @@ def wait_idle(poll_s: float) -> dict:
 
 
 def run(house: str, poll_s: float = 3.0, survey_until: float | None = None) -> str:
-    since, findings, spots, stuck = 0, [], [], 0
+    since, findings, spots, stuck, quiet = 0, [], [], 0, 0
 
     def send(cmd: dict, why: str) -> dict:
         cmd["reasoning"] = _nemotron(f"In one sentence, explain this robot command to a farmer: {json.dumps(cmd)}. Context: {why}", why)
@@ -109,13 +115,24 @@ def run(house: str, poll_s: float = 3.0, survey_until: float | None = None) -> s
         batt = st.get("battery")
         if batt is not None and (batt * 100 if batt <= 1 else batt) < BATTERY_MIN:   # accept 0–1 or %
             break
-        if st.get("state") in ("done", "idle") and not st.get("legs_remaining") and \
-                not any(s.state == "revisiting" for s in spots):
+        robot_idle = st.get("state") in ("done", "idle") and not st.get("legs_remaining")
+        quiet = quiet + 1 if robot_idle and not res["findings"] else 0
+        if quiet >= 3:                        # robot parked, no shots arriving: judge revisits on what we have
+            for s in [s for s in spots if s.state == "revisiting"]:
+                judge_revisit(findings, s, need=1)
+                if s.state == "revisiting":
+                    s.state = "uncertain"
+        if robot_idle and not any(s.state == "revisiting" for s in spots):
             break
     send({"cmd": "return_to_dock"}, "inspection finished")
     summary = [{"aisle": s.aisle, "metre": s.metre, "labels": sorted(set(s.labels)), "state": s.state} for s in spots]
-    report = _nemotron("Write a short farmer report (Thai then English) from these greenhouse inspection spots: "
-                       + json.dumps(summary, ensure_ascii=False), json.dumps(summary, ensure_ascii=False, indent=1))
+    report = _nemotron(
+        "Write a short farmer report (Thai then English) from these greenhouse inspection spots. Spot states mean: "
+        "confirmed = the robot re-inspected and still sees the symptoms (Thai: ยืนยันว่าพบอาการ); "
+        "cleared = the re-inspection did not see the symptoms (Thai: ตรวจซ้ำแล้วไม่พบอาการ — NOT treated/removed); "
+        "revisiting/new = not yet re-inspected. Never claim the disease was treated or removed. List the labels the "
+        "model reported, recommend a person checks the plant, and note this is not a lab diagnosis. Spots: "
+        + json.dumps(summary, ensure_ascii=False), json.dumps(summary, ensure_ascii=False, indent=1))
     print(report)
     return report
 
