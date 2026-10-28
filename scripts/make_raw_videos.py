@@ -3,7 +3,8 @@
   side_left.mp4    robot-left plant camera (1080x1920), PNG frames kept for detection datasets
   side_right.mp4   robot-right plant camera (1080x1920)
   front.mp4        front camera
-  lidar.mp4        planar LiDAR scan, robot-centred top view (forward = up), colour = range
+  lidar.mp4        planar LiDAR scan, 3-D chase view with fading trail and glow (scripts/lidar_viz.py)
+  lidar_top.mp4    the same scans, robot-centred top view (forward = up), colour = range
   slam_map.mp4     occupancy map built from the LiDAR scans along the route (known poses: mapping, not pose estimation)
 
   python3 scripts/make_raw_videos.py --run <render_cinematic out dir> --out <dir> [--fps 20]"""
@@ -101,8 +102,10 @@ def main():
         lidar_frame(r).save(tmp_l / f"{i:05d}.png")
         grid.add(r); trail.append(tuple(r["lidar"]["origin"]))
         grid.image(trail).save(tmp_m / f"{i:05d}.png")
-    encode(str(tmp_l / "%05d.png"), a.out / "lidar.mp4", a.fps); encode(str(tmp_m / "%05d.png"), a.out / "slam_map.mp4", a.fps)
+    encode(str(tmp_l / "%05d.png"), a.out / "lidar_top.mp4", a.fps); encode(str(tmp_m / "%05d.png"), a.out / "slam_map.mp4", a.fps)
     grid.image(trail).save(a.out / "slam_map_final.png")
+    subprocess.run(["python3", str(Path(__file__).with_name("lidar_viz.py")), "--run", str(a.run), "--out", str(a.out),
+                    "--fps", str(a.fps)], check=True)
     print("ok lidar, slam_map", len(recs), "scans")
 
 
