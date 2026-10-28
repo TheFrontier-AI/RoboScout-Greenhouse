@@ -92,3 +92,14 @@ def test_inspect_gives_up_after_one_retry():
 def test_rejects_unknown_image_format():
     with pytest.raises(ValueError):
         inspect_image(b"GIF89a....", MAST, client=FakeClient([]), model="m")
+
+
+def test_two_eyes_most_severe_wins_and_votes_are_kept():
+    from cloud.eyes.inspect import Finding, merge_findings
+    cos = Finding(status="healthy", summary="looks fine")
+    nem = Finding(status="suspect", issues=[{"label": "leaf_spots", "confidence": 0.5, "evidence": "speckled leaves"}],
+                  summary="possible spots")
+    m = merge_findings({"Cosmos-Reason2-8B": cos, "Nemotron-3.5-Super-VL": nem})
+    assert m.status == "suspect" and m.meta["votes"] == {"Cosmos-Reason2-8B": "healthy", "Nemotron-3.5-Super-VL": "suspect"}
+    assert m.issues[0].evidence.startswith("[Nemotron-3.5-Super-VL]")
+    assert merge_findings({"a": Finding(status="not_plant"), "b": Finding(status="healthy")}).status == "healthy"

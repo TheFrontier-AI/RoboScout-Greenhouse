@@ -96,7 +96,10 @@ class R180Sim:
                 sys.path.insert(0, str(p))
         if stage == "realism":                                    # Astra's review runtime goes with the review scene
             sys.path.insert(0, str(d / REVIEW_RUNTIME_DIR))
-            from sensor_env_review import SensorStopEnv           # noqa: E402
+            if os.environ.get("R1_RUNTIME", "gated") == "gated":  # handoff 28 Oct: gated passed 147-step approach/stop
+                from gated_render_sensor_env import GatedRenderSensorEnv as SensorStopEnv  # noqa: E402
+            else:                                                 # R1_RUNTIME=review: render-every-update baseline
+                from sensor_env_review import SensorStopEnv       # noqa: E402
         else:
             from sensor_env import SensorStopEnv                  # noqa: E402  (Isaac; needs a running SimulationApp)
         stage_path = Path(STAGES.get(stage, stage))

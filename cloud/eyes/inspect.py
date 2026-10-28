@@ -206,9 +206,42 @@ def make_client():
                   api_key=os.environ.get("EYES_API_KEY", "EMPTY"), timeout=180.0)
 
 
+_RANK = {"not_plant": 0, "healthy": 1, "suspect": 2, "disease": 3}
+
+
+def merge_findings(found: dict[str, Finding]) -> Finding:
+    """Two-eye screening: the most severe status wins (any 'suspect' sends HERMES back for a closer look); issues
+    are kept with the model named in the evidence; meta.votes records each model's status."""
+    worst = max(found.values(), key=lambda f: _RANK[f.status])
+    issues = [i.model_copy(update={"evidence": f"[{name}] {i.evidence}".strip()})
+              for name, f in found.items() for i in f.issues]
+    meta = {**worst.meta, "votes": {name: f.status for name, f in found.items()}}
+    summary = " | ".join(f"{name}: {f.summary}" for name, f in found.items() if f.summary)
+    return Finding(status=worst.status, issues=issues, summary=summary, nav=worst.nav, meta=meta)
+
+
 def inspect_image(image_bytes: bytes, meta: dict, client=None, model: str | None = None) -> Finding:
-    """One frame -> Finding. Retries once with a correction message if the reply does not parse."""
-    client = client or make_client()
+    """One frame -> Finding. With EYES2_BASE_URL/EYES2_MODEL set (and no explicit client), side-camera frames also go
+    to a second model and the results are merged (live run 28 Oct: Cosmos-Reason2-8B missed a subtle leaf-spot test
+    plant that Nemotron-3.5-Super-VL flagged as suspect). A failing second eye never blocks the first."""
+    if client is None and model is None and os.environ.get("EYES2_BASE_URL") and meta.get("camera") != FRONT_CAMERA:
+        from concurrent.futures import ThreadPoolExecutor
+        from openai import OpenAI
+        second = OpenAI(base_url=os.environ["EYES2_BASE_URL"], api_key=os.environ.get("EYES2_API_KEY", "EMPTY"), timeout=180.0)
+        m1 = os.environ.get("EYES_MODEL", DEFAULT_MODEL); m2 = os.environ["EYES2_MODEL"]
+        with ThreadPoolExecutor(2) as ex:
+            f1 = ex.submit(_inspect_one, image_bytes, meta, make_client(), m1)
+            f2 = ex.submit(_inspect_one, image_bytes, meta, second, m2)
+            first = f1.result()
+            try:
+                return merge_findings({m1.split("/")[-1]: first, m2.split("/")[-1]: f2.result()})
+            except Exception:
+                return first
+    return _inspect_one(image_bytes, meta, client or make_client(), model)
+
+
+def _inspect_one(image_bytes: bytes, meta: dict, client, model: str | None = None) -> Finding:
+    """One frame, one model. Retries once with a correction message if the reply does not parse."""
     model = model or os.environ.get("EYES_MODEL", DEFAULT_MODEL)
     url = f"data:{_mime(image_bytes)};base64,{base64.b64encode(image_bytes).decode()}"
     messages = [{"role": "system", "content": "You are a helpful assistant."},
