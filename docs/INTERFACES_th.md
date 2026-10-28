@@ -1,14 +1,47 @@
 # สัญญาส่งต่อระหว่างส่วน
 
-## 1) จาก central_brain → r1_greenhouse_nav (คำสั่ง)
-JSON: `{"cmd": "go_to", "house": "tunnel-09", "aisle": "tunnel-09/aisle-02", "metre": 12.0}` |
-`{"cmd": "survey_house", "house": "tunnel-09"}` | `{"cmd": "return_to_dock"}` | `{"cmd": "stop"}`
-ตอบกลับ: `{"status": "accepted|rejected|done|aborted", "reason": "...", "pose": {"aisle": ..., "metre": ...}}`
+ทุกส่วนคุยกันผ่าน **robot API** (`agent/robot_api.py`, พอร์ต 8090) ซึ่งเก็บทุกอย่างลง data dir สำหรับแดชบอร์ดด้วย
+```
+HERMES (Nemotron @ Token Factory) ──POST /command──▶ robot API ◀──GET /next_command── หุ่น (Isaac sim / Jetson)
+          ▲ GET /status /findings /map                  │  ▲ POST /status, POST /frame
+          └─────────────────────────────────────────────┤  │
+                                     Cosmos Reason ◀────┘ (ภาพกล้องข้าง → findings)
+```
 
-## 2) จาก r1_greenhouse_nav → anomaly detection (ภาพ)
-ทุก 0.5 ม. หรือเมื่อหยุด: `{"ts": float, "house": str, "aisle": str, "metre": float, "heading_deg": float,
-"camera": "front_rgb|plant_left_mid|...", "image": <jpeg bytes หรือ path>, "frame_id": int}`
-repo นี้ไม่ตีความภาพ; ผลตรวจจับส่งไป central_brain ไม่ย้อนกลับมาที่ตัวเดิน
+## 1) HERMES → หุ่น (เป้าหมายเท่านั้น ห้ามสั่งล้อ)
+`POST /command` JSON, ใส่ `reasoning` สั้น ๆ ทุกครั้ง (แสดงบนแดชบอร์ด/วิดีโอ):
+| cmd | ฟิลด์ | ความหมาย |
+|---|---|---|
+| `discover_house` | – | โรงเรือนที่ไม่มีผัง: SLAM สร้างแผนที่ + หาช่องทางเดินเอง |
+| `survey_house` | `house` | เดินครบทุกทางเดินที่ผ่านได้ (เข้า–ถอยออก) |
+| `survey_aisle` | `aisle` | ทางเดินเดียว หัวถึงท้าย |
+| `go_to` | `aisle`, `metre` | ไปหยุดที่จุด (metre 0 = หัวทางเดินฝั่งประตู) |
+| `revisit` | `aisle`, `metre` | ไปแล้วหยุดนิ่ง 3 วินาที ให้กล้องข้างทั้ง 6 ถ่าย (purpose=revisit) |
+| `return_to_dock` / `stop` | – | กลับแท่น / หยุดทันที (ล้างคิว) |
+| `set_map` | `path` | ใช้ผังที่คนยืนยันแล้วหลัง discover |
 
-## 3) จาก r1_greenhouse_nav → หุ่น (sim หรือจริง)
-`wheel_cmd = [left_rad_s, right_rad_s]` ที่ 20 Hz; e-stop และหยุดเมื่อมีสิ่งกีดขวางทำในชั้นนี้ ไม่พึ่งเครือข่าย
+ตอบกลับ: `{"status": "accepted|rejected", "reason": "...", "legs": [...]}`; หุ่นตรวจทุกคำสั่งกับผัง (`r1_nav/commands.py`)
+
+## 2) หุ่น → คลาวด์ (ภาพ + ตำแหน่ง + สถานะ)
+**กล้อง 7 ตัว** (`r1_nav/cameras.py`): ข้าง 6 ตัว `mast_{left,right}_{low,mid,high}` ดูต้นไม้ ถ่ายทุก 0.5 ม.;
+หน้า 1 ตัว `front` ไว้นำทาง ถ่ายทุก 2 ม. ให้คลาวด์ตรวจว่าหุ่นเดิน/หมุนถูก
+
+`POST /frame` multipart: `meta` (JSON) + `image` (JPEG)
+```json
+{"ts": 0.0, "house": "tunnel-09", "aisle": "tunnel-09/aisle-02", "metre": 15.0, "heading_deg": 270.0,
+ "camera": "mast_left_mid", "frame_id": 123, "pose_confidence": 0.92, "purpose": "inspect|navigate|revisit"}
+```
+`heading_deg` = มุมหัวหุ่นในกรอบโรงเรือน วัดทวนเข็มจากแกน +X (เดินจากประตูเข้าไปทาง −Y = −90)
+`pose_confidence` มาจาก SLAM; ต่ำกว่า 0.5 → ไม่ส่งตรวจโรคและห้ามปักหมุดที่เมตรนั้น
+
+`POST /status`: `{"state": "idle|running|done|stuck|aborted", "cmd": ..., "aisle": ..., "metre": ..., "heading_deg": ...,
+"pose_confidence": ..., "battery": <เปอร์เซ็นต์ 0–100>, "legs_remaining": n}`
+
+## 3) Cosmos Reason → findings
+ต่อภาพกล้องข้าง: `{"status": "healthy|suspect|disease|not_plant", "issues": [{"label", "confidence", "bbox_norm", "evidence"}], "summary"}`
+`bbox_norm` = `[x0, y0, x1, y1]` สัดส่วน 0–1 ของภาพ (มุมซ้ายบน–ขวาล่าง) หรือ `null`
+อ่านได้ที่ `GET /findings?since=N`
+
+## 4) ชั้นล่างบนตัวหุ่น (ไม่พึ่งเครือข่าย)
+`wheel_cmd = [left_rad_s, right_rad_s]` ที่ 20 Hz; SAFETY (e-stop, หยุดเมื่อมีสิ่งกีดขวาง < 0.6 ม., STUCK) ทำบนหุ่นเสมอ
+เน็ตหลุด: เดินช่วงปัจจุบันให้จบ → ถอยออกรอที่หัวทางเดิน → เก็บภาพไว้ใน outbox แล้วส่งเมื่อต่อได้

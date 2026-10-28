@@ -1,0 +1,160 @@
+"""Robot command hub: HERMES (cloud) posts goals, the robot (sim or Jetson) pulls them, pushes status and camera frames.
+Side-camera frames are sent to Cosmos Reason (cloud/eyes) when EYES_BASE_URL is set. Everything is also written to a data dir
+in the dashboard format (status.json, frames.jsonl, findings.jsonl, decisions.jsonl, aisle_map.json). Stdlib only.
+
+  python3 agent/robot_api.py --data runs/demo --map data/tunnel09_aisle_map_v18.json --port 8090
+
+HERMES side:  POST /command {cmd...,"reasoning": "..."}  GET /status  GET /findings?since=N  GET /map  GET /health
+Robot side:   GET /next_command (204 if none)  POST /status {..}  POST /frame (multipart: meta JSON + image jpeg)"""
+from __future__ import annotations
+import argparse, json, os, queue, shutil, sys, threading, time
+from email.parser import BytesParser
+from email.policy import HTTP
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import urlparse, parse_qs
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from r1_nav.aisle_map import AisleMap            # noqa: E402
+from r1_nav.commands import plan_command          # noqa: E402
+from r1_nav.cameras import SIDE_CAMERAS           # noqa: E402
+
+
+class Hub:
+    def __init__(self, data: Path, map_path: Path | None):
+        self.data, self.lock = data, threading.Lock()
+        (data / "frames").mkdir(parents=True, exist_ok=True)
+        self.amap = AisleMap.load(map_path) if map_path else None
+        if map_path:
+            shutil.copyfile(map_path, data / "aisle_map.json")
+        self.commands: queue.Queue[dict] = queue.Queue()
+        self.status: dict = {"state": "idle", "ts": time.time()}
+        self.findings: list[dict] = []
+        self.inspect_q: queue.Queue[tuple[bytes, dict]] = queue.Queue()
+        threading.Thread(target=self._inspect_worker, daemon=True).start()
+        env = os.environ.get                       # dashboard service chips (configured, not health-checked)
+        (data / "services.json").write_text(json.dumps({
+            "nemotron": {"live": bool(env("NEBIUS_API_KEY")), "model": env("BRAIN_MODEL", ""), "detail": "Nebius Token Factory"},
+            "cosmos": {"live": bool(env("EYES_BASE_URL")), "model": env("EYES_MODEL", ""), "detail": env("EYES_BASE_URL", "")}}))
+
+    def _append(self, name: str, row: dict) -> None:
+        with self.lock, open(self.data / name, "a") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+    def command(self, cmd: dict) -> dict:
+        if cmd.get("cmd") == "set_map":            # after a human confirms the discovered map
+            p = Path(cmd["path"]); self.amap = AisleMap.load(p); shutil.copyfile(p, self.data / "aisle_map.json")
+            reply = {"status": "accepted", "reason": f"map {self.amap.house_id} loaded", "legs": []}
+        else:
+            reply = plan_command(cmd, self.amap).to_dict()
+            if reply["status"] == "accepted":
+                if cmd["cmd"] == "stop":           # stop jumps the queue
+                    with self.commands.mutex:
+                        self.commands.queue.clear()
+                self.commands.put(cmd)
+        self._append("decisions.jsonl", {"ts": time.time(), "reasoning": cmd.get("reasoning", ""),
+                                         "command": {k: v for k, v in cmd.items() if k != "reasoning"},
+                                         "reply": reply["status"], "reason": reply["reason"]})
+        return reply
+
+    def set_status(self, st: dict) -> None:
+        st = {**st, "ts": st.get("ts", time.time())}
+        with self.lock:
+            self.status = st
+            (self.data / "status.json").write_text(json.dumps(st, ensure_ascii=False))
+
+    def frame(self, meta: dict, image: bytes) -> dict:
+        rel = f"frames/{meta.get('frame_id', int(time.time() * 1000))}_{meta.get('camera', 'cam')}.jpg"
+        (self.data / rel).write_bytes(image)
+        self._append("frames.jsonl", {**meta, "image_path": rel})
+        if os.environ.get("EYES_BASE_URL") and meta.get("camera") in SIDE_CAMERAS and meta.get("pose_confidence", 1) >= 0.5:
+            self.inspect_q.put((image, {**meta, "image_path": rel}))
+        return {"stored": rel, "inspect_queued": self.inspect_q.qsize()}
+
+    def _inspect_worker(self) -> None:
+        while True:
+            image, meta = self.inspect_q.get()
+            try:
+                from cloud.eyes.inspect import inspect_image          # lazy: needs openai + endpoint
+                f = inspect_image(image, meta)
+                f = f.model_dump() if hasattr(f, "model_dump") else dict(f)
+                row = {k: meta.get(k) for k in ("frame_id", "aisle", "metre", "camera", "image_path", "purpose")} | f
+            except Exception as e:                                     # keep the hub alive if the endpoint is down
+                row = {k: meta.get(k) for k in ("frame_id", "aisle", "metre", "camera", "image_path")} | \
+                      {"status": "error", "issues": [], "summary": f"inspect failed: {e}"}
+            with self.lock:
+                self.findings.append(row)
+            self._append("findings.jsonl", row)
+
+
+def make_handler(hub: Hub):
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a):                 # quiet
+            pass
+
+        def _json(self, code: int, obj) -> None:
+            body = json.dumps(obj, ensure_ascii=False).encode()
+            self.send_response(code); self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+
+        def _body(self) -> bytes:
+            return self.rfile.read(int(self.headers.get("Content-Length", 0)))
+
+        def do_GET(self):
+            u = urlparse(self.path)
+            if u.path == "/health":
+                return self._json(200, {"ok": True, "map": hub.amap.house_id if hub.amap else None,
+                                        "eyes": bool(os.environ.get("EYES_BASE_URL"))})
+            if u.path == "/status":
+                return self._json(200, hub.status)
+            if u.path == "/map":
+                if not hub.amap:
+                    return self._json(200, {"house": None, "aisles": []})
+                return self._json(200, {"house": hub.amap.house_id, "aisles": [
+                    {"id": a.id, "label": a.label, "length_m": round(a.length_m, 2), "clearance_m": round(a.clearance_m, 3),
+                     "traversable": a.traversable()} for a in hub.amap.aisles]})
+            if u.path == "/findings":
+                since = int(parse_qs(u.query).get("since", ["0"])[0])
+                with hub.lock:
+                    rows = hub.findings[since:]
+                return self._json(200, {"next": since + len(rows), "findings": rows})
+            if u.path == "/next_command":
+                try:
+                    return self._json(200, hub.commands.get_nowait())
+                except queue.Empty:
+                    self.send_response(204); self.end_headers(); return
+            self._json(404, {"error": "not found"})
+
+        def do_POST(self):
+            path = urlparse(self.path).path
+            try:
+                if path == "/command":
+                    return self._json(200, hub.command(json.loads(self._body())))
+                if path == "/status":
+                    hub.set_status(json.loads(self._body())); return self._json(200, {"ok": True})
+                if path == "/frame":
+                    msg = BytesParser(policy=HTTP).parsebytes(
+                        b"Content-Type: " + self.headers["Content-Type"].encode() + b"\r\n\r\n" + self._body())
+                    parts = {p.get_param("name", header="content-disposition"): p.get_payload(decode=True)
+                             for p in msg.iter_parts()}
+                    return self._json(200, hub.frame(json.loads(parts["meta"]), parts["image"]))
+            except (KeyError, ValueError, TypeError) as e:
+                return self._json(400, {"error": str(e)})
+            self._json(404, {"error": "not found"})
+    return H
+
+
+def serve(data: Path, map_path: Path | None, host: str = "127.0.0.1", port: int = 8090) -> ThreadingHTTPServer:
+    hub = Hub(data, map_path)
+    srv = ThreadingHTTPServer((host, port), make_handler(hub)); srv.hub = hub
+    return srv
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--data", default="runs/demo"); ap.add_argument("--map", default=None)
+    ap.add_argument("--host", default="127.0.0.1"); ap.add_argument("--port", type=int, default=8090)
+    a = ap.parse_args()
+    srv = serve(Path(a.data), Path(a.map) if a.map else None, a.host, a.port)
+    print(f"robot API on http://{a.host}:{a.port}  data={a.data}  map={a.map}")
+    srv.serve_forever()

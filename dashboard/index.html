@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R1 Greenhouse Scout</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32" width="32" height="32"><rect x="3" y="3" width="26" height="26" rx="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 22c0-7 5-12 12-12-1 7-5 12-12 12z" fill="currentColor"/><path d="M10 22l6-6" stroke="var(--bg)" stroke-width="1.6"/></svg>
+    </div>
+    <div>
+      <h1>R1 Greenhouse Scout <span class="house" id="house">—</span></h1>
+      <div class="sub">Autonomous plant inspection · หุ่นยนต์ตรวจพืชในโรงเรือนอัตโนมัติ</div>
+    </div>
+  </div>
+
+  <div class="robot-stats" id="robotStats">
+    <div class="stat"><span class="k">State <i>สถานะ</i></span><span class="v" id="sState">—</span></div>
+    <div class="stat"><span class="k">Aisle <i>ทางเดิน</i></span><span class="v" id="sAisle">—</span></div>
+    <div class="stat"><span class="k">Metre <i>ระยะ</i></span><span class="v mono" id="sMetre">—</span></div>
+    <div class="stat"><span class="k">Pose conf. <i>ความมั่นใจ</i></span><span class="v"><span class="meter"><span id="sConfBar"></span></span><span class="mono" id="sConf">—</span></span></div>
+    <div class="stat"><span class="k">Battery <i>แบตเตอรี่</i></span><span class="v mono" id="sBatt">—</span></div>
+    <div class="stat"><span class="k">Command <i>คำสั่ง</i></span><span class="v mono small" id="sCmd">—</span></div>
+  </div>
+
+  <div class="services" id="services" aria-label="Cloud services"></div>
+  <div class="conn" id="conn"><span class="dot"></span><span id="connText">connecting…</span></div>
+</header>
+
+<main class="grid">
+  <section class="card map-card">
+    <div class="card-head">
+      <h2>Greenhouse map <i>แผนที่โรงเรือน</i></h2>
+      <div class="legend">
+        <span><b class="lg aisle-ok"></b>Traversable aisle</span>
+        <span><b class="lg aisle-narrow"></b>Too narrow</span>
+        <span><b class="lg pin healthy"></b>Healthy</span>
+        <span><b class="lg pin suspect"></b>Suspect</span>
+        <span><b class="lg pin disease"></b>Disease</span>
+        <label class="toggle" id="slamToggleWrap" hidden><input type="checkbox" id="slamToggle" checked> SLAM overlay</label>
+      </div>
+    </div>
+    <div class="map-wrap" id="mapWrap">
+      <svg id="map" role="img" aria-label="Top-down greenhouse map"></svg>
+      <div class="map-empty" id="mapEmpty">Waiting for <code>aisle_map.json</code> · รอแผนที่</div>
+    </div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section class="card capture-card">
+    <div class="card-head">
+      <h2>Latest capture <i>ภาพล่าสุด</i></h2>
+      <span class="muted mono" id="captureMeta">—</span>
+    </div>
+    <div class="capture" id="capture"></div>
+  </section>
+
+  <div class="side">
+  <aside class="card detail-card">
+    <div class="card-head">
+      <h2>Finding <i>ผลการตรวจ</i></h2>
+      <span class="muted" id="detailHint">click a pin on the map · คลิกหมุดบนแผนที่</span>
+    </div>
+    <div id="detail" class="detail"><div class="empty">No findings yet · ยังไม่มีผลตรวจ</div></div>
+  </aside>
+
+  <aside class="card feed-card">
+    <div class="card-head">
+      <h2>HERMES decisions <i>การตัดสินใจของ HERMES</i></h2>
+      <span class="muted" id="feedCount"></span>
+    </div>
+    <ol id="feed" class="feed"></ol>
+  </aside>
+  </div>
+</main>
+
+<div class="lightbox" id="lightbox" hidden><figure><div class="lb-img" id="lbImg"></div><figcaption id="lbCap"></figcaption></figure></div>
+
+<script src="app.js"></script>
+</body>
+</html>

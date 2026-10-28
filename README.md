@@ -1,60 +1,68 @@
-# r1_greenhouse_nav — หุ่น R1 เดินสำรวจโรงเรือนให้ครบทุกทางเดิน
+# R1 Zero-Map Greenhouse Agent
 
-**โจทย์ (28 ต.ค. 2026):** ทำให้หุ่น R1 (รุ่น C2 / R180) เคลื่อนที่ในโรงเรือนมะเขือเทศได้จริง: สั่งไปจุดใดก็ได้ในโรงเรือน และ
-เดิน "ให้ครบ" ทุกทางเดินของโรงเรือนหนึ่งหลังในรอบเดียว ระหว่างเดินกล้องจะส่งภาพให้ระบบตรวจความผิดปกติซึ่ง **เป็นคนละส่วน**
-(repo นี้รับผิดชอบเฉพาะการเคลื่อนที่ และสัญญาส่งต่อภาพ ไม่ทำตัวตรวจจับ)
+**A greenhouse robot that enters a house it has never seen, maps it, finds sick plants, and decides by itself where to look again.**
+Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. Thai docs: [README_th.md](README_th.md).
 
-## ขอบเขต
-| ใน repo นี้ | ไม่อยู่ใน repo นี้ |
-|---|---|
-| ผังทางเดิน (aisle map) ของโรงเรือน | ตัวตรวจความผิดปกติจากภาพ (anomaly detection) |
-| ภารกิจ: ไปจุด X / เดินครบทุกทางเดิน / กลับแท่น | สมองส่วนกลาง LLM (อยู่ที่ `central_brain/farm_harness`) |
-| ตัวควบคุมเดินกลางทางเดินด้วย LiDAR + หยุดเมื่อมีสิ่งกีดขวาง | โมเดล 3 มิติฟาร์ม/หุ่น และวัสดุ (อยู่ที่ `robot_design/`) |
-| ตัวต่อกับ Isaac Sim (R180 env) และต่อไปคือหุ่นจริง (Jetson) | รายการจัดซื้อ (อยู่ที่ `r1_v3/MASTER_PROCUREMENT_REGISTER.csv`) |
+- **Brain — HERMES:** [Hermes Agent](https://github.com/NousResearch/hermes-agent) is the agent runtime, running **NVIDIA Nemotron 3** on **Nebius Token Factory**. It picks goals (survey, revisit, dock), never wheel speeds.
+- **Eyes:** **NVIDIA Cosmos Reason 2** on a **Nebius Serverless Endpoint** / RTX PRO 6000 VM. It inspects the 6 side-camera views of tomato plants and checks from the front camera that the robot moved as commanded.
+- **Cloud SLAM AI:** **Nebius GPU Jobs** run feed-forward 3-D reconstruction (MapAnything, VGGT fallback) on robot or drone video. The result is aligned to the greenhouse map.
+- **Robot (edge):** the R1 differential-drive robot, simulated in **NVIDIA Isaac Sim** in a digital twin built from our real farm. It runs a rule-based driver (BOOK), a SAFETY layer and MISSION legs that are identical for the real Jetson.
+- **Evaluation at scale:** Isaac Sim batch jobs randomise wet-floor friction, obstacles and start offsets, and report success rates against the acceptance criteria below.
 
-## ข้อเท็จจริงของสิ่งแวดล้อมที่กำหนดการออกแบบ (วัดจากโมเดล V18 — ยังไม่ได้วัดหน้างาน)
-- โรงเรือนที่ 3 (`tunnel-09`): กว้าง 6.5 ม. ยาว 38.8 ม. มี 4 แปลงยกสูง → **3 ทางเดิน** ยาว 38.0 ม. วิ่งตามแกน −Y จากประตู (y = +19.0) ไปท้ายโรงเรือน (y = −19.0)
-- ช่องว่างระหว่างแปลง: ทางเดินกลาง 1.27 ม. (ทางเดินคอนกรีตจริงกว้าง 0.76 ม.), ทางเดินข้าง 2 เส้น **0.55 ม.**
-- หุ่น R180: กว้าง 0.53 ม. ยาว 0.71 ม. สูง 1.81 ม. น้ำหนักประมาณ 58 กก. ล้อ 4 ล้อ ขับแบบ differential
-- **กลับตัวในทางเดินไม่ได้** (ทดสอบแล้ว FAIL: ต้องใช้ 0.92 ม.) → ทุกทางเดินใช้วิธี เดินหน้าเข้า–ถอยหลังออก
-- **ทางเดินข้าง 0.55 ม. แคบกว่าหุ่น 0.53 ม. + ระยะเผื่อ** → ตอนนี้วิ่งได้จริงเฉพาะทางเดินกลาง ต้องตัดสินใจ: วัดหน้างานจริง / ทำหุ่นแคบลง / ยอมรับว่าสำรวจเฉพาะทางเดินกลาง (ดู `docs/MISSION_SPEC_th.md`)
-- ไม่มี GPS ในโรงเรือน; การรู้ตำแหน่งใช้ LiDAR + IMU + encoder และป้ายหัวแถว (AprilTag) ตามแผนเดิม
-
-## สถาปัตยกรรม
 ```
-central_brain/farm_harness (LLM วางแผนภารกิจระดับสูง, ด่านตรวจความปลอดภัย)
-        │  คำสั่ง: go_to(house, aisle, metre) / survey_house(house) / return_to_dock
-        ▼
-r1_greenhouse_nav (repo นี้)  ── ภาพ+ตำแหน่ง+เวลา ──▶  anomaly detection (คนละส่วน)
-  mission → aisle_map → controller → adapter
-        │
-        ▼
-Isaac Sim R180 env (reset/step, rad/s ล้อซ้าย/ขวา)  ⇄  ต่อไป: หุ่นจริงผ่าน Jetson (ROS 2)
+ Edge: R1 (Isaac twin → Jetson)            Nebius
+  SAFETY · MISSION · BOOK · pose ──frames──▶ robot API hub ──▶ Cosmos Reason (Serverless Endpoint)
+            ▲ goals only                      │ findings
+            └──── HERMES (Hermes Agent + Nemotron @ Token Factory) ◀┘
+                     Cloud SLAM AI + Isaac eval  (Nebius GPU Jobs)  ──▶ live dashboard
 ```
 
-## โครงสร้าง
-| ไฟล์ | หน้าที่ |
-|---|---|
-| `r1_nav/aisle_map.py` | โหลดผังทางเดิน (จาก `data/tunnel09_aisle_map_v18.json`) และบอกว่าทางเดินไหนหุ่นผ่านได้ |
-| `r1_nav/mission.py` | แปลงภารกิจเป็นลำดับช่วงเดิน (เข้าทางเดิน / ถอยออก / ย้ายทางเดิน / กลับแท่น) |
-| `r1_nav/controller.py` | เดินกลางทางเดินจาก LiDAR + หยุดเมื่อมีสิ่งกีดขวาง (ไม่ใช้ตำแหน่งจริงจาก sim) |
-| `r1_nav/sim_adapter.py` | ต่อกับ R180 env ของ Isaac (`make_env`) |
-| `scripts/run_coverage_sim.py` | รันภารกิจเดินครบทางเดินใน Isaac (ยังเป็นโครง รอ env รองรับหลายจุดเริ่ม) |
-| `docs/` | สเปกภารกิจ, สิ่งแวดล้อม, สัญญาส่งต่อ, แผนงาน |
+## Sim-to-Real
+1. **Real → Sim (done):** the tunnel-09 twin is calibrated against real photos (aisle brightness: real 126, Isaac 128). We also have a real drone survey of the site, and the robot's bill of materials uses parts sold in Thailand.
+2. **Sim:** all modules are developed and evaluated in the twin. Real photos and the real drone video go through the same cloud pipeline.
+3. **Sim → Real (next):** `r1_nav/` uses only sensors (no simulator pose). Moving to the Jetson means swapping `sim_adapter` for ROS 2.
 
-## เริ่มต้น
+## Repo map
+| Path | What |
+|---|---|
+| `r1_nav/` | Aisle map, mission legs, BOOK LiDAR aisle-centring controller, goal validation (`commands.py`), 7-camera schedule (`cameras.py`) |
+| `sim/`, `scripts/run_demo_sim.py` | Leg executor (STUCK, rear stop, heading damping), cloud link with offline outbox, Isaac wrapper, kinematic fake backend |
+| `scripts/run_eval_job.py`, `jobs/isaac_eval/` | Batch evaluation (wet floor / obstacle / offsets) as a GPU job |
+| `agent/robot_api.py` | Goal hub between HERMES, the robot and Cosmos; writes the dashboard data |
+| `agent/hermes_skills/r1-robot-control/` | Hermes Agent skill that commands the robot |
+| `agent/brain_loop.py` | Deterministic fallback brain (same policy; Nemotron writes the reasoning and the farmer report) |
+| `cloud/eyes/` | Cosmos Reason serving (vLLM) and an inspection client with strict JSON output |
+| `cloud/brain/` | Nemotron client for Token Factory and the Hermes provider config |
+| `cloud/mapping/` | Cloud SLAM AI job (MapAnything / VGGT) and alignment into house metres |
+| `dashboard/` | Live map, finding pins, 7-camera views, HERMES decision feed |
+| `deploy/nebius/` | One-VM stack (RTX PRO 6000): bootstrap and docker compose |
+| `docs/` | Mission spec, interfaces, environment, roadmap, hackathon plan (Thai) |
+
+## Quick start
 ```bash
-python3 -m pytest -q                      # ทดสอบส่วนที่ไม่ต้องใช้ Isaac
-R180_DIR=/path/to/diy_r50/physical_ai_r180 \
-  /path/to/isaac-sim/python.sh scripts/run_coverage_sim.py --dry-run
+python3 -m pytest -q                                   # 72 offline tests
+
+# Full loop rehearsal without GPU (fake robot + stub eyes):
+python3 scripts/stub_eyes.py --port 8001 --spot 15 &
+EYES_BASE_URL=http://127.0.0.1:8001/v1 EYES_MODEL=stub EYES_API_KEY=x \
+  python3 agent/robot_api.py --data runs/demo --map data/tunnel09_aisle_map_v18.json --port 8090 &
+python3 dashboard/serve.py --data runs/demo --port 8080 &          # open http://127.0.0.1:8080
+python3 scripts/run_demo_sim.py --backend fake --idle-exit-s 60 &
+python3 agent/brain_loop.py --house tunnel-09                     # or: hermes, with the r1-robot-control skill
 ```
+Real stack on Nebius: [deploy/nebius/README_th.md](deploy/nebius/README_th.md). Cloud details and verified model IDs: [cloud/README_cloud.md](cloud/README_cloud.md).
 
-## เกณฑ์ความสำเร็จของเฟสแรก (วัดใน Isaac ฉาก `scene_fix_2026-10-28/C2_R180_tunnel09_photo_match.usda`)
-1. ไปจุดที่สั่งในทางเดินกลาง ±0.15 ม. ตามแนวยาว และไม่ล้ำขอบแปลง (ระยะข้างต่ำสุด ≥ 0.05 ม.) 10/10 รอบ
-2. เดินหน้าสุดทาง–ถอยออก–กลับถึงหน้าประตู ครบ 1 ทางเดิน โดยไม่ชน และหยุดภายใน 0.5 ม. เมื่อมีสิ่งกีดขวาง 10/10 รอบ
-3. ส่งภาพกล้องหน้าพร้อมตำแหน่ง (ทางเดิน, เมตร, เวลา) ทุก 0.5 ม. ตลอดการเดิน ตามสัญญาใน `docs/INTERFACES_th.md`
-4. เวลาเดินครบ 1 ทางเดิน (ไป–กลับ 76 ม.) ≤ 8 นาที ที่ความเร็วปลอดภัย 0.25 ม./วินาที
+## Phase-1 acceptance criteria (Isaac, tunnel-09 photo-matched scene)
+1. Stop at a commanded point in the centre aisle within ±0.15 m, side clearance ≥ 0.05 m, 10/10 runs.
+2. Full aisle in and reverse out, no collision, stop within 0.5 m of an obstacle, 10/10 runs.
+3. Side images with (aisle, metre, time) every 0.5 m (`docs/INTERFACES_th.md`).
+4. One aisle (76 m round trip) in ≤ 8 min at 0.25 m/s.
 
-## เครดิตและข้อกำหนด
-- แบบหุ่น R1 ต่อยอดแนวคิดจาก R1 ของ Sumith Shridhar (ไม่ได้ใช้โค้ดหรือโมเดลของต้นฉบับ)
-- ห้ามเริ่ม training นโยบายโดยไม่ได้รับอนุมัติ; ตัวควบคุมเฟสแรกเป็นกฎชัดเจนที่ตรวจสอบได้
+## Honest status
+- The robot itself is still being assembled. Everything robot-side runs in the Isaac twin.
+- The side aisles of tunnel-09 (0.55 m) are narrower than the robot plus margin. They are reported as skipped, not attempted.
+- Headland transit and docking are not simulated yet (the env has a single start). No policy training was done for this entry.
+
+## License and credits
+Apache-2.0 (see `LICENSE`). Third-party models keep their own licences (see `cloud/README_cloud.md` and `cloud/mapping/README_mapping.md`).
+The R1 concept is inspired by Sumith Shridhar's R1; no code or models from it are used.
