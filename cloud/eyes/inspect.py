@@ -101,10 +101,17 @@ RETRY_PROMPT = ("Your previous reply was not valid JSON for the requested schema
                 "Reply again with ONLY the JSON object, no prose, no markdown fences.")
 
 
+SCREEN_SUFFIX = ("\nThis is the fast SCREENING pass while driving; every flagged spot gets a closer, stricter re-inspection. "
+                 "Prefer recall: if ANY leaf shows spots, lesions, rings, yellow halos or discoloured patches, even small or "
+                 "partly visible, answer at least \"suspect\" and box them. Say \"healthy\" only if all visible leaves look clean.")
+
+
 def build_prompt(meta: dict) -> str:
     keys = ("house", "aisle", "metre", "heading_deg", "camera")
     ctx = ", ".join(f"{k}={meta[k]}" for k in keys if meta.get(k) is not None) or "unknown position"
     prompt = (NAV_PROMPT if meta.get("camera") == FRONT_CAMERA else PLANT_PROMPT).format(ctx=ctx)
+    if meta.get("camera") != FRONT_CAMERA and meta.get("purpose", "inspect") == "inspect":
+        prompt += SCREEN_SUFFIX                  # screening = sensitive; revisit keeps the conservative wording
     return prompt + (REASONING_SUFFIX if os.environ.get("EYES_REASONING") == "1" else "")
 
 
