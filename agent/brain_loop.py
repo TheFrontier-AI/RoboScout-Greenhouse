@@ -85,17 +85,23 @@ def wait_idle(poll_s: float) -> dict:
         time.sleep(poll_s)
 
 
-def run(house: str, poll_s: float = 3.0, survey_until: float | None = None) -> str:
+def run(house: str, poll_s: float = 3.0, survey_until: float | None = None, farm: bool = False,
+        max_revisits: int | None = None) -> str:
+    """farm=True: one drive-through survey of every house (survey_farm); revisits are queued by the robot until the
+    survey is done, and at most max_revisits spots are revisited (most votes first; the rest are reported as new)."""
     since, findings, spots, stuck, quiet = 0, [], [], 0, 0
+    revisits = 0
 
     def send(cmd: dict, why: str) -> dict:
         cmd["reasoning"] = _nemotron(f"In one sentence, explain this robot command to a farmer: {json.dumps(cmd)}. Context: {why}", why)
         return _post("/command", cmd)
 
-    if not _get("/health").get("map"):
+    if farm:
+        send({"cmd": "survey_farm"}, "daily inspection: drive through tunnel-09 and tunnel-10, photograph every plant")
+    elif not _get("/health").get("map"):
         send({"cmd": "discover_house"}, "no map of this greenhouse yet, mapping it first"); wait_idle(poll_s)
         print("discovered; confirm the map then POST {'cmd':'set_map','path':...}"); return ""
-    if survey_until is None:
+    elif survey_until is None:
         send({"cmd": "survey_house", "house": house}, "daily inspection of every reachable aisle")
     else:                                     # demo / partial survey: inspect the first part of the first reachable aisle
         aisle = next(a["id"] for a in _get("/map")["aisles"] if a["traversable"])
@@ -108,8 +114,10 @@ def run(house: str, poll_s: float = 3.0, survey_until: float | None = None) -> s
         for s in [s for s in spots if s.state == "revisiting"]:
             judge_revisit(findings, s)
         for s in cluster(res["findings"], spots):
-            s.state = "revisiting"
-            send({"cmd": "revisit", "house": house, "aisle": s.aisle, "metre": round(s.metre, 1)},
+            if max_revisits is not None and revisits >= max_revisits:
+                continue                          # stays "new": reported, not re-inspected this round
+            s.state = "revisiting"; revisits += 1
+            send({"cmd": "revisit", "house": (s.aisle or house).split("/")[0], "aisle": s.aisle, "metre": round(s.metre, 1)},
                  f"{' and '.join(s.by) or 'the plant-inspection model'} flagged {', '.join(sorted(set(s.labels)))} "
                  f"near {s.aisle} metre {s.metre:.1f}")
         if st.get("state") == "stuck":
@@ -144,4 +152,6 @@ def run(house: str, poll_s: float = 3.0, survey_until: float | None = None) -> s
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--house", default="tunnel-09"); ap.add_argument("--poll", type=float, default=3.0)
     ap.add_argument("--survey-until", type=float, help="partial survey: go_to this metre of the first reachable aisle")
-    a = ap.parse_args(); run(a.house, a.poll, a.survey_until)
+    ap.add_argument("--farm", action="store_true", help="drive-through survey of the whole farm (survey_farm)")
+    ap.add_argument("--max-revisits", type=int, help="cap revisits (farm runs: each one is a trip back into a house)")
+    a = ap.parse_args(); run(a.house, a.poll, a.survey_until, a.farm, a.max_revisits)

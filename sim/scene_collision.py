@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 
 ROOT = "/Farm/SiteV18_Root"
-PLANT = re.compile(r"_Hero_Tomato_Row_\d+_Plant_\d+$")
+PLANT = re.compile(r"_Hero_Tomato_Row_\d+_Plant_\d+(?:_\d{3})?$")
 
 
 def _collide(prim, UsdPhysics) -> int:

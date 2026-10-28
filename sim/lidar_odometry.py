@@ -78,6 +78,9 @@ class LidarWheelOdometry:
     def heading(self) -> float:
         return self.wheel.heading
 
+    def set_heading(self, heading_deg: float) -> None:
+        self.wheel.set_heading(heading_deg)
+
     def update(self, obs):
         prev_wheel = self.wheel.metre
         w_metre, heading, w_conf = self.wheel.update(obs)

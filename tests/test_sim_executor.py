@@ -176,3 +176,44 @@ def test_large_pose_disagreement_stops_the_robot():
             break
         cmd, _ = ex.step(obs); obs, *_ = sim.step(cmd)
     assert ex.status == "aborted" and "position" in ex.reason
+
+
+def test_yard_path_follows_waypoints_and_faces_final_heading():
+    from r1_nav.mission import PathLeg
+    sim = FakeR180Sim(aisle_length_m=50.0, start_metre=0.0, bed_half_m=40.0)    # open yard
+    obs, _ = sim.reset()
+    ex = LegExecutor(WheelImuOdometry(metre=0.0), "yard", ExecutorConfig())
+    ex.set_xy(0.0, 0.0)
+    ex.load([PathLeg("path", None, None, "test", waypoints=((0.0, -3.0), (2.0, -3.0)), final_heading_deg=0.0)], "go")
+    gt = None
+    for _ in range(3000):
+        if not ex.busy:
+            break
+        cmd, _ = ex.step(obs); obs, _, _, _, info = sim.step(cmd); gt = info["gt"]
+        assert all(abs(c) <= 2.0 for c in cmd)
+    assert ex.status == "done", ex.reason
+    scene = (gt["lateral_m"], -gt["metre"])                    # fake aisle frame -> scene (forward -Y, left +X)
+    assert math.dist(scene, (2.0, -3.0)) < 0.2 and math.dist(ex.xy, (2.0, -3.0)) < 0.15
+    assert abs(gt["yaw_deg"] - 90.0) < 3                           # facing +X: fake yaw +90 (left turn from -Y)
+
+
+def test_enter_hands_yard_position_to_aisle_metre():
+    cfg = ExecutorConfig(aisle_heads={A: (0.0, 3.26)})
+    ex = LegExecutor(WheelImuOdometry(metre=0.0), "tunnel-09", cfg)
+    ex.set_xy(0.02, 4.86)
+    sim = FakeR180Sim(); obs, _ = sim.reset()
+    ex.load([Leg("enter", A, -1.6)], "survey"); _, ev = ex.step(obs)
+    e = [x for x in ev if x["type"] == "enter"][0]
+    assert abs(e["metre"] + 1.6) < 1e-6 and abs(ex.pose.metre + 1.6) < 1e-6 and ex.aisle == A
+
+
+def test_scan_based_stuck_detection_when_wheels_spin_in_place():
+    ex = LegExecutor(WheelImuOdometry(metre=0.0), "tunnel-09", ExecutorConfig())
+    sim = FakeR180Sim(); obs, _ = sim.reset()
+    ex.load([Leg("drive_in", A, 20.0)], "survey")
+    for k in range(80):                                   # LiDAR fixes say the robot stays at the same spot
+        t = 1.0 + 0.1 * k
+        ex.apply_fix(0.0, 3.87, -90.0, xy=False, t=t); ex.note_command(t, [1.9, 1.9])
+    obs = dict(obs, timestamp_s=9.0)
+    cmd, ev = ex.step(obs)
+    assert ex.status == "stuck" and "LiDAR" in ex.reason and cmd == [0.0, 0.0]
