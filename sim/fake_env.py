@@ -16,9 +16,11 @@ class FakeR180Sim:
     backend = "fake"
 
     def __init__(self, aisle_length_m: float = 38.04, bed_half_m: float = 0.634, start_metre: float = 3.26,
-                 dt: float = 0.1, side_cameras: bool = True, end_wall_metre: float | None = None):
+                 dt: float = 0.1, side_cameras: bool = True, end_wall_metre: float | None = None,
+                 plant_pitch_m: float | None = None):
         self.L, self.W, self.start_metre, self.dt = aisle_length_m, bed_half_m, start_metre, dt
         self.end_wall = end_wall_metre             # far end wall across the aisle (None = open)
+        self.pitch = plant_pitch_m                 # stems along both bed edges (gives the scan structure along the aisle)
         self.has_side_cameras = side_cameras
         self.knobs = {"seed": True, "friction_scale": True, "obstacle": True, "start_offset": True, "ground_truth": True}
         self.angles = [-math.pi + 2 * math.pi * i / N_BEAMS for i in range(N_BEAMS)]   # raw R180 azimuths
@@ -79,6 +81,8 @@ class FakeR180Sim:
                 best = min(best, (self.W - ly) / sn)
             elif sn < -1e-6:
                 best = min(best, (self.W + ly) / -sn)
+            if self.pitch:                                        # stems: 3 cm discs just inside the bed edges
+                best = min(best, self._stem_hit(lx, ly, cs, sn, best))
             if self.end_wall is not None and cs > 1e-6:
                 best = min(best, (self.end_wall - lx) / cs)
             if self.obstacle is not None and cs > 1e-6:
@@ -87,6 +91,24 @@ class FakeR180Sim:
                     best = min(best, d)
             out.append(max(0.05, best + self._rng.gauss(0.0, self.noise)))
         return out
+
+    def _stem_hit(self, lx, ly, cs, sn, best, rad=0.03):
+        hit = best
+        for side in (-1.0, 1.0):
+            sy = side * (self.W - 0.08)
+            if abs(sn) < 1e-6:
+                continue
+            d_line = (sy - ly) / sn                              # where the beam crosses the stem line
+            if not 0 < d_line < hit:
+                continue
+            sx = lx + d_line * cs
+            k = round((sx - 0.2 * (side > 0)) / self.pitch)      # rows offset so left/right stems differ
+            cx = k * self.pitch + 0.2 * (side > 0)
+            ox, oy = cx - lx, sy - ly                            # ray-circle intersection
+            b = ox * cs + oy * sn; c = ox * ox + oy * oy - rad * rad; disc = b * b - c
+            if disc >= 0 and b - math.sqrt(disc) > 0:
+                hit = min(hit, b - math.sqrt(disc))
+        return hit
 
     def _image(self, shade: int):
         try:
