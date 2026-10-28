@@ -15,6 +15,7 @@ LIBRARY = Path("/home/passin/Documents/Blender/TheFarm/robot_design/r1_v3/diy_r5
                "tomato_realism_2026-10-28")
 HEALTHY = [f"Tomato_Healthy_S2026{d}" for d in range(1028, 1036)]
 ROOT = "/Farm/SiteV18_Root"
+STEM_PROXY_R = 0.10                # m: stem + canopy core seen by the planar LiDAR
 PLANT = re.compile(r"_Hero_Tomato_Row_(\d+)_Plant_(\d+)(?:_\d{3})?$")   # some tunnel-10 plants carry a _001 suffix
 
 # Clearly visible anomalies only (mild ones are near invisible at mast distance), spread over both aisle-02 rows
@@ -71,11 +72,15 @@ def swap_crops(stage, tunnels=("09", "10"), anomalies=DEFAULT_ANOMALIES, seed: i
             x.AddTranslateOp().Set(Gf.Vec3d(*base))
             x.AddRotateZOp().Set(rng.uniform(0.0, 360.0))
             x.GetPrim().GetReferences().AddReference(str(asset_path(name, res)))
-            if collision:                                     # LiDAR must see the plants (static triangle meshes)
-                for p in Usd.PrimRange(x.GetPrim()):
-                    if p.IsA(UsdGeom.Mesh) and p.IsActive():
-                        UsdPhysics.CollisionAPI.Apply(p)
-                        UsdPhysics.MeshCollisionAPI.Apply(p).CreateApproximationAttr().Set("none")
+            if collision:
+                # LiDAR must see the plants, but the leaves are alpha-cut cards: a mesh collider would include the
+                # transparent part of every card and stick far into the aisle (false SAFETY stops). An invisible
+                # stem-and-canopy-core cylinder per plant is what a planar LiDAR at 0.55 m mostly returns from anyway.
+                cyl = UsdGeom.Cylinder.Define(stage, path + "/LidarProxy")
+                cyl.CreateRadiusAttr(STEM_PROXY_R); cyl.CreateHeightAttr(2.0); cyl.CreateAxisAttr("Z")
+                UsdGeom.Xformable(cyl).AddTranslateOp().Set(Gf.Vec3d(0, 0, 1.05))
+                UsdGeom.Imageable(cyl).MakeInvisible()
+                UsdPhysics.CollisionAPI.Apply(cyl.GetPrim())
             manifest.append({"tunnel": f"tunnel-{t}", "row": row, "plant": idx, "asset": name,
                              "synthetic_anomaly": kind, "xy": [round(base[0], 3), round(base[1], 3)],
                              "v18_height_m": round(hi[2] - lo[2], 2), "prim": path})
