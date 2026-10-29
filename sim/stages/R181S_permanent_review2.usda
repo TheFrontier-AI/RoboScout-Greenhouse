@@ -1,0 +1,45 @@
+#usda 1.0
+(
+    customLayerData = {
+        dictionary renderSettings = {
+            bool "rtx:post:histogram:enabled" = 0
+            bool "rtx:post:tonemap:enabled" = 1
+            int "rtx:post:tonemap:op" = 4
+            double "rtx:post:tonemap:filmIso" = 100
+            double "rtx:post:tonemap:whitepoint" = 6500
+            double "rtx:post:tonemap:cameraShutter" = 50
+            double "rtx:post:tonemap:fNumber" = 5
+            double "rtx:post:tonemap:cm2Factor" = 1
+            int "rtx:post:aa:op" = 3
+            double "rtx:post:scaling:staticRatio" = 1
+            bool "rtx:raytracing:fractionalCutoutOpacity" = 1
+            int "rtx:pathtracing:spp" = 32
+            int "rtx:pathtracing:totalSpp" = 64
+            int "rtx:pathtracing:maxBounces" = 12
+            int "rtx:pathtracing:maxSpecularAndTransmissionBounces" = 12
+            bool "rtx:pathtracing:optixDenoiser:enabled" = 1
+            string "rtx:rendermode" = "PathTracing"
+        }
+        string scope = "R1 / R181-S runtime stage: Astra's permanent scene (portable_scene_review2, unchanged) + the disabled sensor-test obstacle the R180 env requires. Render settings = Astra's exterior_reference profile (ISO 100, f/5, shutter 50, 64 spp, OptiX, ACES). Do not run sim.scene_prep.prepare_farm_run on this stage."
+    }
+    metersPerUnit = 1
+    subLayers = [
+        @../../../robot_design/r1_v3/diy_r50/physical_ai_r180/portable_scene_review2/scene.usdc@
+    ]
+    upAxis = "Z"
+)
+
+def "TestFixtures"
+{
+    def Cube "removable_front_obstacle" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        bool physics:collisionEnabled = 0
+        double size = 1
+        token visibility = "invisible"
+        float3 xformOp:scale = (0.65, 0.18, 0.7)
+        double3 xformOp:translate = (0, -100, -10)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+}
