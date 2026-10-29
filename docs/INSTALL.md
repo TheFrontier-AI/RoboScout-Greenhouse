@@ -132,7 +132,7 @@ It uploads only what the pipeline reads (jsonl, `side/`, `front/`, `zed/`), post
 
 The route is generated, not hard-coded: `r1_nav.mission.farm_loop(houses, …)` takes any list of houses and builds the
 drive-through — front-to-back in the first, cross behind, back-to-front in the next, and so on, then home. Three ways
-to command it:
+to command it (1 is for the simulator; on a real farm you use 2 or 3):
 
 1. **Simulation driver** — give the houses in order (`aisle id : aisle-centre x` in site metres):
    ```bash
@@ -150,6 +150,32 @@ to command it:
 Each house needs an aisle map (`data/<house>_aisle_map_*.json`, like `tunnel09_aisle_map_v18.json`) for its row
 geometry; identical tunnels can share one map with an x offset, which is how tunnel-10 is handled today. The report
 groups harvest and health per house automatically (`by_aisle`), so nothing changes on the cloud side.
+
+## 2c. Which farm? Deploying on another farm (anywhere)
+
+Nothing in the code names our farm. A farm is **three data files plus one confirmation**; point the system at them and
+every command above works on that farm. House names are whatever those files call them.
+
+| What | File | Who makes it | How the system finds it |
+|---|---|---|---|
+| **Site map** — the farm as a graph: `dock`, one `door` per house, `junction`/`waypoint` nodes, edges with length / width / surface, in site metres | `data/<farm>_site_map.json` (schema: `r1_nav/site_map.py`; ours: `data/site_map_v18_draft.json`) | from the farm plan or a walk with a tape measure; the `farm-site-map` skill builds and edits it from the farmer's words | `R1_SITE_MAP=/path/<farm>_site_map.json` in the environment of the hub / brain (comma-separate several) |
+| **Aisle map** — one per house: beds, aisle centre lines, lengths, clearance, house-to-site transform | `data/<house>_aisle_map.json` (schema: `r1_nav/aisle_map.py`; ours: `data/tunnel09_aisle_map_v18.json`) | measured once per house type; identical houses share a file with an x-offset; `discover_house` lets the robot survey an unmapped house with LiDAR first | hub `--map <file>` (default house) and the `aisle_maps` passed to `plan_command` |
+| **Confirmation** — a human has checked the site map | `metadata.confirmed_by / confirmed_at` inside the site map | the farmer, through the `farm-site-map` skill (`SiteMap.confirm(by=...)`) | commands that move between houses (`go_to_house`, `survey_house` of another house, `survey_farm`) are **rejected until confirmed** |
+| **Scene** (simulation only) — the farm's digital twin | USD stage for Isaac Sim | built from photos/plans (Blender → Isaac) | `scripts/run_farm.py` (`STAGE`, `--houses`) — not used on a real robot |
+
+**So, to run the robot on a different farm, in Thailand or abroad:**
+
+1. Write the site map for that farm (`data/<farm>_site_map.json`) with its houses and paths; have its farmer confirm it.
+2. Write one aisle map per house type (`data/<house>_aisle_map.json`).
+3. Start the hub with `R1_SITE_MAP=data/<farm>_site_map.json` and `--map data/<house>_aisle_map.json`; start the robot with
+   `ROBOT_API_URL` pointing at that hub.
+4. Command it exactly as in 2b: `survey_house` / `go_to_house` / `survey_farm`. The report is grouped by the house ids of
+   that farm automatically.
+5. Crops: the detector and the Nemotron prompts are tuned for tomato; another crop needs its own classes (retrain
+   `vision/train_rtdetr.py`) and prompt text — the navigation, mapping, agent and report need no change.
+
+The simulation flag `--houses` only tells the digital twin which houses to prepare; it is not how a real robot is
+commanded. On a real robot the list of houses *is* the confirmed site map.
 
 ## 3. End-to-end test (what we ran)
 
