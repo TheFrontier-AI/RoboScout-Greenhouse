@@ -35,24 +35,50 @@ class Relocation:
 
 
 class Relocalizer:
-    def __init__(self, map_xy: np.ndarray, path_xyh: np.ndarray, spacing_m: float = 0.5,
+    def __init__(self, map_xy: np.ndarray, path_xyh: np.ndarray | None = None, spacing_m: float = 0.5,
                  heading_offsets_deg=(0.0, 180.0, 15.0, -15.0, 195.0, 165.0), hit_m: float = 0.25,
-                 refine_top: int = 12, ambiguity_margin: float = 0.02, same_place_m: float = 3.0):
+                 refine_top: int = 12, ambiguity_margin: float = 0.02, same_place_m: float = 3.0,
+                 grid_m: float | None = None, grid_headings: int = 12, clearance_m: float = 0.4, reach_m: float = 6.0):
+        """Hypotheses come from the taught path (path_xyh, spacing_m along it, taught heading +- offsets) and/or,
+        with grid_m set, from every free cell of the map (grid_m apart, at least clearance_m from any map point and
+        within reach_m of one, grid_headings headings each) - so the robot can also be found OFF the taught path."""
         self.map = np.asarray(map_xy, float); self.tree = cKDTree(self.map)
         self.hit_m, self.refine_top, self.margin, self.same_place_m = hit_m, refine_top, ambiguity_margin, same_place_m
         self.loc = ScanToMapLocalizer(self.map, max_pair_m=0.3, iters=25, max_jump_m=3.0, max_jump_deg=60.0)
-        # hypotheses: the taught path resampled every spacing_m, each with the taught heading + offsets
-        p = np.asarray(path_xyh, float)
-        d = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(p[:, :2], axis=0), axis=1))]
-        marks = np.arange(0.0, d[-1], spacing_m)
-        xs = np.interp(marks, d, p[:, 0]); ys = np.interp(marks, d, p[:, 1])
-        hs = np.degrees(np.unwrap(np.radians(p[:, 2]))); hs = np.interp(marks, d, hs)
-        self.hyp = np.array([(x, y, (h + off + 180) % 360 - 180) for x, y, h in zip(xs, ys, hs) for off in heading_offsets_deg])
+        hyps = []
+        if path_xyh is not None and len(path_xyh):
+            p = np.asarray(path_xyh, float)
+            d = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(p[:, :2], axis=0), axis=1))]
+            marks = np.arange(0.0, d[-1], spacing_m)
+            xs = np.interp(marks, d, p[:, 0]); ys = np.interp(marks, d, p[:, 1])
+            hs = np.degrees(np.unwrap(np.radians(p[:, 2]))); hs = np.interp(marks, d, hs)
+            hyps += [(x, y, (h + off + 180) % 360 - 180) for x, y, h in zip(xs, ys, hs) for off in heading_offsets_deg]
+        if grid_m:
+            lo, hi = self.map.min(0) - 1.0, self.map.max(0) + 1.0
+            gx, gy = np.meshgrid(np.arange(lo[0], hi[0], grid_m), np.arange(lo[1], hi[1], grid_m))
+            cells = np.c_[gx.ravel(), gy.ravel()]
+            dist, _ = self.tree.query(cells)
+            free = cells[(dist >= clearance_m) & (dist <= reach_m)]
+            heads = np.arange(grid_headings) * (360.0 / grid_headings) - 180.0
+            hyps += [(float(x), float(y), float(h)) for x, y in free for h in heads]
+        self.hyp = np.array(hyps, float).reshape(-1, 3)
+        self.n_path = 0 if path_xyh is None else len(hyps) - (len(free) * grid_headings if grid_m else 0)
 
     def _score(self, scan_body: np.ndarray, x: float, y: float, h_deg: float) -> float:
         pts = scan_body @ _rot(math.radians(h_deg)).T + (x, y)
         d, _ = self.tree.query(pts, distance_upper_bound=self.hit_m)
         return float(np.isfinite(d).mean())
+
+    def _score_many(self, pts: np.ndarray, hyps: np.ndarray, chunk: int = 2000) -> np.ndarray:
+        """Share of scan points on the map for many (x, y, heading) hypotheses at once."""
+        out = np.empty(len(hyps))
+        for i in range(0, len(hyps), chunk):
+            H = hyps[i:i + chunk]; th = np.radians(H[:, 2]); c, s = np.cos(th), np.sin(th)
+            X = c[:, None] * pts[None, :, 0] - s[:, None] * pts[None, :, 1] + H[:, None, 0]
+            Y = s[:, None] * pts[None, :, 0] + c[:, None] * pts[None, :, 1] + H[:, None, 1]
+            d, _ = self.tree.query(np.stack([X.ravel(), Y.ravel()], -1), distance_upper_bound=self.hit_m)
+            out[i:i + chunk] = np.isfinite(d).reshape(len(H), -1).mean(1)
+        return out
 
     def locate(self, scan_xy: np.ndarray, max_range_m: float = 11.0, subsample: int = 4) -> Relocation:
         scan = np.asarray(scan_xy, float)
@@ -61,8 +87,17 @@ class Relocalizer:
             return Relocation(None, 0.0, 0.0, False, hypotheses=len(self.hyp))
         body = scan + (LIDAR_AHEAD_M, 0.0)
         coarse = body[::subsample]
-        scores = np.array([self._score(coarse, *h) for h in self.hyp])
-        order = np.argsort(-scores)[: self.refine_top]
+        scores = self._score_many(coarse, self.hyp)
+        # refine a DIVERSE set of places: best hypothesis per place (same_place_m apart), so a twin greenhouse's rival
+        # is always refined and compared, never hidden behind near-duplicates of the winner
+        order = []
+        for i in np.argsort(-scores):
+            if scores[i] < 0.5 * scores[int(np.argmax(scores))]:
+                break
+            if all(math.hypot(self.hyp[i, 0] - self.hyp[j, 0], self.hyp[i, 1] - self.hyp[j, 1]) > self.same_place_m for j in order):
+                order.append(int(i))
+            if len(order) >= self.refine_top:
+                break
         refined = []
         for i in order:
             x, y, h = self.hyp[i]
