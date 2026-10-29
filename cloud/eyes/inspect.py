@@ -78,7 +78,7 @@ PLANT_PROMPT = """You inspect one image from a side-looking camera on a greenhou
 Context: {ctx}.
 Look for: early blight (concentric brown rings, yellow halo, older leaves), late blight (dark greasy water-soaked
 patches, white mould on undersides), leaf mold (yellow upper-leaf spots, olive-grey velvet below), yellowing/chlorosis,
-wilting, pests (whitefly, aphids, mites, leaf-miner trails, caterpillar damage), fruit rot (blossom-end rot, soft or
+wilting (drooping, limp leaves and stems), defoliation (missing or dropped leaves, bare stem sections), pests (whitefly, aphids, mites, leaf-miner trails, caterpillar damage), fruit rot (blossom-end rot, soft or
 mouldy fruit). Be conservative: use "disease" only for clear visible evidence, "suspect" when unsure or the view is
 blurred/occluded/far, "healthy" when foliage is visible and nothing is wrong, "not_plant" when no tomato plant is visible.
 Do not invent issues; an empty list is fine. confidence is 0..1. bbox_norm is [x0,y0,x1,y1] normalised to 0..1 of the

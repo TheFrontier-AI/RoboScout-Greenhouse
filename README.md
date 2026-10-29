@@ -1,5 +1,9 @@
 # RoboFarm
 
+![R1 driving tunnel-09, seen from the greenhouse CCTV (Isaac Sim, 8x speed)](docs/media/r1_cctv_tunnel09.gif)
+
+*R1 (R181-S) driving itself down tunnel-09 on its real AI-driven route, filmed by the greenhouse CCTV camera in the Isaac Sim digital twin. 8x speed, no cuts.*
+
 **R1 is our greenhouse robot: it enters a house it has never seen, maps it, finds sick plants, and decides by itself where to look again.**
 Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. Thai docs: [README_th.md](README_th.md).
 

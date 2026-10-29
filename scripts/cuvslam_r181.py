@@ -63,14 +63,14 @@ def main():
         pe, _ = tr.track(ns, imgs, depths=[d] if d is not None else None)
         p = pe.world_from_rig
         if p is not None:
-            est.append((ns, [float(x) for x in p.pose.translation]))
+            est.append((ns, [float(x) for x in p.pose.translation], [float(x) for x in p.pose.rotation]))   # rotation = quaternion xyzw
     dt = time.time() - t0
-    P = np.array([e for _, e in est]); G = np.array([gt[n] for n, _ in est])
+    P = np.array([e for _, e, _ in est]); G = np.array([gt[n] for n, _, _ in est])
     rmse, med, mx, s = sim3_ate(P, G)
     L = float(np.linalg.norm(np.diff(G, axis=0), axis=1).sum())
     res = {"method": f"cuVSLAM {a.mode}", "frames": len(frames), "tracked": len(est), "track_s": dt, "fps": len(frames) / dt,
            "path_m": L, "ate_rmse_m": rmse, "ate_median_m": med, "ate_max_m": mx, "sim3_scale": s,
-           "poses": [[n, *e] for n, e in est]}
+           "poses": [[n, *e] for n, e, _ in est], "quat_xyzw": [q for _, _, q in est]}
     print(json.dumps({k: v_ for k, v_ in res.items() if k != "poses"}, indent=1))
     if a.out:
         a.out.write_text(json.dumps(res))

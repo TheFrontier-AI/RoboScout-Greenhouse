@@ -22,11 +22,11 @@ def main():
     a = ap.parse_args(); a.out.mkdir(parents=True, exist_ok=True)
     from PIL import Image
     from vision.detector import Detector, to_finding
-    caps = {}
-    for line in open(a.rec / "events.jsonl"):
+    caps = {}                                            # frames.jsonl: what the robot knew at each capture
+    for line in open(a.rec / "frames.jsonl"):
         e = json.loads(line)
-        if e.get("type") == "capture" and str(e.get("camera", "")).startswith("mast_"):
-            caps[(int(round(e["t"] * 1e9)), e["camera"])] = e
+        if str(e.get("camera", "")).startswith("mast_") and e.get("ts") is not None:
+            e["t"] = e["ts"]; caps[(int(round(e["ts"] * 1e9)), e["camera"])] = e
     det = Detector(a.model, threshold=a.threshold)
     rows = []
     for f in sorted((a.frames / "side").glob("*_plant_*.png")):

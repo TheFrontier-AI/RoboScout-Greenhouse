@@ -4,7 +4,8 @@ slight hand shake, no person modelled). Scene frame = farm plan: x east, y north
 tunnel-10 aisle at x 9.015, front doors y 3.67, back doors y -35.19, yard connector y ~ -37.5, dock (2.0, 4.9).
 
 Each CCTV records only while the robot is inside its watch zone (like a motion-triggered camera); bystanders film
-while the robot is within their range. Every clip is raw, real-time footage of the recorded route."""
+while the robot is within their range. Outdoor cameras stop once the robot is inside a greenhouse, indoor ones once
+it has left (doors at y 3.67 / -35.19). Every clip is raw, real-time footage of the recorded route."""
 from __future__ import annotations
 import math
 from dataclasses import dataclass
@@ -19,15 +20,16 @@ class Shot:
     hfov_deg: float
     zone: tuple[float, float, float, float]   # robot x0, x1, y0, y1 that triggers recording
     note: str
+    where: str = "outside"                    # "outside" cameras record only while the robot is outdoors, "inside" only indoors
 
 
 SHOTS = [
     Shot("cctv1_t09_front", "cctv", (3.6, 8.2, 3.0), (0.4, 3.4, 0.4), 95, (-2, 5, 0, 9), "pole in front of tunnel-09: leaving the dock, entering the front door"),
-    Shot("cctv2_t09_head", "cctv", (0.0, 3.35, 2.4), (0.0, -8.0, 0.3), 80, (-1, 1, -16, 3.4), "inside tunnel-09 at the front end, looking down aisle-02"),
-    Shot("cctv3_t09_tail", "cctv", (0.0, -34.9, 2.4), (0.0, -24.0, 0.3), 80, (-1, 1, -35, -18), "inside tunnel-09 at the back end, looking up the aisle"),
+    Shot("cctv2_t09_head", "cctv", (0.0, 3.35, 2.4), (0.0, -8.0, 0.3), 80, (-1, 1, -16, 3.4), "inside tunnel-09 at the front end, looking down aisle-02", "inside"),
+    Shot("cctv3_t09_tail", "cctv", (0.0, -34.9, 2.4), (0.0, -24.0, 0.3), 80, (-1, 1, -35, -18), "inside tunnel-09 at the back end, looking up the aisle", "inside"),
     Shot("cctv4_yard", "cctv", (4.5, -41.5, 4.2), (4.5, -36.3, 0.2), 100, (-2, 11, -42, -33), "pole in the back yard: out of 09, across, into 10"),
-    Shot("cctv5_t10_tail", "cctv", (9.015, -34.9, 2.4), (9.015, -24.0, 0.3), 80, (8, 10, -35, -18), "inside tunnel-10 at the back end, looking up the aisle"),
-    Shot("cctv6_t10_head", "cctv", (9.015, 3.35, 2.4), (9.015, -8.0, 0.3), 80, (8, 10, -16, 3.4), "inside tunnel-10 at the front end, looking down the aisle"),
+    Shot("cctv5_t10_tail", "cctv", (9.015, -34.9, 2.4), (9.015, -24.0, 0.3), 80, (8, 10, -35, -18), "inside tunnel-10 at the back end, looking up the aisle", "inside"),
+    Shot("cctv6_t10_head", "cctv", (9.015, 3.35, 2.4), (9.015, -8.0, 0.3), 80, (8, 10, -16, 3.4), "inside tunnel-10 at the front end, looking down the aisle", "inside"),
     Shot("cctv7_front_overview", "cctv", (4.5, 13.0, 5.5), (4.5, 3.5, 0.3), 100, (-3, 12, 0, 10), "high pole over the front yard: both front doors and the dock"),
     Shot("person1_t09_door", "bystander", (2.3, 6.6, 1.6), None, 55, (-2, 4, -2, 8), "someone filming by tunnel-09's front door"),
     Shot("person2_yard", "bystander", (6.8, -39.8, 1.6), None, 55, (-1, 10, -40, -33), "someone filming in the back yard"),
@@ -35,9 +37,13 @@ SHOTS = [
 ]
 
 
+FRONT_DOOR_Y, BACK_DOOR_Y = 3.67, -35.19
+
+
 def in_zone(shot: Shot, x: float, y: float) -> bool:
     x0, x1, y0, y1 = shot.zone
-    return x0 <= x <= x1 and y0 <= y <= y1
+    outdoors = y > FRONT_DOOR_Y or y < BACK_DOOR_Y
+    return x0 <= x <= x1 and y0 <= y <= y1 and outdoors == (shot.where == "outside")
 
 
 def handheld(t: float, amp_m: float = 0.012, amp_deg: float = 0.35):

@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse, json, subprocess, sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent)); sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 def encode(files, out: Path, fps: float, crf: int = 16):
@@ -30,6 +30,7 @@ def ns_sorted(d: Path, pattern="*"):
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--frames", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--rec", type=Path, help="run record (steps.jsonl): drop CCTV/bystander frames outside the camera's indoor/outdoor rule")
     a = ap.parse_args(); a.out.mkdir(parents=True, exist_ok=True); F = a.frames
     for name, fps in (("chase", 5), ("front", 2)):
         fs = ns_sorted(F / name, "*.jpg")
@@ -43,7 +44,7 @@ def main():
     if dep:                                                     # depth as a viewable greyscale video (0-12 m)
         import numpy as np
         from PIL import Image
-        vis = F / "zed" / "depth_vis"; vis.mkdir(exist_ok=True)
+        vis = a.out / "_depth_vis"; vis.mkdir(exist_ok=True)       # render dirs belong to the container user
         for f in dep:
             o = vis / (f.stem + ".jpg")
             if not o.exists():
@@ -51,14 +52,34 @@ def main():
                 Image.fromarray((255 * (1 - np.clip(d / 12.0, 0, 1)) * (d > 0)).astype(np.uint8)).save(o, quality=92)
         encode(ns_sorted(vis, "*.jpg"), a.out / "zed_depth.mp4", 10)
     (a.out / "shots").mkdir(exist_ok=True)
+    keep = None
+    if a.rec:
+        import numpy as np
+        from sim.shots import SHOTS, in_zone
+        rows = [json.loads(l) for l in open(a.rec / "steps.jsonl")]
+        rows = [r for r in rows if r.get("gt_scene_pose")]
+        tt = np.array([r["t"] for r in rows]); xx = np.array([r["gt_scene_pose"][0] for r in rows]); yy = np.array([r["gt_scene_pose"][1] for r in rows])
+        shot = {s.name: s for s in SHOTS}
+        keep = lambda cam, f: cam not in shot or in_zone(shot[cam], float(np.interp(int(f.stem) / 1e9, tt, xx)), float(np.interp(int(f.stem) / 1e9, tt, yy)))
     for cam in sorted((F / "shots").glob("*")) if (F / "shots").exists() else []:
         fs = ns_sorted(cam, "*.jpg"); clips, cur = [], []
-        for f in fs:
-            if cur and int(f.stem) - int(cur[-1].stem) > 0.15e9:
-                clips.append(cur); cur = []
-            cur.append(f)
-        if cur:
-            clips.append(cur)
+        if keep:
+            fs = [f for f in fs if keep(cam.name, f)]
+        if keep:                    # one clip per visit of the robot to the camera's zone (by the route, not file gaps)
+            grid = np.arange(tt[0], tt[-1], 0.1); inside = [in_zone(shot[cam.name], float(np.interp(g, tt, xx)), float(np.interp(g, tt, yy)))
+                                                           for g in grid] if cam.name in shot else [True] * len(grid)
+            visit = np.cumsum(np.r_[0, np.diff(np.asarray(inside, int)) == 1])
+            by = {}
+            for f in fs:
+                by.setdefault(int(visit[min(len(grid) - 1, int((int(f.stem) / 1e9 - tt[0]) / 0.1))]), []).append(f)
+            clips = [by[k] for k in sorted(by)]
+        else:
+            for f in fs:
+                if cur and int(f.stem) - int(cur[-1].stem) > 0.15e9:
+                    clips.append(cur); cur = []
+                cur.append(f)
+            if cur:
+                clips.append(cur)
         for i, c in enumerate(clips):
             if len(c) >= 5:
                 encode(c, a.out / "shots" / f"{cam.name}_{i + 1}.mp4", 10)
@@ -71,7 +92,7 @@ def main():
         rows += [json.loads(l) for l in open(p)]
     if rows:
         from make_farm_videos import lidar_frame
-        rows.sort(key=lambda r: r["ns"]); d = F / "lidar" / "frames"; d.mkdir(exist_ok=True)
+        rows.sort(key=lambda r: r["ns"]); d = a.out / "_lidar_frames"; d.mkdir(exist_ok=True)
         for r in rows:
             o = d / f"{r['ns']}.png"
             if not o.exists():
