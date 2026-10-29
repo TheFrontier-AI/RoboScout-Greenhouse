@@ -117,6 +117,22 @@ class Hub:
             threading.Thread(target=launch_pipeline, args=(run_dir,), daemon=True).start()
         return {"ok": True, "run": run, "path": str(run_dir), "pipeline": "spawned" if auto else "marker written"}
 
+    def run_status(self, run: str) -> dict:
+        """Where a handed-off run stands: the newest runs.jsonl row for `run`, plus what the pipeline has written in
+        <run dir>/analysis (step markers, pipeline.done, report.json). Lets the robot or a farmer poll for the report."""
+        rows = [json.loads(l) for l in (self.data / "runs.jsonl").read_text().splitlines()] if (self.data / "runs.jsonl").exists() else []
+        rows = [r for r in rows if r.get("run") == run]
+        if not rows:
+            return {"run": run, "state": "unknown"}
+        run_dir = Path(rows[-1]["path"]); an = run_dir / "analysis"
+        done = sorted(p.stem for p in an.glob("*.done")) if an.is_dir() else []
+        failed = sorted(p.stem for p in an.glob("*.failed")) if an.is_dir() else []
+        report = (an / "report.json").exists()
+        state = "done" if (an / "pipeline.done").exists() else "failed" if failed and not report else "running" if done else "queued"
+        return {"run": run, "state": state, "path": str(run_dir), "received_ts": rows[-1].get("ts"), "steps_done": done,
+                "steps_failed": failed, "report": "analysis/report.json" if report else None,
+                "report_md": [p.name for p in an.glob("report_*.md")] if an.is_dir() else []}
+
     def _inspect_worker(self) -> None:
         while True:
             image, meta = self.inspect_q.get()
@@ -216,6 +232,8 @@ def make_handler(hub: Hub):
                 with hub.lock:
                     rows = hub.situations[since:]
                 return self._json(200, {"next": since + len(rows), "situations": rows})
+            if u.path == "/run_status":
+                return self._json(200, hub.run_status(parse_qs(u.query).get("run", [""])[0]))
             if u.path == "/next_command":
                 try:
                     return self._json(200, hub.commands.get_nowait())

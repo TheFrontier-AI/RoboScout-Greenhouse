@@ -43,9 +43,13 @@ Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. 
 | `deploy/nebius/` | One-VM stack (RTX PRO 6000): bootstrap and docker compose |
 | `docs/` | Mission spec, interfaces, environment, roadmap, hackathon plan (Thai) |
 
+## Install and run (cloud + robot)
+Step-by-step install for both halves, verified on a fresh Nebius VM and an ARM64 box: **[docs/INSTALL.md](docs/INSTALL.md)**.
+Fine-tuned detector weights are not in this repo: contact the author (see INSTALL.md).
+
 ## Quick start
 ```bash
-python3 -m pytest -q                                   # 72 offline tests
+python3 -m pytest -q                                   # offline tests (no GPU, no network)
 
 # Full loop rehearsal without GPU (fake robot + stub eyes):
 python3 scripts/stub_eyes.py --port 8001 --spot 15 &

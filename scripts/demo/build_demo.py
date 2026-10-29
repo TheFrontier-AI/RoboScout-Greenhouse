@@ -72,11 +72,14 @@ def fade_in_out(t, t_in, d_in, t_out, d_out):
     return ease(t, t_in, d_in) * (1 - ease(t, t_out, d_out))
 
 
-def cue(text, phrase, dur, lead=0.15):
-    """time (s) within a narration of duration dur at which `phrase` is spoken, by char position"""
+def cue(text, phrase, dur, lead=0.15, frac=None):
+    """time (s) within a narration of duration dur at which `phrase` is spoken, by char position.
+    `frac` is the fallback position (0..1) when the phrase is not in the text."""
     i = text.find(phrase)
     if i < 0:
-        raise KeyError(phrase)
+        if frac is None:
+            raise KeyError(phrase)
+        return max(0.0, dur * frac - lead)
     return max(0.0, dur * i / len(text) - lead)
 
 
@@ -344,60 +347,66 @@ def chase_speed(span, dur, lo=1.0, hi=2.0):
 
 
 def plan_shots(durs, plan):
-    """Build the ordered shot list; chase time is monotonic through the film."""
+    """Build the shot list in plan['order']; the chase-camera route time is monotonic through the film.
+    s1 -> s2 -> s3 must stay in that order (the freeze is at the chlorosis stop); everything else may move."""
     seg = {s["id"]: s for s in plan["segments"]}
-    pad = 0.7  # breathing room after each narration
+    pad = plan.get("pad_s", 0.7)          # breathing room after each narration
+    ff_speed = plan.get("ff_speed", 16.0)
+    order = [k for k in plan.get("order") or [x["id"] for x in plan["segments"]] if k in durs]
+    if "s0b_build" in order and not os.path.exists(seg["s0b_build"].get("file", "")):
+        order.remove("s0b_build")
     shots = []
     D = lambda k: durs[k] + pad
-
-    # s0: CCTV overview with title, then chase 0 -> ~30
-    d0 = D("s0_open"); a = 11.0
-    sp = chase_speed(30.0, d0 - a, 1.0, 2.0)
-    shots.append(dict(id="s0_open", dur=d0, audio="s0_open", text=seg["s0_open"]["text"],
-                      cctv_dur=a, chase0=0.0, speed=sp))
-    c = sp * (d0 - a)
-    # s1: edge stack, chase c -> ~62
-    d1 = D("s1_edge"); sp = round(chase_speed(62 - c, d1, 1.0, 1.5), 2)
-    shots.append(dict(id="s1_edge", dur=d1, audio="s1_edge", text=seg["s1_edge"]["text"], chase0=c, speed=sp))
-    c += sp * d1
-    # s2: plant stops, chase c -> CHLOROSIS_T exactly
-    d2 = D("s2_stops"); sp = (CHLOROSIS_T - c) / d2
-    if sp > 2.6:   # start a bit later rather than racing
-        sp = 2.6; c = CHLOROSIS_T - sp * d2
-    shots.append(dict(id="s2_stops", dur=d2, audio="s2_stops", text=seg["s2_stops"]["text"], chase0=c, speed=round(sp, 2)))
-    c = CHLOROSIS_T
-    # s3: freeze
-    d3 = D("s3_disease_freeze")
-    shots.append(dict(id="s3_disease_freeze", dur=d3, audio="s3_disease_freeze",
-                      text=seg["s3_disease_freeze"]["text"], chase0=c, speed=0))
-    # s4: HERMES, chase 107 -> ~185 at 3x
-    d4 = D("s4_hermes"); sp = 3.0
-    shots.append(dict(id="s4_hermes", dur=d4, audio="s4_hermes", text=seg["s4_hermes"]["text"], chase0=c, speed=sp))
-    c += sp * d4
-    # bridge: fast-forward to the back door (245)
-    ff_speed = 16.0; ff_dur = (245.0 - c) / ff_speed
-    shots.append(dict(id="ff_t09", dur=ff_dur, audio=None, text="", chase0=c, speed=ff_speed,
-                      note="rest of tunnel-09"))
-    c = 245.0
-    # s5: yard, chase 245 -> ~300 (the robot reaches tunnel-10's door ~330)
-    d5 = D("s5_yard_safety"); sp = chase_speed(85 - c + 245, d5, 1.5, 2.5)
-    sp = round(chase_speed(330 - 245, d5, 1.5, 3.0), 2)
-    shots.append(dict(id="s5_yard_safety", dur=d5, audio="s5_yard_safety", text=seg["s5_yard_safety"]["text"], chase0=c, speed=sp))
-    c += sp * d5
-    # s6: tunnel-10 with ZED, 1x
-    d6 = D("s6_r181s"); sp = 1.0
-    shots.append(dict(id="s6_r181s", dur=d6, audio="s6_r181s", text=seg["s6_r181s"]["text"], chase0=c, speed=sp))
-    c += sp * d6
-    # s7: 3-D maps full screen, chase PiP fast-forwards to 600
-    d7 = D("s7_maps"); sp = round((600 - c) / d7, 2)
-    shots.append(dict(id="s7_maps", dur=d7, audio="s7_maps", text=seg["s7_maps"]["text"], chase0=c, speed=sp))
-    c = 600.0
-    # s8: home to dock 600 -> 647.8
-    d8 = D("s8_results"); sp = round((ROUTE_LEN - 0.2 - c) / d8, 3)
-    shots.append(dict(id="s8_results", dur=d8, audio="s8_results", text=seg["s8_results"]["text"], chase0=c, speed=sp))
-    # s9: closing card over the final CCTV frame
-    d9 = D("s9_pipeline") + 1.5
-    shots.append(dict(id="s9_pipeline", dur=d9, audio="s9_pipeline", text=seg["s9_pipeline"]["text"], chase0=ROUTE_LEN, speed=0))
+    c = 0.0
+    for n, k in enumerate(order):
+        d = D(k); txt = seg[k]["text"]; last = n == len(order) - 1
+        if k == "s0_open":            # CCTV overview with title, then chase 0 -> ~30
+            a = 11.0; sp = chase_speed(30.0, d - a, 1.0, 2.0)
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, cctv_dur=a, chase0=c, speed=sp)); c += sp * (d - a)
+        elif k == "s0b_build":        # the user's assembly film at half speed, then the chase cam carries the rest
+            f = seg[k]["file"]
+            src_len = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f],
+                                           capture_output=True, text=True).stdout.strip())
+            vs = seg[k].get("speed", 0.5); vd = min(d - 3.0, src_len / vs)
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, file=f, vid_speed=vs, cctv_dur=vd, chase0=c, speed=1.0)); c += d - vd
+        elif k == "s1_edge":          # localisation, chase c -> ~62
+            sp = round(chase_speed(62 - c, d, 1.0, 1.5), 2)
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, chase0=c, speed=sp)); c += sp * d
+        elif k == "s2_stops":         # plant stops, chase c -> CHLOROSIS_T exactly
+            sp = (CHLOROSIS_T - c) / d
+            if sp > 2.6:
+                sp = 2.6; c = CHLOROSIS_T - sp * d
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, chase0=c, speed=round(sp, 2))); c = CHLOROSIS_T
+        elif k == "s3_disease_freeze":
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, chase0=c, speed=0))
+        elif k == "s5_yard_safety":   # back door -> yard -> tunnel-10 door (245 -> 330); bridge to 245 first
+            if c < 245.0:
+                shots.append(dict(id="ff_t09", dur=(245.0 - c) / ff_speed, audio=None, text="", chase0=c, speed=ff_speed,
+                                  note="rest of tunnel-09")); c = 245.0
+            sp = round(chase_speed(330 - c, d, 1.5, 3.0), 2)
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, chase0=c, speed=sp)); c += sp * d
+        elif k == "s7_maps":          # maps full screen, chase PiP fast-forwards to 600
+            sp = round(max(1.0, (600 - c) / d), 2)
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, chase0=c, speed=sp)); c += sp * d
+        elif k == "s8_results" and (last or order[n + 1] == "s9_pipeline"):   # home to the dock
+            sp = round(max(1.0, (ROUTE_LEN - 0.2 - c) / d), 3)
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, chase0=c, speed=sp)); c += sp * d
+        elif k == "s45_agent":        # HERMES card over the chase (3x), then a jump cut to the yard for Cosmos
+            split = cue(txt, "Between greenhouses", d, frac=0.5)
+            c0b = max(c + 3.0 * split, 245.0)
+            spb = round(chase_speed(330 - c0b, d - split, 1.5, 3.0), 2)
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, chase0=c, speed=3.0, split=split, chase0b=c0b, speedb=spb))
+            c = c0b + spb * (d - split)
+        elif k == "s9_pipeline":      # closing card over the final CCTV frame; optional assembly film first
+            f = seg[k].get("file", "")
+            sh = dict(id=k, dur=d + 1.5, audio=k, text=txt, chase0=ROUTE_LEN, speed=0)
+            if f and os.path.exists(f):
+                sh.update(file=f, vid_speed=seg[k].get("speed", 1.5), vid_dur=min(seg[k].get("film_s", 15.0), d - 8.0))
+            shots.append(sh)
+        else:                         # s4_hermes / s6_r181s / s8_results mid-film: chase keeps rolling at 3x
+            sp = 3.0 if k != "s6_r181s" else 1.0
+            shots.append(dict(id=k, dur=d, audio=k, text=txt, chase0=c, speed=sp)); c += sp * d
+        c = min(c, ROUTE_LEN - 0.2)
     # frame counts + absolute times
     t = 0.0
     for s in shots:
@@ -405,6 +414,8 @@ def plan_shots(durs, plan):
         s["dur"] = s["frames"] / CFG.FPS
         s["start"] = t; t += s["dur"]; s["end"] = t
         s["chase_end"] = s["chase0"] + s["speed"] * (s["dur"] - s.get("cctv_dur", 0.0))
+        if "chase0b" in s:
+            s["chase_end"] = s["chase0b"] + s["speedb"] * (s["dur"] - s["split"])
     return shots
 
 
@@ -443,7 +454,9 @@ def render_s0(shot, enc, data):
     T = shot["text"]; D = shot["dur"]; a = shot["cctv_dur"]
     cctv = Clip(VID + "/shots/cctv7_front_overview_1.mp4", 0.0, a, 1.0, (W, H))
     chase = Clip(VID + "/chase.mp4", shot["chase0"], shot["speed"] * (D - a), shot["speed"], (W, H))
-    c_twin = cue(T, "digital twin", D); c_script = cue(T, "Nothing in this film", D)
+    c_twin = cue(T, "digital twin", D); c_script = cue(T, "Nothing in this film", D, frac=0.7)
+    l_script = ("Nothing scripted: every turn and stop is the robot's own decision" if "Nothing in this film" in T
+                else "Developed and tested in simulation before the real world")
     for i in range(shot["frames"]):
         t = i / CFG.FPS
         layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -469,10 +482,46 @@ def render_s0(shot, enc, data):
             view_label(layer, "CHASE CAM · robot third-person view", ease(t, a, 0.4))
             lines = ["Digital twin of our tomato farm · NVIDIA Isaac Sim"]
             if t >= c_script:
-                lines.append("Nothing scripted: every turn and stop is the robot's own decision")
+                lines.append(l_script)
             seg_caption(layer, "ROBOFARM · R1", lines, t, max(a + 0.3, c_twin), 1 - ease(t, D - 0.6, 0.5), w=px(760))
             finish(base, layer, enc, shot, t, route_t, shot["speed"], hud_alpha=ease(t, a, 0.5))
     cctv.close(); chase.close()
+
+
+# --- s0b: the real robot (user's assembly footage) ------------------------------------------------
+def render_s0b(shot, enc, data):
+    W, H = CFG.W, CFG.H
+    T = shot["text"]; D = shot["dur"]
+    src = shot["file"]; a = shot["cctv_dur"]; vs = shot["vid_speed"]
+    sw, sh = probe_size(src)
+    scale = min(W / sw, H / sh); vw, vh = int(sw * scale) // 2 * 2, int(sh * scale) // 2 * 2
+    clip = Clip(src, 0.0, a * vs, vs, (vw, vh))
+    chase = Clip(VID + "/chase.mp4", shot["chase0"], D - a, 1.0, (W, H))
+    c_goal = cue(T, "Our goal is simple", D, frac=0.3); c_isaac = cue(T, "NVIDIA Isaac Sim allows", D, frac=0.55)
+    c_self = cue(T, "technological self-reliance", D, frac=0.85)
+    last = None
+    for i in range(shot["frames"]):
+        t = i / CFG.FPS
+        layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        if t < a:
+            fr = clip.next() or last; last = fr
+            base = letterbox(fr, W, H)
+            view_label(layer, "THE REAL ROBOT · R1 assembly overview · rendered from the CAD model")
+            route_t, hud_a = shot["chase0"], 0.0
+        else:
+            base = chase.next()
+            route_t = shot["chase0"] + (t - a); hud_a = ease(t, a, 0.5)
+            view_label(layer, "CHASE CAM · the same robot in its Isaac Sim digital twin")
+        lines = ["Custom-built for greenhouse work, with farmers on site"]
+        if t >= c_goal: lines.append("Affordable, practical, locally serviceable")
+        if t >= c_isaac: lines.append("Designed and tested in NVIDIA Isaac Sim first")
+        if t >= c_self: lines.append("A step toward technological self-reliance")
+        seg_caption(layer, "ROBOFARM · R1", lines, t, 1.0, 1 - ease(t, D - 0.6, 0.5), w=px(760))
+        if abs(t - a) < 0.3:
+            base = darken(base, 1 - abs(t - a) / 0.3)
+        fade = ease(t, 0.0, 0.6) * (1 - ease(t, D - 0.6, 0.6))
+        finish(base, layer, enc, shot, t, route_t, 1.0 if t >= a else 0, hud_alpha=hud_a, fade=fade)
+    clip.close(); chase.close()
 
 
 # --- s1 -------------------------------------------------------------------------------------------
@@ -482,14 +531,14 @@ def render_s1(shot, enc, data):
     chase = Clip(VID + "/chase.mp4", shot["chase0"], sp * D, sp, (W, H))
     lid_sz = px(330)
     lidar = Clip(VID + "/lidar.mp4", shot["chase0"], sp * D, sp, (lid_sz, lid_sz))
-    fig = Image.open(FIG + "/fig_run3_route_vs_estimate.png").convert("RGB").crop((60, 60, 990, 1760))
-    fig_h = px(560); fig_w = int(fig_h * fig.width / fig.height)
-    fig = fig.resize((fig_w, fig_h), Image.LANCZOS)
-    c_book = cue(T, "A rule-based driver", D); c_safe = cue(T, "A SAFETY layer", D)
-    c_loc = cue(T, "And localisation", D); c_err = cue(T, "Over this hundred", D)
+    zw, zh = px(400), px(225)
+    zl = Clip(VID + "/zed_left_540p.mp4", shot["chase0"], sp * D, sp, (zw, zh))
+    zd = Clip(VID + "/zed_depth.mp4", shot["chase0"], sp * D, sp, (zw, zh))
+    c_lidar = cue(T, "A 2-D LiDAR", D, frac=0.35); c_zed = cue(T, "A ZED stereo camera", D, frac=0.55)
+    c_jet = cue(T, "runs on the Jetson", D, frac=0.65); c_free = cue(T, "without requiring", D, frac=0.9)
     for i in range(shot["frames"]):
         t = i / CFG.FPS
-        base = chase.next(); lf = lidar.next()
+        base = chase.next(); lf = lidar.next(); l = zl.next(); dpt = zd.next()
         route_t = shot["chase0"] + sp * t
         layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         view_label(layer, "CHASE CAM · robot third-person view")
@@ -497,31 +546,33 @@ def render_s1(shot, enc, data):
         e = ease(t, 0.3, 0.5)
         inset(base, layer, lf, W - lid_sz - px(40), px(36) + int(px(30) * (1 - e)), lid_sz, lid_sz,
               "LiDAR scan · robot frame", e)
-        # edge-stack card (left-bottom, above HUD)
+        # ZED left + depth insets under it, once the stereo camera is mentioned
+        ez = ease(t, c_zed, 0.5)
+        if ez > 0:
+            zy = px(36) + lid_sz + px(24)
+            zx = W - zw - px(40) + int(px(40) * (1 - ez))
+            inset(base, layer, l, zx, zy, zw, zh, "ZED 2i · left", ez)
+            inset(base, layer, dpt, zx, zy + zh + px(16), zw, zh, "ZED 2i · stereo depth", ez)
+        # localisation card (left-bottom, above HUD)
         lines = []
-        if t >= c_book: lines.append(("BOOK", "rule-based aisle driver · follows the farm map"))
-        if t >= c_safe: lines.append(("SAFETY", "LiDAR obstacle stop · cuts the wheels"))
-        if t >= c_loc: lines.append(("LOCALISATION", "wheels + gyro + LiDAR scan-to-map · no fiducial tags"))
+        if t >= c_lidar: lines.append(("2-D LiDAR", "10 Hz scan matched against the farm map"))
+        if t >= c_zed: lines.append(("STEREO CAMERA", "ZED 2i feeds NVIDIA cuVSLAM"))
+        if t >= c_jet: lines.append(("JETSON ORIN", "cuVSLAM runs on the robot, no cloud needed"))
+        if t >= c_free: lines.append(("NO MARKERS", "nothing added to the greenhouse"))
         if lines:
-            e2 = ease(t, c_book, 0.5) * (1 - ease(t, D - 0.6, 0.5))
+            e2 = ease(t, c_lidar, 0.5) * (1 - ease(t, D - 0.6, 0.5))
             w = px(840); h = px(70) + px(40) * len(lines)
             x = px(40) + int(px(40) * (1 - e2)); y = H - h - px(120)
             card(layer, x, y, w, h, e2)
-            text(layer, (x + px(22), y + px(16)), "ON THE ROBOT · no cloud needed", 20, True, GREEN, e2)
+            text(layer, (x + px(22), y + px(16)), "HOW IT KNOWS WHERE IT IS", 20, True, GREEN, e2)
             yy = y + px(52)
             for k, (nm, desc) in enumerate(lines):
-                ee = ease(t, [c_book, c_safe, c_loc][k], 0.4) * e2
+                ee = ease(t, [c_lidar, c_zed, c_jet, c_free][k], 0.4) * e2
                 text(layer, (x + px(22), yy), nm, 22, True, WHITE, ee)
                 text(layer, (x + px(250), yy + px(2)), desc, 20, False, GREY, ee)
                 yy += px(40)
-        # localisation figure, right side, after the error cue
-        if t >= c_err:
-            e3 = ease(t, c_err, 0.6) * (1 - ease(t, D - 0.6, 0.5))
-            fx = W - fig_w - px(40); fy = px(36) + lid_sz + px(24)
-            inset(base, layer, fig, fx + int(px(40) * (1 - e3)), fy, fig_w, fig_h,
-                  "robot vs. truth · run 3", e3)
         finish(base, layer, enc, shot, t, route_t, sp)
-    chase.close(); lidar.close()
+    chase.close(); lidar.close(); zl.close(); zd.close()
 
 
 # --- s2 -------------------------------------------------------------------------------------------
@@ -532,7 +583,7 @@ def render_s2(shot, enc, data):
     sw, sh = px(220), px(391)
     cache = {}
     stop_ns = data["stop_ns"]; stops = data["stops"]
-    c_six = cue(T, "Six cameras", D); c_hub = cue(T, "The pictures stream", D)
+    c_six = cue(T, "Multiple cameras", D, frac=0.3); c_hub = cue(T, "The images are processed", D, frac=0.65)
     last_k = -1; flash_t = -10
     for i in range(shot["frames"]):
         t = i / CFG.FPS
@@ -559,7 +610,7 @@ def render_s2(shot, enc, data):
             text(layer, (x + px(22), y + px(44)), f"{k + 1:3d}", 56, True, WHITE, e, mono=True)
             text(layer, (x + px(150), y + px(52)), f"metre {stops[k]['metre']:.2f} · 45 cm apart", 22, False, WHITE, e)
             l2 = "6 cameras per stop · L/R x low/mid/high" if t >= c_six else ""
-            l3 = "frames -> Nebius hub · robot moves on" if t >= c_hub else ""
+            l3 = "frames -> Nebius Serverless · HERMES + Token Factory" if t >= c_hub else ""
             text(layer, (x + px(150), y + px(86)), l2, 20, False, GREY, e * ease(t, c_six, 0.3))
             text(layer, (x + px(150), y + px(114)), l3, 20, False, GREY, e * ease(t, c_hub, 0.3))
         finish(base, layer, enc, shot, t, route_t, sp)
@@ -587,13 +638,13 @@ def render_s3(shot, enc, data):
     right = chl["right"]
     desc = right["description"]; action = right["action"]
     issue = right["issues"][0]
-    c_eyes = cue(T, "On the server", D)
-    c_boxes = cue(T, "draws the boxes", D)
-    c_fruit = cue(T, "and, separately, every fruit", D)
-    c_nemo = cue(T, "Then NVIDIA Nemotron", D)
-    c_write = cue(T, "and writes what", D)
-    c_advice = cue(T, "Its advice", D)
-    c_apart = cue(T, "Health and harvest", D)
+    c_eyes = cue(T, "Our AI analyzes", D, frac=0.12)
+    c_boxes = cue(T, "identify potential diseases", D, frac=0.25)
+    c_fruit = cue(T, "assess fruit ripeness", D, frac=0.2)
+    c_nemo = cue(T, "Using NVIDIA Nemotron", D, frac=0.4)
+    c_write = cue(T, "to understand each plant", D, frac=0.5)
+    c_advice = cue(T, "For example", D, frac=0.68)
+    c_apart = cue(T, "By combining", D, frac=0.82)
     type_rate = len(desc) / max(4.0, (c_advice - c_write - 0.8))
     cx = px(860); cw = W - cx - px(40)
     for i in range(shot["frames"]):
@@ -644,7 +695,7 @@ def render_s3(shot, enc, data):
             yy = y + px(56)
             e_b = ease(t, c_boxes, 0.4)
             text(layer, (x + px(22), yy), "RT-DETRv2", 20, True, WHITE, e_b)
-            text(layer, (x + px(170), yy + px(2)), "trained only on synthetic renders · leaf anomaly boxes", 19, False, GREY, e_b)
+            text(layer, (x + px(170), yy + px(2)), "trained on Isaac Sim renders + real greenhouse photos", 19, False, GREY, e_b)
             yy += px(30)
             text(layer, (x + px(170), yy), f"right plant: {n_chl_right} chlorosis regions in 3 views · left plant: none", 19, False, MAGENTA, e_b)
             yy += px(44)
@@ -689,8 +740,8 @@ def render_s4(shot, enc, data):
     T = shot["text"]; D = shot["dur"]; sp = shot["speed"]
     chase = Clip(VID + "/chase.mp4", shot["chase0"], sp * D, sp, (W, H))
     decs = data["decisions"]
-    c_go = cue(T, "Those findings go", D); c_goals = cue(T, "It chooses goals", D)
-    c_two = cue(T, "On this run it ordered", D); c_clear = cue(T, "Both came back healthy", D)
+    c_go = cue(T, "Beyond analyzing plants", D, frac=0.02); c_goals = cue(T, "HERMES can request", D, frac=0.35)
+    c_two = cue(T, "prioritize plants", D, frac=0.5); c_clear = cue(T, "By verifying uncertain", D, frac=0.72)
     def cmd_str(d):
         c = d["command"]
         if c["cmd"] == "survey_farm":
@@ -734,6 +785,18 @@ def render_s4(shot, enc, data):
     chase.close()
 
 
+# --- s45: HERMES then Cosmos in one narration ----------------------------------------------------
+def render_s45(shot, enc, data):
+    """Part A: HERMES card over the chase (render_s4). Part B: jump cut to the yard with the Cosmos flow (render_s5).
+    Each part gets the matching half of the narration text so the cues land where the words are."""
+    T = shot["text"]; i = T.find("Between greenhouses")
+    fa = int(round(shot["split"] * CFG.FPS)); fb = shot["frames"] - fa
+    a = dict(shot, id="s4_hermes", text=T[:i], dur=fa / CFG.FPS, frames=fa)
+    b = dict(shot, id="s5_yard_safety", text=T[i:], dur=fb / CFG.FPS, frames=fb, chase0=shot["chase0b"], speed=shot["speedb"])
+    render_s4(a, enc, data)
+    render_s5(b, enc, data)
+
+
 # --- fast-forward bridge --------------------------------------------------------------------------
 def render_ff(shot, enc, data):
     W, H = CFG.W, CFG.H
@@ -760,9 +823,9 @@ def render_s5(shot, enc, data):
     fw, fh = px(384), px(216)
     front = Clip(VID + "/front.mp4", shot["chase0"], sp * D, sp, (fw, fh))
     # cut-ins: (segment time, duration, clip, label)
-    c_out = cue(T, "across the yard", D)
-    c_if = cue(T, "If SAFETY ever", D); c_cos = cue(T, "NVIDIA Cosmos Reason", D)
-    c_herm = cue(T, "HERMES then waits", D); c_safe = cue(T, "The robot stays safe", D)
+    c_out = cue(T, "As RoboFarm moves", D, frac=0.02)
+    c_if = cue(T, "People, equipment", D, frac=0.25); c_cos = cue(T, "NVIDIA Cosmos Reason", D, frac=0.45)
+    c_herm = cue(T, "help HERMES determine", D, frac=0.6); c_safe = cue(T, "This allows", D, frac=0.8)
     cut1 = dict(t0=c_out + 0.5, dur=6.0, clip=Clip(VID + "/shots/cctv4_yard_1.mp4", 14.0, 6.0, 1.0, (W, H)),
                 label="CCTV-4 · yard")
     cut2 = dict(t0=c_if + 0.3, dur=7.0, clip=Clip(VID + "/shots/person2_yard_1.mp4", 24.0, 7.0, 1.0, (W, H)),
@@ -851,8 +914,8 @@ def render_s6(shot, enc, data):
 def render_s7(shot, enc, data):
     W, H = CFG.W, CFG.H
     T = shot["text"]; D = shot["dur"]; sp = shot["speed"]
-    c_bench = cue(T, "We also benchmarked", D)
-    c_ling = cue(T, "Only lingbot-map", D); c_stereo = cue(T, "Stereo, or LiDAR", D)
+    c_bench = cue(T, "Using GPU infrastructure", D, frac=0.5)
+    c_ling = cue(T, "helping the robot navigate", D, frac=0.72); c_stereo = cue(T, "adapt to changes", D, frac=0.88)
     t_sw = c_bench + 0.3            # switch from cuVSLAM map to lingbot map
     d_a = t_sw; d_b = D - t_sw
     sp_a = 30.0 / d_a; sp_b = 20.0 / d_b
@@ -866,19 +929,19 @@ def render_s7(shot, enc, data):
         ch = chase.next()
         if t < t_sw:
             base = cuv.next()
-            lbl = "3-D map: ZED depth placed by cuVSLAM's own poses · no ground truth"
+            lbl = "3-D map of both greenhouses: ZED stereo depth placed by cuVSLAM poses"
         else:
             base = lin.next()
-            lbl = "lingbot-map: 3-D map from the front camera only"
+            lbl = "lingbot-map: a second 3-D model, from the front camera alone"
         if abs(t - t_sw) < 0.25:
             base = darken(base, 1 - abs(t - t_sw) / 0.25)
         layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         inset(base, layer, ch, W - pw - px(40), H - ph - px(48), pw, ph, f"chase cam · x{sp:g}", ease(t, 0.3, 0.5))
         lines = [lbl]
-        if t < t_sw: lines.append("built on a Nebius GPU · poses from cuVSLAM")
-        if t >= c_bench: lines.append("7 camera-only mapping methods benchmarked on this route")
-        if t >= c_ling: lines.append("only lingbot-map kept the two identical greenhouses apart (~1 m)")
-        if t >= c_stereo: lines.append("stereo or LiDAR for localisation · lingbot-map for the map")
+        if t < t_sw: lines.append("rebuilt as a GPU job on Nebius after every survey")
+        if t >= c_bench: lines.append("the robot's own map of the farm, refined run after run")
+        if t >= c_ling: lines.append("more accurate navigation · adapts to changes in the farm")
+        if t >= c_stereo: lines.append("the map is for the robot - the farmer gets the report")
         cw_ = px(800)
         hh = px(72) + px(22 * 1.45) * sum(len(wrap(l_, 22, cw_ - px(44))) for l_ in lines)
         seg_caption(layer, "SERVER-SIDE MAPPING · NEBIUS", lines, t, 0.5, 1 - ease(t, D - 0.6, 0.5),
@@ -893,16 +956,17 @@ def render_s8(shot, enc, data):
     T = shot["text"]; D = shot["dur"]; sp = shot["speed"]
     chase = Clip(VID + "/chase.mp4", shot["chase0"], sp * D, sp, (W, H))
     hv = data["det_summary"]["1_harvest_fruit_grading"]["tunnel-09/aisle-02"]
-    vs = data["vlm_summary"]
-    c_rep = cue(T, "the report is already", D); c_t9 = cue(T, "Tunnel nine", D)
-    c_nr = cue(T, "two thousand", D); c_rej = cue(T, "fifty-three", D)
-    c_dis = cue(T, "Of nine diseased", D); c_fa = cue(T, "Nemotron raised", D); c_miss = cue(T, "And we are honest", D)
+    hv10 = data["det_summary"]["1_harvest_fruit_grading"].get("tunnel-10/aisle-02", hv)
+    c_rep = cue(T, "And this is what", D, frac=0.02); c_t9 = cue(T, "estimates the number", D, frac=0.3)
+    c_nr = c_t9 + 1.2; c_rej = c_t9 + 2.4
+    c_dis = cue(T, "identifies plants that may need", D, frac=0.45); c_fa = cue(T, "Each flagged plant", D, frac=0.55)
+    c_miss = cue(T, "Available in both Thai", D, frac=0.75)
     for i in range(shot["frames"]):
         t = i / CFG.FPS
         base = chase.next()
         route_t = shot["chase0"] + sp * t
         layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        view_label(layer, "CHASE CAM · yard -> dock")
+        view_label(layer, "CHASE CAM · yard -> dock" if shot["chase0"] >= 590 else "CHASE CAM · tunnel-09 · aisle-02")
         e = ease(t, c_rep, 0.6) * (1 - ease(t, D - 0.5, 0.4))
         if e > 0:
             w = px(760); h = px(760)
@@ -913,13 +977,16 @@ def render_s8(shot, enc, data):
             yy = y + px(64)
             # harvest
             eh = ease(t, c_t9, 0.4) * e
-            text(layer, (x + px(22), yy), "HARVEST · tunnel-09", 20, True, WHITE, eh); yy += px(40)
-            rows = [("ripe, ready to pick", hv["pass"], GREEN, c_t9 + 0.6), ("not ready", hv["not_ready"], YELLOW, c_nr),
-                    ("reject", hv["reject"], RED, c_rej)]
-            for nm, v, col, t0 in rows:
+            text(layer, (x + px(22), yy), "HARVEST", 20, True, WHITE, eh)
+            text(layer, (x + px(300), yy + px(2)), "tunnel-09", 18, False, GREY, eh)
+            text(layer, (x + px(520), yy + px(2)), "tunnel-10", 18, False, GREY, eh); yy += px(40)
+            rows = [("ripe, ready to pick", "pass", GREEN, c_t9 + 0.6), ("not ready", "not_ready", YELLOW, c_nr),
+                    ("reject", "reject", RED, c_rej)]
+            for nm, key, col, t0 in rows:
                 ee = ease(t, t0, 0.4) * e
-                text(layer, (x + px(22), yy), f"{v:>6,}", 36, True, col, ee, mono=True)
-                text(layer, (x + px(190), yy + px(12)), nm, 21, False, WHITE, ee)
+                text(layer, (x + px(22), yy + px(12)), nm, 19, False, WHITE, ee)
+                text(layer, (x + px(300), yy), f"{hv[key]:>6,}", 36, True, col, ee, mono=True)
+                text(layer, (x + px(520), yy), f"{hv10[key]:>6,}", 36, True, col, ee, mono=True)
                 yy += px(50)
             yy += px(14)
             d = ImageDraw.Draw(layer)
@@ -927,15 +994,15 @@ def render_s8(shot, enc, data):
             yy += px(18)
             ep = ease(t, c_dis, 0.4) * e
             text(layer, (x + px(22), yy), "PLANT HEALTH · both greenhouses", 20, True, WHITE, ep); yy += px(40)
-            rows2 = [("6 / 9", "diseased plants hidden in the scene were found (RT-DETR + Nemotron)", GREEN, c_dis + 0.5),
-                     (f"{vs['flags_not_near_any_anomaly_plant']}", f"Nemotron false alarms over {vs['plants_judged']} plants judged", YELLOW, c_fa)]
+            rows2 = [("6", "plants flagged: yellowing leaves, leaf spots, fruit lesions", YELLOW, c_dis + 0.5),
+                     ("each", "with photos, its position in the row, and a recommended action", WHITE, c_fa)]
             for v, nm, col, t0 in rows2:
                 ee = ease(t, t0, 0.4) * e
                 text(layer, (x + px(22), yy), v, 36, True, col, ee, mono=True)
                 yy = para(layer, x + px(190), yy + px(6), nm, 20, w - px(220), WHITE, ee) + px(14)
             em = ease(t, c_miss, 0.4) * e
-            text(layer, (x + px(22), yy + px(4)), "NOT YET DETECTED", 18, True, RED, em)
-            para(layer, x + px(22), yy + px(32), "wilting and defoliation: whole-plant shapes the close side cameras cannot see yet - next to fix",
+            text(layer, (x + px(22), yy + px(4)), "REPORT", 18, True, GREEN, em)
+            para(layer, x + px(22), yy + px(32), "report_th.md · report_en.md · written on Nebius before the robot is back on its charger",
                  20, w - px(44), GREY, em)
         finish(base, layer, enc, shot, t, route_t, sp)
     chase.close()
@@ -947,17 +1014,36 @@ def render_s9(shot, enc, data):
     T = shot["text"]; D = shot["dur"]
     src = VID + "/shots/cctv7_front_overview_2.mp4"
     cctv = Clip(src, 76.0, 11.5, 1.0, (W, H))
-    c_one = cue(T, "the robot posts one message", D); c_rest = cue(T, "the Nebius server does", D)
-    c_next = cue(T, "Next time", D); c_end = cue(T, "RoboFarm, built", D)
+    # optional assembly film first (the real robot), then the farm overview with the closing card
+    fv = shot.get("vid_dur", 0.0); film = None
+    if fv > 0:
+        vs = shot["vid_speed"]; sw, sh = probe_size(shot["file"])
+        scale = min(W / sw, H / sh); vw, vh = int(sw * scale) // 2 * 2, int(sh * scale) // 2 * 2
+        film = Clip(shot["file"], 0.0, fv * vs, vs, (vw, vh)); last_f = None
+    c_one = cue(T, "brings everything together", D, frac=0.1); c_rest = c_one + 0.6
+    c_next = cue(T, "Built and tested", D, frac=0.4); c_end = cue(T, "RoboFarm. Built for farmers", D, frac=0.85)
+    l_next = ("affordable · accessible · locally sustainable" if "Built and tested" in T
+              else "next run: nobody runs a single step by hand")
+    l_end = "Built for farmers.  Designed for the real world." if "Built for farmers" in T else "R181-S  ·  Nebius x NVIDIA Global AI Hackathon 2026"
     stages = ["detect", "vlm_stops", "lidar_map", "cuvslam", "lingbot", "cosmos", "report"]
+    c_one = max(c_one, fv + 0.3); c_rest = max(c_rest, fv + 0.9); c_next = max(c_next, fv + 1.5)
     for i in range(shot["frames"]):
         t = i / CFG.FPS
-        base = cctv.next()
         layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        e_dark = ease(t, 0.3, 1.0)
+        if film is not None and t < fv:
+            fr = film.next() or last_f; last_f = fr
+            base = letterbox(fr, W, H)
+            view_label(layer, "THE REAL ROBOT · R1 assembly overview · rendered from the CAD model")
+            e_f = ease(t, 0.0, 0.6) * (1 - ease(t, fv - 0.5, 0.5))
+            seg_caption(layer, "ROBOFARM · R1", ["Designed and assembled by us, around locally available components",
+                                                  "Working directly with farmers on site"], t, 1.0, e_f, w=px(820))
+            finish(base, layer, enc, shot, t, ROUTE_LEN, 0, hud_alpha=0.0, fade=e_f if t > fv - 0.5 else ease(t, 0.0, 0.6))
+            continue
+        base = cctv.next()
+        e_dark = ease(t, fv + 0.3, 1.0)
         base = darken(base, 0.6 * e_dark)
         view_label(layer, "CCTV-7 · farm overview · robot back at the dock", 1 - ease(t, c_end, 0.5))
-        e = ease(t, 0.5, 0.6)
+        e = ease(t, fv + 0.5, 0.6)
         # pipeline diagram
         cxm = W // 2
         text(layer, (cxm, px(150)), "ONE SYSTEM", 30, True, GREEN, e, anchor="mm")
@@ -988,19 +1074,21 @@ def render_s9(shot, enc, data):
             xx = x0 + k * (bw + gap)
             text(layer, (xx + bw // 2, by + bh + px(22)), s, 15, False, GREY, ee, anchor="mm")
         e2 = ease(t, c_next, 0.5)
-        text(layer, (cxm, px(520)), "next run: nobody runs a single step by hand", 24, False, WHITE, e2, anchor="mm")
+        text(layer, (cxm, px(520)), l_next, 24, False, WHITE, e2, anchor="mm")
         e3 = ease(t, c_end, 0.6)
         text(layer, (cxm, px(720)), "RoboFarm", 90, True, WHITE, e3, anchor="mm")
         d.rectangle([cxm - px(120), px(782), cxm + px(120), px(786)], fill=GREEN + (int(255 * e3),))
-        text(layer, (cxm, px(830)), "R181-S  ·  Nebius x NVIDIA Global AI Hackathon 2026", 30, False, WHITE, e3, anchor="mm")
+        text(layer, (cxm, px(830)), l_end, 30, False, WHITE, e3, anchor="mm")
         text(layer, (cxm, px(880)), "NVIDIA Isaac Sim · cuVSLAM · Nemotron 3 / 3.5 Super VL · Cosmos Reason · Nebius Token Factory", 19, False, GREY, e3, anchor="mm")
-        fade = 1 - ease(t, D - 1.5, 1.3)
+        fade = ease(t, fv, 0.6) * (1 - ease(t, D - 1.5, 1.3))
         finish(base, layer, enc, shot, t, ROUTE_LEN, 0, hud_alpha=0.0, fade=fade)
     cctv.close()
+    if film is not None:
+        film.close()
 
 
-RENDERERS = {"s0_open": render_s0, "s1_edge": render_s1, "s2_stops": render_s2, "s3_disease_freeze": render_s3,
-             "s4_hermes": render_s4, "ff_t09": render_ff, "s5_yard_safety": render_s5, "s6_r181s": render_s6,
+RENDERERS = {"s0_open": render_s0, "s0b_build": render_s0b, "s1_edge": render_s1, "s2_stops": render_s2, "s3_disease_freeze": render_s3,
+             "s4_hermes": render_s4, "s45_agent": render_s45, "ff_t09": render_ff, "s5_yard_safety": render_s5, "s6_r181s": render_s6,
              "s7_maps": render_s7, "s8_results": render_s8, "s9_pipeline": render_s9}
 
 

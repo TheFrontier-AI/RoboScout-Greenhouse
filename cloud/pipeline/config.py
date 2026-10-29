@@ -8,7 +8,7 @@ same code runs on the Nebius server (deploy/nebius/start_pipeline.sh) and in tes
   PIPELINE_VLM_WORKERS  parallel stop requests (4)   PIPELINE_VLM_LONG_SIDE 1280   PIPELINE_VLM_DETAILED 1
   EYES_BASE_URL/MODEL   Cosmos Reason vLLM endpoint for the front camera (optional)   PIPELINE_COSMOS_EVERY_S 10
   CUVSLAM_PYTHON        interpreter with the cuvslam wheel (default: this one)   CUVSLAM_MODES stereo,inertial,rgbd
-  LINGBOT_RUN           ~/lingbot/run.sh   LINGBOT_IMAGE lingbot:blackwell   LINGBOT_GPU 0
+  LINGBOT_RUN           deploy/nebius/lingbot/run.sh   LINGBOT_IMAGE lingbot:blackwell   LINGBOT_GPU 0
   BRAIN_BASE_URL/MODEL  Nemotron text for report_th.md / report_en.md (needs NEBIUS_API_KEY)
   PIPELINE_MATCH_M      ground-truth match radius (0.7 m)   PIPELINE_MAP_EVERY 5 (steps per map video frame)"""
 from __future__ import annotations
@@ -45,7 +45,7 @@ class PipelineConfig:
     cuvslam_python: str = sys.executable
     cuvslam_modes: tuple[str, ...] = ("stereo", "inertial", "rgbd")
     # lingbot-map (optional GPU step, docker)
-    lingbot_run: Path = Path.home() / "lingbot/run.sh"
+    lingbot_run: Path = ROOT / "deploy/nebius/lingbot/run.sh"
     lingbot_image: str = "lingbot:blackwell"
     lingbot_gpu: int = 0
     # report (Nemotron text on Token Factory; template without a key)

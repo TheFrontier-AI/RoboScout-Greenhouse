@@ -4,12 +4,12 @@
   1920,
   1080
  ],
- "total_s": 297.467,
+ "total_s": 162.167,
  "voice": "en-AU-NatashaNeural",
  "narration_lufs": -16.0,
  "disease_freeze": {
-  "start_s": 71.7,
-  "end_s": 119.067,
+  "start_s": 56.467,
+  "end_s": 79.4,
   "route_time_s": 107.116672,
   "stop": 25,
   "aisle": "tunnel-09/aisle-02",
@@ -19,132 +19,98 @@
   {
    "id": "s0_open",
    "start_s": 0.0,
-   "end_s": 22.433,
+   "end_s": 21.267,
    "chase_route_time_s": [
     0.0,
-    22.87
+    20.53
    ],
    "chase_speed": 2.0,
    "narration_start_s": 0.35,
-   "narration_end_s": 22.099
+   "narration_end_s": 21.281
   },
   {
    "id": "s1_edge",
-   "start_s": 22.433,
-   "end_s": 52.3,
+   "start_s": 21.267,
+   "end_s": 39.833,
    "chase_route_time_s": [
-    22.9,
-    62.02
+    20.56,
+    48.41
    ],
-   "chase_speed": 1.31,
-   "narration_start_s": 22.783,
-   "narration_end_s": 51.939
+   "chase_speed": 1.5,
+   "narration_start_s": 21.617,
+   "narration_end_s": 39.835
   },
   {
    "id": "s2_stops",
-   "start_s": 52.3,
-   "end_s": 71.7,
+   "start_s": 39.833,
+   "end_s": 56.467,
    "chase_route_time_s": [
-    62.01,
-    107.21
+    63.85,
+    107.1
    ],
-   "chase_speed": 2.33,
-   "narration_start_s": 52.65,
-   "narration_end_s": 71.35
+   "chase_speed": 2.6,
+   "narration_start_s": 40.183,
+   "narration_end_s": 56.474
   },
   {
    "id": "s3_disease_freeze",
-   "start_s": 71.7,
-   "end_s": 119.067,
+   "start_s": 56.467,
+   "end_s": 79.4,
    "chase_route_time_s": [
     107.12,
     107.12
    ],
    "chase_speed": 0,
-   "narration_start_s": 72.05,
-   "narration_end_s": 118.726
+   "narration_start_s": 56.817,
+   "narration_end_s": 79.386
   },
   {
-   "id": "s4_hermes",
-   "start_s": 119.067,
-   "end_s": 145.3,
+   "id": "s45_agent",
+   "start_s": 79.4,
+   "end_s": 101.7,
    "chase_route_time_s": [
     107.12,
-    185.82
+    280.02
    ],
    "chase_speed": 3.0,
-   "narration_start_s": 119.417,
-   "narration_end_s": 144.935
-  },
-  {
-   "id": "ff_t09",
-   "start_s": 145.3,
-   "end_s": 149.0,
-   "chase_route_time_s": [
-    185.77,
-    244.97
-   ],
-   "chase_speed": 16.0
-  },
-  {
-   "id": "s5_yard_safety",
-   "start_s": 149.0,
-   "end_s": 177.8,
-   "chase_route_time_s": [
-    245.0,
-    329.96
-   ],
-   "chase_speed": 2.95,
-   "narration_start_s": 149.35,
-   "narration_end_s": 177.466
-  },
-  {
-   "id": "s6_r181s",
-   "start_s": 177.8,
-   "end_s": 207.367,
-   "chase_route_time_s": [
-    330.01,
-    359.58
-   ],
-   "chase_speed": 1.0,
-   "narration_start_s": 178.15,
-   "narration_end_s": 207.024
+   "narration_start_s": 79.75,
+   "narration_end_s": 101.688
   },
   {
    "id": "s7_maps",
-   "start_s": 207.367,
-   "end_s": 237.7,
+   "start_s": 101.7,
+   "end_s": 119.333,
    "chase_route_time_s": [
-    359.58,
-    600.13
+    279.98,
+    600.02
    ],
-   "chase_speed": 7.93,
-   "narration_start_s": 207.717,
-   "narration_end_s": 237.352
+   "chase_speed": 18.15,
+   "narration_start_s": 102.05,
+   "narration_end_s": 119.33
   },
   {
    "id": "s8_results",
-   "start_s": 237.7,
-   "end_s": 271.6,
+   "start_s": 119.333,
+   "end_s": 139.4,
    "chase_route_time_s": [
-    600.0,
-    647.6
+    599.96,
+    647.57
    ],
-   "chase_speed": 1.404,
-   "narration_start_s": 238.05,
-   "narration_end_s": 271.262
+   "chase_speed": 2.373,
+   "narration_start_s": 119.683,
+   "narration_end_s": 139.412
   },
   {
    "id": "s9_pipeline",
-   "start_s": 271.6,
-   "end_s": 297.467,
+   "start_s": 139.4,
+   "end_s": 162.167,
    "chase_route_time_s": [
     647.8,
     647.8
    ],
    "chase_speed": 0,
-   "narration_start_s": 271.95,
-   "narration_end_s": 295.623
+   "narration_start_s": 139.75,
+   "narration_end_s": 160.669
   }
  ]
 }

@@ -1,0 +1,11 @@
+# Cloud side (Nebius GPU server): hub + analysis pipeline. Python 3.12 on Ubuntu 24.04 + CUDA.
+# Install torch first from the CUDA index that matches the driver (see docs/INSTALL.md), then this file.
+numpy>=2.0
+pillow>=10
+scipy>=1.13
+opencv-python-headless>=4.10
+openai>=1.50
+pydantic>=2
+transformers>=4.49
+safetensors>=0.4
+accelerate>=1.0

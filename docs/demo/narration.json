@@ -1,54 +1,55 @@
 {
-  "voice": "en-US-AndrewMultilingualNeural",
-  "note": "One continuous film. The robot's chase camera is the spine; overlays pause it. Times are targets; the assembly tool stretches holds to fit the spoken audio.",
-  "segments": [
-    {"id": "s0_open", "target_s": 30,
-     "video": "shots/cctv7_front_overview_1.mp4", "then": "chase.mp4@0",
-     "overlay": "title: RoboFarm · R181-S · Nebius x NVIDIA Global AI Hackathon 2026",
-     "text": "This is RoboFarm. The robot you're watching is R1, built for tomato greenhouses, and right now it is leaving its dock in a digital twin of our own farm, rendered in NVIDIA Isaac Sim. Nothing in this film is scripted. Every turn, every stop, is the robot's own decision, and the route you'll see is the route it really drove."},
-
-    {"id": "s1_edge", "target_s": 30,
-     "video": "chase.mp4@30-62", "inset": "lidar.mp4",
-     "overlay": "labels: BOOK driver · SAFETY · LiDAR localisation (no tags) — on the robot",
-     "text": "On board, three things run with no cloud at all. A rule-based driver we call BOOK follows the aisle map. A SAFETY layer stops the wheels the moment the LiDAR sees something in the way. And localisation fuses the wheels, the gyro and the LiDAR scan against a map of the farm, with no fiducial tags anywhere. Over this hundred-and-twenty-metre route, the robot's own idea of where it was stayed within twenty-three centimetres of the truth."},
-
-    {"id": "s2_stops", "target_s": 30,
-     "video": "chase.mp4@62-95", "inset": "side_right_mid.mp4 (flash at each stop)",
-     "overlay": "counter: plant stops · six cameras per stop · frames → Nebius hub",
-     "text": "Inside the greenhouse it slows to a walk and stops at every single plant, forty-five centimetres apart. Six cameras on the mast, three on each side, low, mid and high, fire together. The pictures stream to a hub on Nebius, and the robot moves on without waiting for anyone."},
-
-    {"id": "s3_disease_freeze", "target_s": 45,
-     "video": "freeze chase.mp4 at the chlorosis stop (tunnel-09, metre 11.85)", "inset": "the six side images with RT-DETR boxes, then Nemotron VL text typing in",
-     "overlay": "card: Plant health (separate from Harvest) · RT-DETRv2 boxes · Nemotron 3.5 Super VL verdict + next step",
-     "text": "Here, at metre twelve of tunnel nine, something is wrong with the plant on the right. On the server two very different eyes look at it. RT-DETR, a small detector we trained only on synthetic renders, draws the boxes: the yellowing leaves, in purple, and, separately, every fruit graded ripe, not ready, or reject. Then NVIDIA Nemotron 3.5 Super VL reads all six views of the plant in a single request, and writes what an agronomist would say: yellowing in the upper canopy, lower leaves still green, stems and fruit fine. Its advice: check soil nitrogen and irrigation. Health and harvest are always reported apart, so nobody confuses a sick plant with a ripe one."},
-
-    {"id": "s4_hermes", "target_s": 25,
-     "video": "chase.mp4@95-120", "inset": "HERMES panel: revisit tunnel-09/aisle-02 metre 12.1 — reasoning text from decisions.jsonl",
-     "overlay": "HERMES planner · NVIDIA Nemotron 3 · Nebius Token Factory",
-     "text": "Those findings go to the planner we call HERMES, running NVIDIA Nemotron 3 on Nebius Token Factory. HERMES never touches the wheels. It chooses goals: finish the survey, then go back and look again at the strongest suspects. On this run it ordered two revisits. Both came back healthy, so two false alarms were cleared before they ever reached the farmer."},
-
-    {"id": "s5_yard_safety", "target_s": 30,
-     "video": "chase.mp4@245-300 (back door → yard)", "cutins": "shots/cctv4_yard_1.mp4, shots/person2_yard_1.mp4",
-     "overlay": "SAFETY stop → front frame → Cosmos Reason 2 → HERMES: wait / notify farmer",
-     "text": "Out the back door and across the yard to the next greenhouse. If SAFETY ever stops the robot, the front camera frame goes to NVIDIA Cosmos Reason, which says in plain farm terms what is there: a person, a cart, a hose across the aisle, a fallen plant. HERMES then waits for people and animals, or sends the farmer a message for anything that will not move by itself. The robot stays safe; the AI explains why."},
-
-    {"id": "s6_r181s", "target_s": 35,
-     "video": "chase.mp4@330-365 (tunnel-10)", "inset": "zed_left_540p.mp4 + zed_depth.mp4; cuVSLAM path overlay on the farm plan",
-     "overlay": "R181-S · Stereolabs ZED 2i · NVIDIA cuVSLAM: 6.4 cm over 111 m · 526 fps · Jetson-ready",
-     "text": "This is the new sensor that makes R1 into R181-S: a ZED 2i stereo camera where the single front camera used to be. With stereo depth, NVIDIA cuVSLAM tracks the robot's position at over five hundred frames a second on a single GPU, and across the whole hundred-and-eleven-metre route it stays within six centimetres of the truth, at true metric scale. The same code runs on a Jetson inside the robot."},
-
-    {"id": "s7_maps", "target_s": 40,
-     "video": "cuvslam_3d.mp4@0-30 then lingbot_3d.mp4@28-48",
-     "overlay": "3-D map: ZED depth placed by cuVSLAM poses · lingbot-map from the front camera · Nebius GPU",
-     "text": "Back on the server, those depth frames become a three-dimensional map of both greenhouses, placed with cuVSLAM's own poses and no ground truth at all. We also benchmarked seven camera-only mapping methods on the same route. Only lingbot-map kept the two identical greenhouses apart, at about a metre of error; the others folded them together. Stereo, or LiDAR, is what makes localisation reliable; lingbot-map is the right tool for the map."},
-
-    {"id": "s8_results", "target_s": 35,
-     "video": "chase.mp4@600-648 (return to dock)", "overlay": "report card: tunnel-09 ripe 1,780 / not ready 2,242 / reject 53 · anomaly plants found 6 of 9 · Nemotron false alarms 12 · wilting & defoliation not yet detected",
-     "text": "Home to the dock, and the report is already written. Tunnel nine: one thousand seven hundred and eighty ripe fruit ready to pick, two thousand two hundred not ready, fifty-three to reject. Of nine diseased plants hidden in the scene, the two eyes together found six. Nemotron raised only twelve false alarms over three hundred and twenty plants. And we are honest about the misses: wilting and leaf drop are whole-plant shapes the close side cameras cannot see yet. That is the next thing to fix."},
-
-    {"id": "s9_pipeline", "target_s": 25,
-     "video": "pipeline diagram card over the final CCTV frame",
-     "overlay": "robot → /run_complete → pipeline: detect · vlm_stops · lidar_map · cuvslam · lingbot · cosmos · report",
-     "text": "Everything you have seen now runs as one system. When a survey ends, the robot posts one message, and the Nebius server does the rest by itself: detection, the six-view inspection, the maps, the report in Thai and English. Next time, nobody runs a single step by hand. RoboFarm, built for the Nebius and NVIDIA Global AI Hackathon."}
-  ]
+ "voice": "en-AU-NatashaNeural",
+ "rate": "-10%",
+ "pitch": "-3Hz",
+ "voice_tempo": 1.3,
+ "pad_s": 0.35,
+ "ff_speed": 24.0,
+ "order": [
+  "s0_open",
+  "s1_edge",
+  "s2_stops",
+  "s3_disease_freeze",
+  "s45_agent",
+  "s7_maps",
+  "s8_results",
+  "s9_pipeline"
+ ],
+ "note": "Narration v2, 3-minute cut (user's text). One continuous film; the chase camera is the spine; holds stretch to the spoken audio. No ground-truth comparisons on screen.",
+ "segments": [
+  {
+   "id": "s0_open",
+   "text": "Meet RoboFarm — our custom-built autonomous robot designed to navigate tomato greenhouses, inspect every plant, and turn what it observes into actionable insights for farmers. What you're seeing is RoboFarm navigating autonomously through a digital twin of our greenhouse, built with NVIDIA Isaac Sim and powered by Nebius GPUs."
+  },
+  {
+   "id": "s1_edge",
+   "text": "For a robot to navigate autonomously, it first needs to understand where it is. RoboFarm combines LiDAR and a ZED stereo camera running NVIDIA cuVSLAM on the Jetson Orin inside the robot to track its position through greenhouse pathways — without requiring additional markers or modifications to the greenhouse."
+  },
+  {
+   "id": "s2_stops",
+   "text": "Once inside the greenhouse, RoboFarm begins its plant-by-plant inspection. Multiple cameras capture each tomato plant from different heights and angles, and the images are processed on Nebius, where HERMES Agent and Nebius Token Factory generate actionable insights for farmers."
+  },
+  {
+   "id": "s3_disease_freeze",
+   "text": "This is where RoboFarm turns images into intelligence. Using NVIDIA Nemotron, the system brings together observations from multiple camera angles to assess fruit ripeness, identify potential diseases, and generate practical recommendations. When it detects yellowing leaves, it may suggest checking nutrient levels or irrigation. Plant health and harvest readiness are always kept separate."
+  },
+  {
+   "id": "s45_agent",
+   "text": "HERMES, an AI agent powered by NVIDIA Nemotron through Nebius Token Factory, coordinates the robot's next actions — a closer inspection, or notifying the farmer. Between greenhouses, NVIDIA Cosmos Reason interprets people, equipment and unexpected obstacles, helping HERMES decide whether to proceed, wait, or request human assistance."
+  },
+  {
+   "id": "s7_maps",
+   "text": "As RoboFarm moves through the greenhouse, it continuously collects spatial data to build and refine its 3D map. Using GPU infrastructure on Nebius, the system updates its representation of the environment, helping the robot navigate more accurately and adapt to changes in the farm."
+  },
+  {
+   "id": "s8_results",
+   "text": "And this is what the farmer receives — a clear, actionable report from every survey: harvest readiness, the number of ripe and unripe tomatoes, and the plants that need attention, each with images, its location, and recommended actions. Available in Thai and English, it turns hours of manual inspection into decisions farmers can act on."
+  },
+  {
+   "id": "s9_pipeline",
+   "text": "We designed and assembled RoboFarm around locally available components, working directly with farmers — a step toward technological self-reliance. Built and tested in real agricultural environments, our vision is to make advanced robotics affordable, accessible, and locally sustainable. RoboFarm. Built for farmers. Designed for the real world.",
+   "file": "/home/passin/Documents/Blender/TheFarm/r1_runs/farm_2026-10-29/demo_assets/assembly.mp4",
+   "video": "assembly film ~15 s under the first sentences, then the final CCTV frame + closing card"
+  }
+ ]
 }

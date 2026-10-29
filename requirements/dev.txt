@@ -1,0 +1,5 @@
+# Offline tests (no GPU, no network): python3 -m pytest -q
+-r robot.txt
+pytest>=8
+openai>=1.50
+pydantic>=2
