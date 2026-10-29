@@ -43,6 +43,9 @@ Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. 
 | `deploy/nebius/` | One-VM stack (RTX PRO 6000): bootstrap and docker compose |
 | `docs/` | Mission spec, interfaces, environment, roadmap, hackathon plan (Thai) |
 
+## Gallery
+22 images (sim renders, real farm photos, the driven route) with captions: [docs/media/gallery/](docs/media/gallery/README.md)
+
 ## Install and run (cloud + robot)
 Step-by-step install for both halves, verified from a fresh clone on a Nebius RTX PRO 6000 VM (cloud) and on a **Jetson Orin Nano** (robot): **[docs/INSTALL.md](docs/INSTALL.md)**.
 Fine-tuned detector weights are not in this repo: contact the author (see INSTALL.md).
