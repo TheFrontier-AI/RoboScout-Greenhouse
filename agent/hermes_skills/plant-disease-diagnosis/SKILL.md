@@ -19,8 +19,9 @@ You are HERMES. The robot's eyes (Cosmos Reason 2 by default) look at every side
 stream of per-frame opinions into **a few trustworthy spots** with a recommended action for the farmer.
 
 > **Not a diagnosis.** R1 gives a visual screening only. It is not a substitute for an agronomist, an
-> extension officer or a lab test (PCR/ELISA for viruses, culture for bacteria). Always say so in the report:
-> "ผลนี้เป็นการคัดกรองจากภาพเท่านั้น ไม่ใช่การวินิจฉัยของนักวิชาการเกษตรหรือผลตรวจแล็บ".
+> extension officer or a lab test (PCR/ELISA for viruses, culture for bacteria). Always include this disclaimer
+> in the farmer's language (Thai on our farm): "This is a visual screening only, not a diagnosis by an agronomist
+> or a lab result".
 
 ## When to Use
 - New rows appear at `GET $ROBOT_API_URL/findings?since=N` during or after a survey.
@@ -82,29 +83,30 @@ Rules: never put API keys in `reasoning`, reports or logs. Do not run `cloud/eye
 If the screening model was Cosmos, confirm with Nemotron VL (independent family), and the reverse.
 Model choice and why: `references/models.md`.
 
-## 5. Report to the farmer (Thai first, then English)
-One block per confirmed or uncertain spot, then a summary. Keep it short and concrete:
+## 5. Report to the farmer (farmer's language first, then English)
+Write the report in the farmer's language (Thai on our farm) first, then the same in English. One block per
+confirmed or uncertain spot, then a summary. Keep it short and concrete. The structure, shown here in English:
 ```
-รายงานตรวจแปลง tunnel-09 — 2026-10-28 09:40
-ทางเดินที่ตรวจ: aisle-01, aisle-02 | ข้าม: aisle-03 (แคบเกินไป 0.55 ม.)
-1) aisle-02 เมตร 15.0 ฝั่งซ้าย ต้นล่าง — สงสัยโรคใบไหม้ (late blight) ความมั่นใจ 0.8 (ยืนยันแล้ว 2 มุมกล้อง + 2 โมเดล)
-   หลักฐาน: แผลสีเข้มฉ่ำน้ำบนใบ มีราขาวใต้ใบ | รูป: frames/123_mast_left_low.jpg
-   ควรทำ: ตรวจด้วยตาภายในวันนี้, เด็ดใบ/ต้นที่เป็นใส่ถุงทิ้งนอกโรงเรือน, ลดความชื้น เพิ่มการระบายอากาศ,
-          ปรึกษาเจ้าหน้าที่เกษตรเรื่องสารที่ขึ้นทะเบียน
-ปลอดภัย (ตรวจซ้ำแล้วปกติ): aisle-01 เมตร 8.5
-หมายเหตุ: ผลนี้เป็นการคัดกรองจากภาพเท่านั้น ไม่ใช่การวินิจฉัยของนักวิชาการเกษตรหรือผลตรวจแล็บ
+Inspection report tunnel-09 — 2026-10-28 09:40
+Aisles inspected: aisle-01, aisle-02 | skipped: aisle-03 (too narrow, 0.55 m)
+1) aisle-02 metre 15.0 left side, low — suspected late blight, confidence 0.8 (confirmed by 2 camera views + 2 models)
+   Evidence: dark water-soaked lesions on the leaf, white mould under the leaf | image: frames/123_mast_left_low.jpg
+   Action: inspect by eye today; pick the affected leaves/plant into a bag and dispose outside the greenhouse;
+           lower humidity and improve airflow; ask the extension officer about registered products
+Clear (re-inspected, looks normal): aisle-01 metre 8.5
+Note: This is a visual screening only, not a diagnosis by an agronomist or a lab result
 --- English ---
 Covered aisle-01, aisle-02; skipped aisle-03 (too narrow). 1 confirmed spot: aisle-02 15.0 m left low,
 suspected late blight (0.8; 2 views + 2 models)... This is visual screening, not an agronomist or lab diagnosis.
 ```
-Include: aisle, metre, side, height, canonical label (Thai + English), confidence, the evidence text, the
+Include: aisle, metre, side, height, canonical label (local name + English), confidence, the evidence text, the
 image path, the state (`confirmed`/`uncertain`/`cleared`/`watch`), and the action from the reference table.
-Say "suspected" (สงสัย), never "diagnosed". For `tylcv`, `bacterial_spot` and anything `uncertain`,
+Say "suspected", never "diagnosed". For `tylcv`, `bacterial_spot` and anything `uncertain`,
 recommend a lab test or an extension officer.
 
 ## Rules
 - Never invent findings, labels, metres or confidences. If nothing is wrong, say so plainly.
 - Never recommend a specific pesticide product or dose. Say "registered product per label / ask the Thai
-  Department of Agriculture (กรมวิชาการเกษตร) or local extension officer".
+  Department of Agriculture or the local extension officer".
 - Never command spraying or watering. See `greenhouse-watering`, which refuses today.
 - Thresholds above are starting values, not calibrated. Log every decision so the farm team can tune them.

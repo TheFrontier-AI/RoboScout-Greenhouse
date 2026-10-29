@@ -5,7 +5,7 @@ Researched 2026-10-28. Numbers marked *assumption* are engineering estimates, no
 ## 1. Inputs (from the repo)
 | Input | Value | Where |
 |---|---|---|
-| Forward / reverse limit | 0.25 / 0.15 m/s | `docs/MISSION_SPEC_th.md` |
+| Forward / reverse limit | 0.25 / 0.15 m/s | `docs/MISSION_SPEC.md` |
 | Side capture spacing | 0.5 m (6 mast cams), front 2 m | `r1_nav/cameras.py` |
 | Revisit hold | 3.0 s | `r1_nav/commands.py` `REVISIT_HOLD_S` |
 | Side camera optics (sim) | focal 20 mm, aperture 21.40 × 38.05 mm portrait → ~56° H × 87° V; 180×320 now, 360×640 recommended | `sim/SIDE_CAMERAS_TODO.md` |

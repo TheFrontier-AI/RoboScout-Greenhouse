@@ -8,9 +8,9 @@ const POLL_MS = 1000;
 const ROBOT_WIDTH_M = 0.528, SIDE_MARGIN_M = 0.06;        // keep in sync with r1_nav/aisle_map.py
 const SIDE_CAMS = ["mast_left_high", "mast_left_mid", "mast_left_low", "mast_right_high", "mast_right_mid", "mast_right_low"];
 const SEVERITY = { disease: 3, suspect: 2, healthy: 1, not_plant: 0 };
-const STATUS_TH = { healthy: "ปกติ", suspect: "น่าสงสัย", disease: "พบโรค", not_plant: "ไม่ใช่พืช" };
-const STATE_TH = { surveying: "กำลังสำรวจ", transit: "กำลังเดินทาง", hold: "หยุดรอ", revisit: "กลับไปตรวจซ้ำ",
-  idle: "ว่าง", docked: "จอดชาร์จ", stopped: "หยุด", returning: "กลับจุดจอด", error: "ผิดพลาด" };
+const STATUS_LABEL = { healthy: "healthy", suspect: "suspect", disease: "disease found", not_plant: "not a plant" };
+const STATE_LABEL = { surveying: "surveying an aisle", transit: "moving between aisles", hold: "holding", revisit: "re-inspecting a spot",
+  idle: "idle", docked: "docked, charging", stopped: "stopped", returning: "returning to dock", error: "error" };
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 const $ = (id) => document.getElementById(id);
@@ -205,7 +205,7 @@ function ensureMap(s) {
     const [tx, ty] = P(v, (g.xmin + g.xmax) / 2, g.ymax);
     const t = el("text", { x: v.orient === "h" ? tx - 12 : tx, y: v.orient === "h" ? ty : ty - 8, class: "door",
       "text-anchor": "middle", transform: v.orient === "h" ? `rotate(-90 ${tx - 12} ${ty})` : null }, base);
-    t.textContent = "DOOR · ประตู";
+    t.textContent = "DOOR";
   }
   // aisle labels inside each aisle, near the far end
   for (const a of g.aisles) {
@@ -386,8 +386,8 @@ function renderDetail(s, idx) {
   const sig = JSON.stringify([sel && key(sel.aisle, sel.metre), b && b.findings.length, b && Object.values(b.frames).flat().length]);
   if (sig === ui.detailSig) return;
   ui.detailSig = sig;
-  $("detailHint").textContent = ui.selected ? "pinned · click map to change" : "auto-follow · ติดตามอัตโนมัติ";
-  if (!b) { $("detail").innerHTML = `<div class="empty">No findings yet · ยังไม่มีผลตรวจ</div>`; return; }
+  $("detailHint").textContent = ui.selected ? "pinned · click map to change" : "auto-follow · click map to pin";
+  if (!b) { $("detail").innerHTML = `<div class="empty">No findings yet</div>`; return; }
   const latest = (cam) => (b.frames[cam] || []).slice(-1)[0];
   const findFor = (fr) => fr && idx.findingByFrame.get(fr.frame_id);
   const worst = b.worst || "healthy";
@@ -405,16 +405,16 @@ function renderDetail(s, idx) {
   const sums = [...new Set(b.findings.filter((r) => r.status !== "healthy" && r.source !== "rtdetr").map((r) => r.summary).filter(Boolean))].slice(0, 3);
   const counts = b.findings.reduce((c, r) => ((c[r.status] = (c[r.status] || 0) + 1), c), {});
   const h = harvestTotals(b.findings);
-  const harvestHTML = h.frames ? `<div class="harvest-title">Harvest at this metre · ผลผลิตที่จุดนี้</div><div class="harvest">
-      <span><b>${h.plants}</b> plants <i>ต้น</i></span><span class="pass"><b>${h.pass}</b> ripe · pass <i>ผ่าน</i></span>
-      <span class="notready"><b>${h.not_ready}</b> not ready <i>ยังไม่สุก</i></span><span class="reject"><b>${h.reject}</b> reject <i>ไม่ผ่าน</i></span></div>` : "";
+  const harvestHTML = h.frames ? `<div class="harvest-title">Harvest at this metre</div><div class="harvest">
+      <span><b>${h.plants}</b> plants</span><span class="pass"><b>${h.pass}</b> ripe · pass</span>
+      <span class="notready"><b>${h.not_ready}</b> not ready</span><span class="reject"><b>${h.reject}</b> reject</span></div>` : "";
   $("detail").innerHTML = `
     <div class="detail-title"><span class="where">${esc(shortAisle(b.aisle))} @ ${b.metre.toFixed(1)} m</span>
-      <span class="status ${esc(worst)}">${esc(worst.replace("_", " "))} · ${STATUS_TH[worst] || ""}</span>
+      <span class="status ${esc(worst)}">${STATUS_LABEL[worst] || esc(worst.replace("_", " "))}</span>
       <span class="muted">${passes > 1 ? passes + " passes · " : ""}${Object.entries(counts).map(([k, n]) => `${n} ${k}`).join(", ")}</span></div>
     ${sums.map((t) => `<div class="summary">${esc(t)}</div>`).join("")}
     <div class="cams">${cams}</div>
-    ${issueHTML || `<div class="empty">No issues at this metre · ไม่พบปัญหา</div>`}
+    ${issueHTML || `<div class="empty">No issues at this metre</div>`}
     ${harvestHTML}`;
 }
 
@@ -425,7 +425,7 @@ function renderCapture(s, idx) {
   const sig = JSON.stringify([side?.frame_id, front?.frame_id, idx.findings.length]);
   if (sig === ui.captureSig) return;
   ui.captureSig = sig;
-  if (!side && !front) { $("capture").innerHTML = `<div class="empty">Waiting for frames · รอภาพ</div>`; return; }
+  if (!side && !front) { $("capture").innerHTML = `<div class="empty">Waiting for frames</div>`; return; }
   const b = side && idx.byKey.get(key(side.aisle, side.metre));
   const pick = (c) => (b?.frames[c] || []).slice(-1)[0];
   $("captureMeta").textContent = side ? `${shortAisle(side.aisle)} @ ${fmtM(side.metre)} · ${clock(side.ts)}` : "";
@@ -433,8 +433,8 @@ function renderCapture(s, idx) {
   $("capture").innerHTML = `
     <div class="front">${thumbHTML(front, null, { cam: "front" })}
       <div class="muted mono" style="margin-top:6px">front · navigation check · ${front ? fmtM(front.metre) : "—"}</div></div>
-    <div class="sides"><div class="side-label">Left bed · แปลงซ้าย</div>${thumbs(SIDE_CAMS.slice(0, 3))}
-      <div class="side-label">Right bed · แปลงขวา</div>${thumbs(SIDE_CAMS.slice(3))}</div>`;
+    <div class="sides"><div class="side-label">Left bed</div>${thumbs(SIDE_CAMS.slice(0, 3))}
+      <div class="side-label">Right bed</div>${thumbs(SIDE_CAMS.slice(3))}</div>`;
 }
 
 function renderFeed(s) {
@@ -443,7 +443,7 @@ function renderFeed(s) {
   if (sig === ui.feedSig) return;
   ui.feedSig = sig;
   $("feedCount").textContent = ds.length ? `${ds.length} · Nemotron` : "";
-  if (!ds.length) { $("feed").innerHTML = `<li class="empty" style="border:0;background:none">No decisions yet · ยังไม่มีการตัดสินใจ</li>`; return; }
+  if (!ds.length) { $("feed").innerHTML = `<li class="empty" style="border:0;background:none">No decisions yet</li>`; return; }
   $("feed").innerHTML = ds.map((d, i) => {
     const c = d.command || {};
     const id = `${d.ts}|${c.cmd}`;
@@ -467,7 +467,7 @@ function renderHeader(s) {
   const st = s.status || {};
   $("house").textContent = ui.geom?.house || st.house || "—";
   const state = String(st.state || "—");
-  $("sState").innerHTML = `<span class="state-pill ${esc(state)}">${esc(state)}</span><i>${STATE_TH[state] || ""}</i>`;
+  $("sState").innerHTML = `<span class="state-pill ${esc(state)}">${esc(state)}</span><i>${STATE_LABEL[state] || ""}</i>`;
   const a = ui.geom?.aisles.find((q) => q.id === st.aisle);
   $("sAisle").textContent = st.aisle ? `${shortAisle(st.aisle)}${a?.label ? " · " + a.label : ""}` : "—";
   $("sMetre").textContent = st.metre != null ? `${Number(st.metre).toFixed(2)}${a ? " / " + a.length.toFixed(1) : ""} m` : "—";
@@ -501,20 +501,21 @@ function renderKpis(s, idx) {
     const ms = new Set(idx.frames.filter((f) => f.aisle === a.id && SIDE_CAMS.includes(f.camera)).map((f) => Math.round(f.metre * 2)));
     cov = `${Math.min(100, Math.round((ms.size / (Math.floor(a.length / 0.5) + 1)) * 100))}%`;
   }
-  const k = (cls, label, th, v) => `<div class="kpi ${cls}"><div class="k">${label}<i>${th}</i></div><div class="v">${v}</div></div>`;
-  const group = (title, th) => `<div class="kpi-group">${title}<i>${th}</i></div>`;
+  // k(cssClass, label, hint, value): hint is an optional small secondary label (e.g. which models produced it).
+  const k = (cls, label, hint, v) => `<div class="kpi ${cls}"><div class="k">${label}${hint ? `<i>${hint}</i>` : ""}</div><div class="v">${v}</div></div>`;
+  const group = (title, hint) => `<div class="kpi-group">${title}${hint ? `<i>${hint}</i>` : ""}</div>`;
   // Two separate jobs, two separate panels: plant health (disease screening) and harvest (fruit grading / count).
   const det = { suspect: 0, disease: 0 };
   for (const r of idx.findings) if (r.source === "rtdetr" && r.status in det) det[r.status]++;
-  $("kpis").innerHTML = k("", "Frames", "ภาพ", idx.frames.length) + k("", "Aisle coverage", "ครอบคลุม", cov) +
-    group("Plant health · disease screening", "สุขภาพต้น · ตรวจโรค (Cosmos + Nemotron-VL + RT-DETR)") +
-    k("healthy", "Healthy", "ปกติ", c.healthy) + k("suspect", "Suspect", "น่าสงสัย", c.suspect) +
-    k("disease", "Disease", "พบโรค", c.disease) + k("", "Not plant", "ไม่ใช่พืช", c.not_plant) +
-    (det.suspect + det.disease ? k("suspect", "Detector flags", "RT-DETR พบใบผิดปกติ", det.suspect + det.disease) : "");
+  $("kpis").innerHTML = k("", "Frames", "", idx.frames.length) + k("", "Aisle coverage", "side cameras", cov) +
+    group("Plant health · disease screening", "Cosmos + Nemotron-VL + RT-DETR") +
+    k("healthy", "Healthy", "", c.healthy) + k("suspect", "Suspect", "", c.suspect) +
+    k("disease", "Disease", "", c.disease) + k("", "Not plant", "", c.not_plant) +
+    (det.suspect + det.disease ? k("suspect", "Detector flags", "RT-DETR leaf anomalies", det.suspect + det.disease) : "");
   const h = harvestTotals(idx.findings);
-  if (h.frames) $("kpis").innerHTML += group("Harvest · fruit grading", "ผลผลิต · คัดเกรดผล (RT-DETR)") +
-    k("", "Plants", "จำนวนต้น", h.plants) + k("healthy", "Ripe · pass", "สุก ผ่าน", h.pass) +
-    k("suspect", "Not ready", "ยังไม่สุก", h.not_ready) + k("disease", "Reject", "ไม่ผ่าน", h.reject);
+  if (h.frames) $("kpis").innerHTML += group("Harvest · fruit grading", "RT-DETR") +
+    k("", "Plants", "", h.plants) + k("healthy", "Ripe · pass", "", h.pass) +
+    k("suspect", "Not ready", "", h.not_ready) + k("disease", "Reject", "", h.reject);
 }
 
 // ---------------------------------------------------------------- main loop
@@ -550,7 +551,7 @@ async function poll() {
     $("connText").textContent = age == null ? "live · no robot status" : age < 15 ? `live · updated ${Math.max(0, age).toFixed(0)} s ago` : `robot status ${Math.round(age)} s old`;
   } catch (e) {
     $("conn").className = "conn bad";
-    $("connText").textContent = "server unreachable · ขาดการเชื่อมต่อ";
+    $("connText").textContent = "server unreachable";
   } finally {
     setTimeout(poll, POLL_MS);
   }

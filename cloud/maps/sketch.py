@@ -34,9 +34,9 @@ The image is {w} x {h} pixels. Read it and list:
 - nodes: every greenhouse/building (kind "house"), the robot dock or charger ("dock"), path crossings or turns
   ("junction"), gates ("gate") and other labelled points ("other"). For a house give the point of its door/entrance if
   one is drawn (door_marked true), else the point where a path touches the house (door_marked false).
-  "label" is copied exactly as written (any language, e.g. "โรงเรือน A", "dock"); use "" if unlabelled.
+  "label" is copied exactly as written (any language, e.g. "House A", "dock"); use "" if unlabelled.
 - edges: drawn paths/roads between two nodes (by node id). Put any text written along or next to a path in "notes"
-  (copy it as written, e.g. "เปียกหลังรดน้ำ", "do not pass 7-9am"). blocked=true only if the path is crossed out or
+  (copy it as written, e.g. "wet after watering", "do not pass 7-9am"). blocked=true only if the path is crossed out or
   marked closed. width_m only if a width is written, else null.
 - areas: other written notes not tied to one path, with the point they refer to.
 Coordinates "xy" are [x, y] normalised to 0..1000 of the image width/height, origin top-left.

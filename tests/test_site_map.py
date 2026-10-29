@@ -62,8 +62,8 @@ def test_width_filter_validate_and_merge():
     mm = m.merge(other)
     e = mm.find_edge("j1", "j2")
     assert e.notes == ["wet after watering", "ruts"] and e.width_m == 2.0 and "j9" in mm.nodes and not mm.confirmed
-    noted = m.patch({"op": "add_note", "a": "j1", "b": "j3", "note": "ห้ามผ่าน 7-9 โมง"})
-    assert noted.find_edge("j1", "j3").notes == ["ห้ามผ่าน 7-9 โมง"]
+    noted = m.patch({"op": "add_note", "a": "j1", "b": "j3", "note": "do not pass 7-9am"})
+    assert noted.find_edge("j1", "j3").notes == ["do not pass 7-9am"]
 
 
 def test_go_to_house_and_cross_house_survey():
@@ -134,10 +134,10 @@ def _png(w=400, h=300) -> bytes:
 
 SKETCH_REPLY = """<think>three houses</think>```json
 {"nodes": [{"id": "n1", "kind": "house", "label": "Tunnel 09", "xy": [250, 500], "door_marked": true},
-           {"id": "n2", "kind": "house", "label": "โรงเรือน B", "xy": [750, 500], "door_marked": false},
+           {"id": "n2", "kind": "house", "label": "House B", "xy": [750, 500], "door_marked": false},
            {"id": "n3", "kind": "dock", "label": "dock", "xy": [250, 900]},
            {"id": "n4", "kind": "junction", "label": "", "xy": "bad"}],
- "edges": [{"a": "n1", "b": "n2", "notes": "เปียกหลังรดน้ำ", "blocked": false, "width_m": null},
+ "edges": [{"a": "n1", "b": "n2", "notes": "wet after watering", "blocked": false, "width_m": null},
            {"a": "n3", "b": "n1", "notes": [], "blocked": false, "width_m": 1.5},
            {"a": "n1", "b": "ghost"}],
  "areas": [{"label": "pond", "xy": [500, 100], "notes": ["do not pass 7-9am"]}], "notes": ["drawn by farmer"],}
@@ -146,7 +146,7 @@ SKETCH_REPLY = """<think>three houses</think>```json
 
 def test_sketch_parse_and_anchor_alignment():
     from cloud.maps.sketch import norm_label, sketch_to_site_map
-    assert norm_label("Tunnel 09") == norm_label("tunnel-09") and norm_label("โรงเรือน B") == norm_label("โรงเรือนB")
+    assert norm_label("Tunnel 09") == norm_label("tunnel-09") and norm_label("House B") == norm_label("HouseB")
     client = FakeClient(["not json at all", SKETCH_REPLY])
     # image 400x300: n1 pixel (100,150) y-up (100,150); n3 (100,30). Anchors: 1 px = 0.1 m, shifted.
     anchors = {"tunnel-09": (195.0, 156.0), "dock": (195.0, 144.0)}
@@ -155,15 +155,15 @@ def test_sketch_parse_and_anchor_alignment():
     assert m.meta["scale_known"] and not m.confirmed and m.meta["source"] == "hand_sketch"
     assert rep["scale_m_per_px"] == pytest.approx(0.1) and rep["rmse_m"] < 1e-6
     assert set(rep["anchors_matched"]) == {"tunnel-09", "dock"}
-    assert m.nodes["n1"].house == "tunnel-09" and m.nodes["n2"].house == "โรงเรือน B"
+    assert m.nodes["n1"].house == "tunnel-09" and m.nodes["n2"].house == "House B"
     assert m.nodes["n2"].extra["door_estimated"] and np.allclose(m.nodes["n2"].xy, (215.0, 156.0))
     assert "n4" not in m.nodes and len(m.edges) == 2
     e = m.find_edge("n1", "n2")
-    assert e.notes == ["เปียกหลังรดน้ำ"] and e.length_m == pytest.approx(20.0)
+    assert e.notes == ["wet after watering"] and e.length_m == pytest.approx(20.0)
     assert m.landmarks[0]["notes"] == ["do not pass 7-9am"] and m.meta["sketch_notes"] == ["drawn by farmer"]
-    r = plan_command({"cmd": "go_to_house", "house": "โรงเรือน B"}, MAP, site=m)
+    r = plan_command({"cmd": "go_to_house", "house": "House B"}, MAP, site=m)
     assert r.status == "rejected" and "not confirmed" in r.reason
-    assert plan_command({"cmd": "go_to_house", "house": "โรงเรือน B"}, MAP, site=m.confirm("farmer")).status == "accepted"
+    assert plan_command({"cmd": "go_to_house", "house": "House B"}, MAP, site=m.confirm("farmer")).status == "accepted"
 
 
 def test_sketch_without_anchors_stays_in_pixels():

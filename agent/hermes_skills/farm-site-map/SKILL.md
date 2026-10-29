@@ -19,7 +19,7 @@ The **site map** is a small graph in site metres (same frame as the aisle maps' 
 nodes = `dock`, `door` (one per greenhouse, `house` = house id), `junction`, `waypoint`;
 edges = paths with `length_m`, `width_m` (null = unknown), `surface`, `notes[]` (farmer's words), `blocked`.
 The robot only follows routes on a map a **human has confirmed**. Every edit makes a new revision and clears the
-confirmation. Code: `r1_nav/site_map.py`; docs: `docs/SITE_MAP_th.md`.
+confirmation. Code: `r1_nav/site_map.py`; docs: `docs/SITE_MAP.md`.
 
 ## When to Use
 - The farmer asks to go to / survey another greenhouse and the robot API rejects it with "no site map" or "not confirmed".
@@ -46,9 +46,9 @@ The robot API reads confirmed maps from env `R1_SITE_MAP` (comma-separated paths
 
 ## Sketch workflow
 1. Farmer sends a photo of a paper sketch, or draws lines/arrows/notes on the V18 web model (draw tools in the
-   "คอมเมนต์บนโมเดล" panel) and sends a screenshot.
+   "Comments on model" panel) and sends a screenshot.
 2. Run `python -m cloud.maps.sketch <image> --anchors-from data/site_map_v18_draft.json --out data/site_map_sketch.json`
-   (or `--anchor "โรงเรือน A=195.07,156.67"` for labels the V18 ids don't match). It prints matched anchors, rmse and scale.
+   (or `--anchor "House A=195.07,156.67"` for labels the V18 ids don't match). It prints matched anchors, rmse and scale.
 3. **Show the draft** to the farmer: `show` output in plain words (houses found, paths, notes, anything unmatched,
    `scale_known`). If `scale_known` is false, ask for two known places (e.g. "which box is tunnel-09? where is the dock?").
 4. Fix what the farmer corrects with `patch`; repeat 3.
@@ -59,7 +59,7 @@ The robot API reads confirmed maps from env `R1_SITE_MAP` (comma-separated paths
 |---|---|
 | "the path from A to B is closed / blocked today" | `{"op":"close_edge","a":..,"b":..,"reason":"closed today"}` |
 | "it's open again" | `{"op":"open_edge","a":..,"b":..}` |
-| "wet after watering", "do not pass 7-9am", "ทางเป็นโคลน" | `{"op":"add_note","a":..,"b":..,"note":"<their words>"}` |
+| "wet after watering", "do not pass 7-9am", "muddy path" | `{"op":"add_note","a":..,"b":..,"note":"<their words>"}` |
 | "that gate is only 60 cm" | `{"op":"set_width","a":..,"b":..,"width_m":0.6}` |
 | "it's concrete" | `{"op":"set_surface","a":..,"b":..,"surface":"concrete"}` |
 | "there is a path from X to Y" / "remove that path" | `add_edge {"edge":{"a":..,"b":..}}` / `remove_edge` |

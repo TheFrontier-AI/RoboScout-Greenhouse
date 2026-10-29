@@ -193,7 +193,7 @@ def test_optional_step_failure_does_not_stop_the_rest(env, monkeypatch):
     assert res["steps"]["cosmos_front"] == "ok" and json.loads((a / "cosmos_front/summary.json").read_text())["errors"] >= 1
     rep = json.loads((a / "report.json").read_text())
     assert rep["steps"]["lidar_map"]["status"] == "error" and rep["disease"]["rtdetr"]["ground_truth_check"] is None
-    th = (a / "report_th.md").read_text(); assert "รายงานการสำรวจ" in th and "แม่แบบ" in th        # template fallback, Thai
+    th = (a / "report_th.md").read_text(); assert steps._T["th"]["title"] in th and steps._T["th"]["template"] in th   # template fallback, Thai report text
     assert json.loads((a / "report.done").read_text())["result"]["writer"]["en"].startswith("template")
     # a failed step is retried on the next run (no .done); after it succeeds again everything is cached
     monkeypatch.setitem(steps.STEPS, "lidar_map", steps.step_lidar_map)

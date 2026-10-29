@@ -24,10 +24,9 @@ Numbers: `references/r1_water_hardware.md`.
 - The robot API accepts only `discover_house, survey_house, survey_aisle, go_to, revisit, return_to_dock,
   stop, set_map`. There is **no `water` command**. Never send one, never fake one with `go_to`/`revisit`, and
   never tell the farmer that R1 watered anything.
-- If asked to water, reply in this spirit: "R1 ยังรดน้ำไม่ได้: ออกแบบระบบน้ำไว้แล้วแต่ยังไม่ได้ประกอบและยังไม่มีคำสั่ง `water`
-  ในระบบ. ผมทำแผนรดน้ำให้ได้ (ต้นไหน กี่มล. นานกี่วินาที) เพื่อให้คนทำตาม หรือใช้เมื่อระบบพร้อม".
-  English: "R1 cannot water yet. The water system is designed but not built, and the robot has no `water`
-  command. I can make a watering plan for a person to follow now, or for R1 later."
+- If asked to water, reply in this spirit, in the farmer's language (Thai on our farm): "R1 cannot water yet.
+  The water system is designed but not built, and the robot has no `water` command. I can make a watering plan
+  (which plants, how many mL, how many seconds) for a person to follow now, or for R1 later."
 - Never plan pesticide/fungicide/fertiliser spraying with R1. That needs a licensed applicator, product
   labels and re-entry intervals. Out of scope.
 - Re-check `/health` each mission. Only when the robot team adds `water` and `/health` reports the water
@@ -68,8 +67,8 @@ Numbers: `references/r1_water_hardware.md`.
    wetting keeps plants wet overnight). Water before a survey only if the farmer accepts a wet aisle.
    Otherwise survey first.
 8. **Output a plan, not commands**: table with aisle, metre, side, head, dose_mL, est. dwell_s, cumulative
-   pump-on s, tank left L, rest breaks. Write the plan in Thai and English and mark it "แผนสำหรับคนทำ / for
-   a person to execute (R1 cannot water yet)".
+   pump-on s, tank left L, rest breaks. Write the plan in the farmer's language (Thai on our farm) and English
+   and mark it "plan for a person to execute (R1 cannot water yet)".
 
 ## Proposed API extension (NOT implemented: for the robot team)
 ```jsonc

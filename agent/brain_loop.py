@@ -174,10 +174,11 @@ def run(house: str, poll_s: float = 3.0, survey_until: float | None = None, farm
     summary = [{"aisle": s.aisle, "metre": s.metre, "labels": sorted(set(s.labels)), "state": s.state} for s in spots]
     events = [{"what": x.get("what"), "where": x.get("aisle") or "yard", "metre": x.get("metre"),
                "description": x.get("description"), "crop_concern": x.get("crop_concern")} for x in situations]
+    # Thai farmer-report text (feature: report_th.md): the farmer report is written in Thai first, then English.
     report = _nemotron(
         "Write a short farmer report (Thai then English) from these greenhouse inspection spots. Spot states mean: "
-        "confirmed = the robot re-inspected and still sees the symptoms (Thai: ยืนยันว่าพบอาการ); "
-        "cleared = the re-inspection did not see the symptoms (Thai: ตรวจซ้ำแล้วไม่พบอาการ — NOT treated/removed); "
+        "confirmed = the robot re-inspected and still sees the symptoms; "
+        "cleared = the re-inspection did not see the symptoms (NOT treated/removed); "
         "revisiting/new = not yet re-inspected. Never claim the disease was treated or removed. List the labels the "
         "model reported, recommend a person checks the plant, and note this is not a lab diagnosis. Also list, under a "
         "separate heading, what stopped the robot on the way (from its camera reports) and what a person should do. "

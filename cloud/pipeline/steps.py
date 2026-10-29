@@ -380,6 +380,7 @@ def build_report(run_dir: Path, cfg: PipelineConfig) -> dict:
                   "report": "analysis/{report.json,report_th.md,report_en.md}"}}
 
 
+# Thai farmer-report text (feature: report_th.md). Section titles / labels of the template report in Thai and English.
 _T = {"th": {"title": "รายงานการสำรวจโรงเรือน", "harvest": "1. ผลผลิต (คัดเกรดผล)", "count": "2. จำนวนต้น", "disease": "3. โรค/ความผิดปกติ",
              "nav": "4. เหตุการณ์ระหว่างเดิน", "loc": "5. การระบุตำแหน่ง", "steps": "ขั้นตอนที่รัน", "pass": "ผ่าน (สุกแดง)", "reject": "คัดทิ้ง (มีแผล)",
              "not_ready": "ยังไม่พร้อม", "aisle": "ทางเดิน", "plants": "ต้น", "none": "ไม่มี", "flagged": "ต้นที่ควรดู", "action": "สิ่งที่ควรทำ",
@@ -435,7 +436,8 @@ def nemotron_report(rep: dict, lang: str, cfg: PipelineConfig) -> str:
     slim["disease"]["rtdetr"]["spots"] = slim["disease"]["rtdetr"]["spots"][:40]
     for p in slim["disease"]["vlm"]["flagged"]:
         p.pop("images", None)
-    language = "Thai (ภาษาไทย), plain words a farmer understands; keep model/file names in English" if lang == "th" else "English"
+    # Thai farmer-report text (feature: report_th.md): the Thai report is written by Nemotron in plain farmer Thai.
+    language = "Thai, plain words a farmer understands; keep model/file names in English" if lang == "th" else "English"
     sys_msg = ("You write the post-survey report of R1, a greenhouse inspection robot. Write Markdown in " + language + ". "
                "Use EXACTLY these five sections, in this order, kept separate: 1 Harvest (fruit grading), 2 Plant count, "
                "3 Disease / anomalies (RT-DETR screening and the VLM's per-plant verdicts with their descriptions and actions), "

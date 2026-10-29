@@ -1,5 +1,5 @@
 # R1 demo stack on one Nebius AI Cloud VM (NVIDIA RTX PRO 6000 Blackwell, x86_64).
-# Isaac Sim (jobs/isaac_eval) and the SLAM job (cloud/mapping) run as separate `docker run`s: see README_th.md.
+# Isaac Sim (jobs/isaac_eval) and the SLAM job (cloud/mapping) run as separate `docker run`s: see README.md.
 #   cp .env.example .env && docker compose up -d --build
 services:
   eyes:                       # Cosmos Reason behind an OpenAI-compatible API (also the Serverless Endpoint image)

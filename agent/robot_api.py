@@ -8,7 +8,7 @@ HERMES side:  POST /command {cmd...,"reasoning": "..."}  GET /status  GET /findi
 Robot side:   GET /next_command (204 if none)  POST /status {..}  POST /frame (multipart: meta JSON + image jpeg)
               POST /run_complete {"run": name, "path": <run dir on this server>, "summary": {..}} when the survey ends:
               writes <run dir>/run_complete.json (the cloud/pipeline watcher picks it up); with PIPELINE_AUTO=1 the hub
-              also spawns `python3 -m cloud.pipeline run <run dir>` itself (docs/PIPELINE_th.md)."""
+              also spawns `python3 -m cloud.pipeline run <run dir>` itself (docs/PIPELINE.md)."""
 from __future__ import annotations
 import argparse, json, os, queue, shutil, subprocess, sys, threading, time
 from email.parser import BytesParser

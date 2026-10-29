@@ -14,17 +14,17 @@
     </div>
     <div>
       <h1>RoboFarm · R1 <span class="house" id="house">—</span></h1>
-      <div class="sub">Autonomous plant inspection · หุ่นยนต์ตรวจพืชในโรงเรือนอัตโนมัติ</div>
+      <div class="sub">Autonomous greenhouse plant inspection</div>
     </div>
   </div>
 
   <div class="robot-stats" id="robotStats">
-    <div class="stat"><span class="k">State <i>สถานะ</i></span><span class="v" id="sState">—</span></div>
-    <div class="stat"><span class="k">Aisle <i>ทางเดิน</i></span><span class="v" id="sAisle">—</span></div>
-    <div class="stat"><span class="k">Metre <i>ระยะ</i></span><span class="v mono" id="sMetre">—</span></div>
-    <div class="stat"><span class="k">Pose conf. <i>ความมั่นใจ</i></span><span class="v"><span class="meter"><span id="sConfBar"></span></span><span class="mono" id="sConf">—</span></span></div>
-    <div class="stat"><span class="k">Battery <i>แบตเตอรี่</i></span><span class="v mono" id="sBatt">—</span></div>
-    <div class="stat"><span class="k">Command <i>คำสั่ง</i></span><span class="v mono small" id="sCmd">—</span></div>
+    <div class="stat"><span class="k">State</span><span class="v" id="sState">—</span></div>
+    <div class="stat"><span class="k">Aisle</span><span class="v" id="sAisle">—</span></div>
+    <div class="stat"><span class="k">Metre</span><span class="v mono" id="sMetre">—</span></div>
+    <div class="stat"><span class="k">Pose conf.</span><span class="v"><span class="meter"><span id="sConfBar"></span></span><span class="mono" id="sConf">—</span></span></div>
+    <div class="stat"><span class="k">Battery</span><span class="v mono" id="sBatt">—</span></div>
+    <div class="stat"><span class="k">Command</span><span class="v mono small" id="sCmd">—</span></div>
   </div>
 
   <div class="services" id="services" aria-label="Cloud services"></div>
@@ -34,7 +34,7 @@
 <main class="grid">
   <section class="card map-card">
     <div class="card-head">
-      <h2>Greenhouse map <i>แผนที่โรงเรือน</i></h2>
+      <h2>Greenhouse map</h2>
       <div class="legend">
         <span><b class="lg aisle-ok"></b>Traversable aisle</span>
         <span><b class="lg aisle-narrow"></b>Too narrow</span>
@@ -46,14 +46,14 @@
     </div>
     <div class="map-wrap" id="mapWrap">
       <svg id="map" role="img" aria-label="Top-down greenhouse map"></svg>
-      <div class="map-empty" id="mapEmpty">Waiting for <code>aisle_map.json</code> · รอแผนที่</div>
+      <div class="map-empty" id="mapEmpty">Waiting for <code>aisle_map.json</code></div>
     </div>
     <div class="kpis" id="kpis"></div>
   </section>
 
   <section class="card capture-card">
     <div class="card-head">
-      <h2>Latest capture <i>ภาพล่าสุด</i></h2>
+      <h2>Latest capture</h2>
       <span class="muted mono" id="captureMeta">—</span>
     </div>
     <div class="capture" id="capture"></div>
@@ -62,15 +62,15 @@
   <div class="side">
   <aside class="card detail-card">
     <div class="card-head">
-      <h2>Finding <i>ผลการตรวจ</i></h2>
-      <span class="muted" id="detailHint">click a pin on the map · คลิกหมุดบนแผนที่</span>
+      <h2>Finding</h2>
+      <span class="muted" id="detailHint">click a pin on the map</span>
     </div>
-    <div id="detail" class="detail"><div class="empty">No findings yet · ยังไม่มีผลตรวจ</div></div>
+    <div id="detail" class="detail"><div class="empty">No findings yet</div></div>
   </aside>
 
   <aside class="card feed-card">
     <div class="card-head">
-      <h2>HERMES decisions <i>การตัดสินใจของ HERMES</i></h2>
+      <h2>HERMES decisions</h2>
       <span class="muted" id="feedCount"></span>
     </div>
     <ol id="feed" class="feed"></ol>

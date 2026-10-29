@@ -339,7 +339,7 @@ Principles:
 - **Verify before alarming.** Disease flags are clustered within 1 m; after the survey the strongest clusters are revisited and the six revisit shots are judged again; a flag is cleared only when all six come back healthy. On run 3 HERMES ordered revisits at tunnel-09 metre 0 and 1.4 (chlorosis flags); both came back healthy and the two false alarms never reached the farmer. On an earlier run with a stronger lesion the revisit confirmed it (early blight 0.89–0.99).
 - **Situations.** When SAFETY stops the robot, the front frame goes to Cosmos Reason (§4.3) and HERMES waits for people and animals or notifies the farmer for anything that will not move by itself.
 
-Interfaces (`agent/robot_api.py`, `docs/INTERFACES_th.md`): from HERMES `POST /command`, `GET /status`, `GET /findings`, `GET /map`; from the robot `GET /next_command`, `POST /status`, `POST /frame` (multipart: JSON meta + JPEG), `POST /run_complete`; for anyone `GET /health`, `GET /run_status?run=<name>`. The dashboard (`dashboard/`) shows the live map, finding pins, the seven camera views and the HERMES decision feed, with *Plant health* and *Harvest* as separate panels.
+Interfaces (`agent/robot_api.py`, `docs/INTERFACES.md`): from HERMES `POST /command`, `GET /status`, `GET /findings`, `GET /map`; from the robot `GET /next_command`, `POST /status`, `POST /frame` (multipart: JSON meta + JPEG), `POST /run_complete`; for anyone `GET /health`, `GET /run_status?run=<name>`. The dashboard (`dashboard/`) shows the live map, finding pins, the seven camera views and the HERMES decision feed, with *Plant health* and *Harvest* as separate panels.
 
 ---
 
@@ -416,7 +416,7 @@ Clean-clone verification at the time of writing: the **robot side** was installe
 
 ## 9. Reproducibility
 
-- **Repository:** https://github.com/TheFrontier-AI/RoboScout-Greenhouse (Apache-2.0). Install and run: `docs/INSTALL.md`; pipeline details: `docs/PIPELINE_th.md`; interfaces: `docs/INTERFACES_th.md`.
+- **Repository:** https://github.com/TheFrontier-AI/RoboScout-Greenhouse (Apache-2.0). Install and run: `docs/INSTALL.md`; pipeline details: `docs/PIPELINE.md`; interfaces: `docs/INTERFACES.md`.
 - **Weights.** RT-DETRv2 base and lingbot-map are public. **The fine-tuned RT-DETRv2 weights (`vision_runs/rtdetr_v2_mixed/best`) are available from the author on request**; they are not in the repository. Nemotron 3 / 3.5 Super VL are used through Nebius Token Factory; Cosmos Reason 2 is gated on Hugging Face (accept the licence, set `HF_TOKEN`).
 - **Licences.** Project code Apache-2.0; RT-DETRv2 Apache-2.0; lingbot-map Apache-2.0; cuVSLAM under the NVIDIA community licence; MapAnything, VGGT, MASt3R-SLAM and SLAM3R under their research licences (benchmark only); Isaac Sim under NVIDIA's licence.
 - **Data.** Run 3 recording (`r1_runs/farm_2026-10-29/vm_runs/farm_full3/rec`, 5.8 GB: steps/frames/events, 978 side PNGs, 1,501 front JPEGs) and the Astra re-render (`render_v2_astra_scene/raw`, 27 GB, all cameras) are kept by the author; the hand-off test in §6.2 uses run 3 as the robot's recording.

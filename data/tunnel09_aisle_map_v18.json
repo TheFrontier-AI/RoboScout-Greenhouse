@@ -127,7 +127,7 @@
   "aisles": [
     {
       "id": "tunnel-09/aisle-01",
-      "label": "ทางเดิน 1",
+      "label": "Aisle 1",
       "length_m": 38.04133224487305,
       "clearance_m": 0.5497732162475586,
       "start": [
@@ -158,7 +158,7 @@
     },
     {
       "id": "tunnel-09/aisle-02",
-      "label": "ทางเดิน 2",
+      "label": "Aisle 2",
       "length_m": 38.04133224487305,
       "clearance_m": 1.2678618431091309,
       "start": [
@@ -189,7 +189,7 @@
     },
     {
       "id": "tunnel-09/aisle-03",
-      "label": "ทางเดิน 3",
+      "label": "Aisle 3",
       "length_m": 38.04133224487305,
       "clearance_m": 0.5497732162475586,
       "start": [

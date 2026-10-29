@@ -53,7 +53,7 @@ so expect roughly real-time or slower. A 30 m goto is about 120 s of sim time.
 ## 3. Nebius Serverless Jobs (UNVERIFIED)
 - Isaac Sim needs an RTX GPU (RT cores) with a working Vulkan/driver stack in the container. Confirm that the
   Serverless Jobs GPU types include an RTX PRO 6000 or L40S class. If they offer only H100/H200 (no RT cores), use
-  the VM path above. That is the fallback in `docs/HACKATHON_PLAN_th.md`.
+  the VM path above. That is the fallback in `docs/HACKATHON_PLAN.md`.
 - Shard by seed: submit K jobs with the same image and args `--episodes 25 --seed0 {0,25,50,...}
   --out /results/shard_{k}`. Mount object storage at `/results`, or copy out at the end. Merge the
   `results.jsonl` files and recompute the success rate.

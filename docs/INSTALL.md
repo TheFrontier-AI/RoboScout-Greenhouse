@@ -278,13 +278,3 @@ Models: Nemotron 3.5 Super VL and Nemotron 3 run hosted on Nebius Token Factory 
   `TORCH_INDEX=https://download.pytorch.org/whl/cu128 bash deploy/nebius/install_cloud.sh`.
 - `docker: permission denied` — `sudo usermod -aG docker $USER` and log in again (the lingbot hook falls back to `sudo docker`).
 - Watcher sees nothing — the run dir must contain `run_complete.json` and `frames.jsonl`/`steps.jsonl`, one or two levels under `RUNS_DIR`.
-
----
-
-## สรุปภาษาไทย
-
-ระบบมี 2 ฝั่ง: **หุ่น** (Jetson Orin หรือ Linux อะไรก็ได้ — `deploy/robot/install_robot.sh`) และ **คลาวด์** (Nebius GPU VM —
-`deploy/nebius/install_cloud.sh` แล้ว `start_pipeline.sh` หรือ `--service`) หุ่นบันทึก run แล้วส่งขึ้นเซิร์ฟเวอร์ด้วย
-`scripts/robot_upload_run.py --wait` เซิร์ฟเวอร์รัน pipeline (ตรวจจับ → Nemotron 6 มุม → แผนที่ LiDAR → cuVSLAM/lingbot (ถ้ามี) →
-รายงาน TH/EN) ใส่ key Token Factory ใน `deploy/nebius/.env` อย่างเดียว **น้ำหนักโมเดลตรวจจับที่ฝึกเอง ไม่อยู่ใน git —
-ติดต่อผู้เขียน** แล้ววางที่ `vision_runs/rtdetr_v2_mixed/best/`

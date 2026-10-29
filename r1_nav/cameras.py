@@ -1,5 +1,5 @@
 """R1 camera rig: 6 side (mast) cameras look at the plants, 1 front camera drives/verifies navigation.
-Decides which cameras fire at a given aisle metre and builds the frame metadata sent to the cloud (docs/INTERFACES_th.md)."""
+Decides which cameras fire at a given aisle metre and builds the frame metadata sent to the cloud (docs/INTERFACES.md)."""
 from __future__ import annotations
 from dataclasses import dataclass, asdict
 

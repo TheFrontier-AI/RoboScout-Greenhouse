@@ -1,5 +1,5 @@
 """Validate HERMES (cloud) goal commands and turn them into mission legs. The cloud only sends goals, never wheel
-commands; anything that does not fit the confirmed aisle map is rejected with a reason (docs/INTERFACES_th.md §1).
+commands; anything that does not fit the confirmed aisle map is rejected with a reason (docs/INTERFACES.md §1).
 Moving between greenhouses (go_to_house, survey_house of another house) also needs a CONFIRMED site map
 (r1_nav/site_map.py): passed in, or loaded lazily from env R1_SITE_MAP (comma-separated JSON paths)."""
 from __future__ import annotations

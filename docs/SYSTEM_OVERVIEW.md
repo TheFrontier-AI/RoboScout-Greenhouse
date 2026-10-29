@@ -1,6 +1,6 @@
 # RoboFarm — System Overview (29 Oct 2026)
 
-*For the hackathon write-up and the demo narration. Every number below comes from runs made on 28–29 Oct 2026; the files that back them are listed in §10. Thai summary in §12 (สรุปภาษาไทย).*
+*For the hackathon write-up and the demo narration. Every number below comes from runs made on 28–29 Oct 2026; the files that back them are listed in §10. Summary in §12.*
 
 ---
 
@@ -140,7 +140,7 @@ robot (sim or Jetson)                       Nebius server
                                                detect ▸ vlm_stops ▸ lidar_map ▸ cuvslam ▸ lingbot ▸ cosmos_front ▸ report
                                                <run>/analysis/report.json · report_th.md · report_en.md
 ```
-`python3 -m cloud.pipeline watch --runs-dir <dir>` (systemd unit provided). Steps are idempotent and isolated; a missing GPU tool is a *skip with reason*, not a failure. Details: `docs/PIPELINE_th.md`.
+`python3 -m cloud.pipeline watch --runs-dir <dir>` (systemd unit provided). Steps are idempotent and isolated; a missing GPU tool is a *skip with reason*, not a failure. Details: `docs/PIPELINE.md`.
 
 ## 9. Honest limitations
 - Everything is simulation; the sim images are noise-free and perfectly calibrated, so cuVSLAM's 6 cm and the detector's numbers will be worse on a real camera.
@@ -195,8 +195,8 @@ Picture-in-picture: main = chase camera (continuous, real time or 2×), inset = 
 
 Narration voice: a modern neural TTS (edge-tts `en-US-AndrewMultilingualNeural` or ElevenLabs if a key is available); script written for speech, not for reading.
 
-## 12. สรุปภาษาไทย
+## 12. Summary
 
-RoboFarm คือหุ่นตรวจแปลงมะเขือเทศ R1 (รุ่นใหม่ R181-S ใส่กล้องคู่ ZED 2i) ขับเองด้วยแผนที่แปลง + LiDAR ไม่ใช้แท็ก หยุดถ่าย 6 กล้องทุกต้น แล้วส่งภาพขึ้นเซิร์ฟเวอร์ Nebius ฝั่งเซิร์ฟเวอร์: RT-DETR คัดเกรดผล/หาใบผิดปกติทีละภาพ, Nemotron 3.5 Super VL ดู 6 ภาพต่อต้นในคำขอเดียวแล้วอธิบายแบบนักวิชาการเกษตร, HERMES (Nemotron 3) ตัดสินใจย้อนกลับไปดูหรือแจ้งเกษตรกร, Cosmos Reason อธิบายเหตุการณ์หน้ารถให้ HERMES, และสร้างแผนที่ 3 มิติด้วย cuVSLAM (จากกล้องคู่) และ lingbot-map (จากกล้องหน้า) ทุกอย่างทดสอบใน Isaac Sim ฝาแฝดฟาร์มจริง เส้นทางในวิดีโอคือเส้นทางที่หุ่นขับเองจริง
+RoboFarm is the R1 tomato-field inspection robot (new variant R181-S with a ZED 2i stereo camera). It drives itself using the field map + LiDAR, with no tags, stops at every plant to capture 6 cameras, then sends the images to the Nebius server. On the server: RT-DETR grades fruit / finds abnormal leaves image by image, Nemotron 3.5 Super VL looks at the 6 images per plant in one request and describes them like an agronomist, HERMES (Nemotron 3) decides whether to go back and look again or notify the farmer, Cosmos Reason explains events in front of the robot to HERMES, and 3-D maps are built with cuVSLAM (from the stereo camera) and lingbot-map (from the front camera). Everything is tested in Isaac Sim, a twin of the real farm; the route in the video is the route the robot actually drove by itself.
 
-ผลหลัก: ตำแหน่งจาก LiDAR คลาด 0.23 ม. ตลอด 123 ม.; cuVSLAM กล้องคู่คลาด 6.4 ซม. ตลอด 111 ม. ที่ 526 ภาพ/วินาที; lingbot-map 1.06 ม.; RT-DETR + Nemotron VL ร่วมกันเจอต้นผิดปกติ 6 จาก 9 ต้น (ยังไม่เจอต้นเหี่ยวกับใบร่วง) โดย Nemotron แจ้งเตือนเกินแค่ 12 ต้น; นับผลสุก/ไม่สุก/เสียแยกรายโรงเรือน; ระบบอัตโนมัติครบวงจรอยู่บน git แล้ว (114 เทสต์) ข้อจำกัดอยู่ใน §9 รูปและคลิปต้นทางสำหรับทำเอกสารอยู่ใน §10 และแผนวิดีโอเดโม 5 นาทีใน §11
+Main results: LiDAR localisation error 0.23 m over 123 m; stereo cuVSLAM error 6.4 cm over 111 m at 526 frames/s; lingbot-map 1.06 m; RT-DETR + Nemotron VL together find 6 of 9 abnormal plants (the wilted and defoliated plants are still missed), with Nemotron raising only 12 false alarms; ripe / unripe / damaged fruit are counted per greenhouse; the complete automated system is on git (114 tests). Limitations are in §9, the source images and clips for documentation in §10, and the 5-minute demo video plan in §11.

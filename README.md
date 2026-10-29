@@ -5,7 +5,7 @@
 *R1 (R181-S) driving itself down tunnel-09 on its real AI-driven route, filmed by the greenhouse CCTV camera in the Isaac Sim digital twin. 8x speed, no cuts.*
 
 **R1 is our greenhouse robot: it enters a house it has never seen, maps it, finds sick plants, and decides by itself where to look again.**
-Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. Thai docs: [README_th.md](README_th.md).
+Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*.
 
 - **Brain — HERMES:** [Hermes Agent](https://github.com/NousResearch/hermes-agent) is the agent runtime, running **NVIDIA Nemotron 3** on **Nebius Token Factory**. It picks goals (survey, revisit, dock), never wheel speeds.
 - **Eyes:** **NVIDIA Cosmos Reason 2** on a **Nebius Serverless Endpoint** / RTX PRO 6000 VM. It inspects the 6 side-camera views of tomato plants and checks from the front camera that the robot moved as commanded.
@@ -26,11 +26,16 @@ Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. 
 2. **Sim:** all modules are developed and evaluated in the twin. Real photos and the real drone video go through the same cloud pipeline.
 3. **Sim → Real (next):** `r1_nav/` uses only sensors (no simulator pose). Moving to the Jetson means swapping `sim_adapter` for ROS 2.
 
+Site and robot facts that drive the design (measured on the V18 farm model, not yet on site): tunnel-09 is 6.5 m wide × 38.8 m long with
+4 raised beds → **3 aisles** of 38.0 m running along −Y from the door (y = +19.0) to the far end (y = −19.0); the centre gap is 1.27 m
+(real concrete path 0.76 m) and the two side gaps are **0.55 m**. The R180 robot is 0.53 m wide, 0.71 m long, 1.81 m tall, about 58 kg,
+4 wheels, differential drive. It **cannot turn around inside an aisle** (tested: FAIL, needs 0.92 m), so every aisle is driven in forward and reversed out.
+
 ## Repo map
 | Path | What |
 |---|---|
 | `r1_nav/` | Aisle map, mission legs, BOOK LiDAR aisle-centring controller, goal validation (`commands.py`), 7-camera schedule (`cameras.py`), farm site map between greenhouses (`site_map.py`) |
-| `cloud/maps/`, `scripts/extract_site_map_v18.py` | Site-map drafts from the V18 model, a farmer's sketch (Nemotron VL) or a drone top-down; human confirms before use ([docs/SITE_MAP_th.md](docs/SITE_MAP_th.md)) |
+| `cloud/maps/`, `scripts/extract_site_map_v18.py` | Site-map drafts from the V18 model, a farmer's sketch (Nemotron VL) or a drone top-down; human confirms before use ([docs/SITE_MAP.md](docs/SITE_MAP.md)) |
 | `sim/`, `scripts/run_demo_sim.py` | Leg executor (STUCK, rear stop, heading damping), cloud link with offline outbox, Isaac wrapper, kinematic fake backend |
 | `scripts/run_eval_job.py`, `jobs/isaac_eval/` | Batch evaluation (wet floor / obstacle / offsets) as a GPU job |
 | `agent/robot_api.py` | Goal hub between HERMES, the robot and Cosmos; writes the dashboard data |
@@ -41,7 +46,7 @@ Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. 
 | `cloud/mapping/` | Cloud SLAM AI job (MapAnything / VGGT) and alignment into house metres |
 | `dashboard/` | Live map, finding pins, 7-camera views, HERMES decision feed |
 | `deploy/nebius/` | One-VM stack (RTX PRO 6000): bootstrap and docker compose |
-| `docs/` | Mission spec, interfaces, environment, roadmap, hackathon plan (Thai) |
+| `docs/` | Mission spec, interfaces, environment, roadmap, hackathon plan |
 
 ## Evidence that it runs
 Real logs and outputs, unedited: cloud install on a fresh Nebius VM, the robot hand-off and the full pipeline (9 min 59 s to the farmer's report), the robot side on a **real Jetson Orin Nano** (install, 50 tests, upload to the cloud and the report back), and the run-3 recording the robot made while driving itself: **[docs/evidence/](docs/evidence/README.md)**.
@@ -93,12 +98,12 @@ python3 dashboard/serve.py --data runs/demo --port 8080 &          # open http:/
 python3 scripts/run_demo_sim.py --backend fake --idle-exit-s 60 &
 python3 agent/brain_loop.py --house tunnel-09                     # or: hermes, with the r1-robot-control skill
 ```
-Real stack on Nebius: [deploy/nebius/README_th.md](deploy/nebius/README_th.md). Cloud details and verified model IDs: [cloud/README_cloud.md](cloud/README_cloud.md).
+Real stack on Nebius: [deploy/nebius/README.md](deploy/nebius/README.md). Cloud details and verified model IDs: [cloud/README_cloud.md](cloud/README_cloud.md).
 
 ## Phase-1 acceptance criteria (Isaac, tunnel-09 photo-matched scene)
 1. Stop at a commanded point in the centre aisle within ±0.15 m, side clearance ≥ 0.05 m, 10/10 runs.
 2. Full aisle in and reverse out, no collision, stop within 0.5 m of an obstacle, 10/10 runs.
-3. Side images with (aisle, metre, time) every 0.5 m (`docs/INTERFACES_th.md`).
+3. Side images with (aisle, metre, time) every 0.5 m (`docs/INTERFACES.md`).
 4. One aisle (76 m round trip) in ≤ 8 min at 0.25 m/s.
 
 ## Honest status
