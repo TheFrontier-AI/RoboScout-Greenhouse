@@ -1,4 +1,5 @@
 # Robot side (Jetson Orin / any ARM64 or x86 Linux): navigation stack, recorder, hub client.
-# Everything here is pure Python; cuVSLAM is a separate NVIDIA wheel (see docs/INSTALL.md).
+# Pure Python; cuVSLAM is a separate NVIDIA wheel (see docs/INSTALL.md).
 numpy>=1.26
 pillow>=10
+scipy>=1.11
