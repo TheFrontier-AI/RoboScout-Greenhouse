@@ -28,3 +28,4 @@ All 3:2, ≤ 2 MB. Renders are from the NVIDIA Isaac Sim digital twin of our far
 | 22 | ![](22_route_run3.png) | Run 3, the route R1 drove on its own: dock → tunnel-09 → yard → tunnel-10 → dock — 117 m, 12.5 min, 161 plant stops |
 | 23 | ![](23_two_observers_fusion.png) | Two observers on run 3: the robot's LiDAR estimate and cuVSLAM stereo fused, scored against the recorded truth |
 | 24 | ![](24_teach_map_self_built.png) | Mapping by demonstration: the farm as the robot recorded it on one taught drive — map, dock and doors built by the robot, no distances typed |
+| 25 | ![](25_teach_site_graph.png) | The site graph the robot built from the led drive — dock, doors and measured path lengths on its own LiDAR map; anything off the graph is 'do not go' |

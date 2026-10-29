@@ -54,7 +54,7 @@ Walk or push the robot through the farm once with the recorder on; `scripts/teac
 LiDAR map the robot localises on and the site graph it plans routes on — dock, doors, paths with measured lengths. The
 farmer names the houses and confirms; nobody types a distance or draws a route. Verified on run 3: 32 967-point map,
 5-node site graph, 1 500 / 1 500 scans localised on the self-built map at 0.23 m RMSE
-([docs/INSTALL.md §2d](docs/INSTALL.md), [evidence 10](docs/evidence/README.md), [figure](docs/media/gallery/24_teach_map_self_built.png)).
+([docs/NEW_SITE_GUIDE.md](docs/NEW_SITE_GUIDE.md) — taking the robot to a new farm, why a person leads the first drive, how to send it to house 5 or 6 or every house; [docs/INSTALL.md §2d](docs/INSTALL.md), [evidence 10](docs/evidence/README.md), [figure](docs/media/gallery/24_teach_map_self_built.png)).
 
 ## Supported platforms (tested)
 
