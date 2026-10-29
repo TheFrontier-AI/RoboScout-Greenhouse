@@ -188,6 +188,12 @@ The self-built map carries the pose error of the drive that taught it (median fi
 drawn plan); building it from cuVSLAM poses, and letting the robot teach itself with `discover_house`, are the next
 steps. Teach mode on the physical robot uses the same recorder with the motors idle.
 
+**Who plans what.** HERMES plans the *mission*: which houses to survey today and in what order, which plant to go
+back to, when to come home, whom to tell. The *route* — the actual path from where the robot is to the door of the
+house it was sent to — is planned by the robot itself on the site graph (`r1_nav/site_map.py` finds the shortest
+confirmed path; `r1_nav/commands.py` turns it into legs), and the *driving* along that route is the robot's
+navigation stack alone. HERMES never sees a coordinate or a wheel; it names a destination, and the robot gets there.
+
 ## 2c. Which farm? Deploying on another farm (anywhere)
 
 Nothing in the code names our farm. A farm is **three data files plus one confirmation**; point the system at them and

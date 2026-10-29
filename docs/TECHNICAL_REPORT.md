@@ -302,6 +302,13 @@ In the live run 3 on the original scene, where every side image went to both eye
 
 ## 5. The agent: HERMES
 
+**Who plans what.** HERMES plans the *mission*: which houses to survey today and in what order, which plant to go
+back to, when to come home, whom to tell. The *route* — the actual path from where the robot is to the door of the
+house it was sent to — is planned by the robot itself on the site graph (`r1_nav/site_map.py` finds the shortest
+confirmed path; `r1_nav/commands.py` turns it into legs), and the *driving* along that route is the robot's
+navigation stack alone. HERMES never sees a coordinate or a wheel; it names a destination, and the robot gets there.
+
+
 HERMES is the agent runtime: Hermes Agent with our `r1-robot-control` skill, plus a deterministic fallback loop (`agent/brain_loop.py`) that executes the same decision procedure so that the robot API cannot tell the two apart. It runs **NVIDIA Nemotron 3 Super (120B-A12B)** on Nebius Token Factory for reasoning text and for the farmer's report.
 
 Principles:

@@ -71,6 +71,12 @@ the road to the north, the yard behind the houses. 32 967 LiDAR points, 123 m of
 
 ## 3. Sending it somewhere: house 5, house 6, across houses, every house
 
+**Who plans what.** HERMES plans the *mission*: which houses to survey today and in what order, which plant to go
+back to, when to come home, whom to tell. The *route* — the actual path from where the robot is to the door of the
+house it was sent to — is planned by the robot itself on the site graph (`r1_nav/site_map.py` finds the shortest
+confirmed path; `r1_nav/commands.py` turns it into legs), and the *driving* along that route is the robot's
+navigation stack alone. HERMES never sees a coordinate or a wheel; it names a destination, and the robot gets there.
+
 Once the map is confirmed, you command by **name**, never by coordinates. The robot plans the route on the graph it
 built and localises on the map it recorded. Commands go to the hub (`POST /command`) — from HERMES in plain
 language, from the dashboard, or from a terminal:
