@@ -56,14 +56,18 @@ def front_wall_range(ranges, angles, half: float = math.radians(3)) -> float | N
     return _window_median(ranges, angles, 0.0, half)
 
 
-def spin_clearance_ok(ranges, angles, lidar_ahead_m: float, radius_m: float, self_m: float) -> tuple[bool, float]:
+def spin_clearance_ok(ranges, angles, lidar_ahead_m: float, radius_m: float, self_m: float,
+                      body_half_length_m: float = 0.42, body_half_width_m: float = 0.32) -> tuple[bool, float]:
     """Is the circle swept by a spin in place (about the body centre) free? LiDAR sits lidar_ahead_m ahead of centre;
-    returns closer than self_m are the robot's own body. Returns (ok, closest obstacle distance from the centre)."""
+    returns closer than self_m, or inside the robot's own footprint (the mast stands at the body centre, 0.32 m behind
+    the LiDAR: farm_full3 revisit refused a spin on it), are the robot itself. Returns (ok, closest obstacle distance)."""
     closest = 99.0
     for r, a in zip(ranges, angles):
         if r < self_m or r >= 11.9:
             continue
         x, y = lidar_ahead_m + r * math.cos(a), r * math.sin(a)
+        if abs(x) <= body_half_length_m and abs(y) <= body_half_width_m:
+            continue
         closest = min(closest, math.hypot(x, y))
     return closest > radius_m, closest
 

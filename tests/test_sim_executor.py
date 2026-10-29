@@ -244,3 +244,14 @@ def test_no_stuck_when_scan_changes_between_plant_stops():
         ex.note_command(t, [0.0, 0.0] if k % 20 < 5 else [1.9, 1.9])
     ex.step(dict(obs, timestamp_s=7.0, lidar_m=[r - 0.72 if math.isfinite(r) else r for r in base]))
     assert ex.status != "stuck"
+
+
+def test_spin_clearance_ignores_own_mast_behind_the_lidar():
+    """farm_full3: 9 returns at 0.32 m straight behind the LiDAR (the mast at the body centre) refused a turn."""
+    from sim.executor import spin_clearance_ok
+    angles = [math.radians(a) for a in range(-180, 180)]
+    ranges = [0.32 if abs(a) >= 177 else 5.0 for a in range(-180, 180)]
+    ok, closest = spin_clearance_ok(ranges, angles, 0.34, 0.51, 0.25)
+    assert ok and closest > 0.51
+    ranges[270] = 0.36                                    # a real thing 0.36 m to the left of the LiDAR
+    assert not spin_clearance_ok(ranges, angles, 0.34, 0.51, 0.25)[0]
