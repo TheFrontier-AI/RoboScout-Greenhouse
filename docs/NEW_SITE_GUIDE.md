@@ -146,6 +146,13 @@ assume it is at the dock — it works out where it is, in three steps, and says 
    10) in identical houses — so the choice stays with the camera or with reaching a place that is not symmetric
    (a door, the dock, the road), and until then the robot drives only what both candidates allow.
 
+**Off the taught path.** The search can also cover every free cell of the map (`Relocalizer(..., grid_m=0.5)`: cells
+0.5 m apart, at least 0.4 m from any map point, 12 headings - 47 028 hypotheses on our farm, 0.7 s), so a robot set
+down in the yard away from any path is still searched for. With the path hypotheses kept as well, accuracy on the
+recorded scans is unchanged (8 found, 28 ambiguous with the right place leading in 11, 4 wrong of 40); the grid alone,
+without the path prior, is confused by cells inside the planting beds (3 found, 14 wrong), so the path prior stays on.
+Scans from genuinely off-path places do not exist in the recording; they will be collected in the field trials.
+
 What the farmer sees: on the dashboard the robot reports "relocalised at tunnel-10, metre 14 (camera: the tree
 through the door)" or "ambiguous: tunnel-09 or tunnel-10 — moving to the door to check". It never silently guesses.
 

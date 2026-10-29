@@ -141,6 +141,13 @@ place that is not symmetric — a door, the dock, the road.
 *Figure 8 — 60 random put-down points on run 3: green, a single LiDAR scan finds the place; yellow, the LiDAR says
 "tunnel-09 or tunnel-10"; magenta, wrong; circled, the camera's tie-break (blue correct, red wrong).*
 
+**Off the taught path.** The search can also cover every free cell of the map (`Relocalizer(..., grid_m=0.5)`: cells
+0.5 m apart, at least 0.4 m from any map point, 12 headings - 47 028 hypotheses on our farm, 0.7 s), so a robot set
+down in the yard away from any path is still searched for. With the path hypotheses kept as well, accuracy on the
+recorded scans is unchanged (8 found, 28 ambiguous with the right place leading in 11, 4 wrong of 40); the grid alone,
+without the path prior, is confused by cells inside the planting beds (3 found, 14 wrong), so the path prior stays on.
+Scans from genuinely off-path places do not exist in the recording; they will be collected in the field trials.
+
 What the farmer sees: "relocalised at tunnel-10, metre 14 (camera: the tree through the door)" or "ambiguous:
 tunnel-09 or tunnel-10 — moving to the door to check". The robot never silently guesses. Wiring this into the live
 start-up of the robot is the next step; everything above is measured offline on the recorded drive.

@@ -19,5 +19,35 @@
   "metres_to_decide_median": 16.0,
   "metres_to_decide_max": 16.0
  },
- "note": "two identical greenhouses: LiDAR geometry alone cannot tell tunnel-09 from tunnel-10 inside the aisles; outdoors (dock, road, yard) it can. The ambiguous cases are flagged, not guessed."
+ "note": "two identical greenhouses: LiDAR geometry alone cannot tell tunnel-09 from tunnel-10 inside the aisles; outdoors (dock, road, yard) it can. The ambiguous cases are flagged, not guessed.",
+ "search_space_comparison_40_scans": {
+  "path_only": {
+   "hypotheses": 1476,
+   "correct_1m": 9,
+   "ambiguous": 28,
+   "ambiguous_best_correct": 7,
+   "wrong": 3,
+   "s_per_scan": 0.06,
+   "median_err_m": 0.052
+  },
+  "grid_only_path_unknown": {
+   "hypotheses": 47028,
+   "correct_1m": 3,
+   "ambiguous": 23,
+   "ambiguous_best_correct": 0,
+   "wrong": 14,
+   "s_per_scan": 0.67,
+   "median_err_m": 0.974
+  },
+  "path_plus_grid": {
+   "hypotheses": 48504,
+   "correct_1m": 8,
+   "ambiguous": 28,
+   "ambiguous_best_correct": 11,
+   "wrong": 4,
+   "s_per_scan": 0.7,
+   "median_err_m": 0.053
+  },
+  "note": "grid = every free map cell 0.5 m apart (>=0.4 m from any map point, <=6 m from one) x 12 headings, so the robot can be found OFF the taught path. Evaluated with scans recorded on the path (the only scans that exist); path+grid keeps path-only accuracy while allowing off-path starts; grid alone, without the path prior, is confused by cells inside the planting beds. Off-path scans will be collected in field trials."
+ }
 }
