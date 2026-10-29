@@ -128,6 +128,29 @@ It uploads only what the pipeline reads (jsonl, `side/`, `front/`, `zed/`), post
 
 ---
 
+## 2b. Surveying more greenhouses (three, four, …)
+
+The route is generated, not hard-coded: `r1_nav.mission.farm_loop(houses, …)` takes any list of houses and builds the
+drive-through — front-to-back in the first, cross behind, back-to-front in the next, and so on, then home. Three ways
+to command it:
+
+1. **Simulation driver** — give the houses in order (`aisle id : aisle-centre x` in site metres):
+   ```bash
+   /isaac-sim/python.sh scripts/run_farm.py --record runs/farm_003 --api-url $ROBOT_API_URL \
+       --houses "tunnel-09/aisle-02:0.0,tunnel-10/aisle-02:9.015,tunnel-11/aisle-02:18.03"
+   ```
+   The house must exist in the twin (scene prep swaps its plants in from the same list).
+2. **From HERMES / the hub, one house at a time** — `survey_house` and `go_to_house` are validated commands
+   (`r1_nav/commands.py`): the target house must be a `door` node on the **site map** (`data/site_map_v18_draft.json`,
+   `r1_nav/site_map.py`) and the site map must be **confirmed by a human** (the `farm-site-map` skill walks the farmer
+   through it); an unknown or unconfirmed house is rejected with the list of houses the map knows.
+3. **Whole-farm order** — `agent/brain_loop.py --farm` sends `survey_farm`; the houses it covers are the ones in the
+   confirmed site map, in map order.
+
+Each house needs an aisle map (`data/<house>_aisle_map_*.json`, like `tunnel09_aisle_map_v18.json`) for its row
+geometry; identical tunnels can share one map with an x offset, which is how tunnel-10 is handled today. The report
+groups harvest and health per house automatically (`by_aisle`), so nothing changes on the cloud side.
+
 ## 3. End-to-end test (what we ran)
 
 Raw logs of every step below are in [evidence/](evidence/README.md).

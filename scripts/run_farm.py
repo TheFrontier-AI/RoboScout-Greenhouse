@@ -71,6 +71,10 @@ def main() -> int:
     ap.add_argument("--front-res", default="1280x720", help="front camera (navigation + visual SLAM / MapAnything input)")
     ap.add_argument("--max-sim-s", type=float, default=7200.0); ap.add_argument("--idle-exit-s", type=float, default=600.0)
     ap.add_argument("--only", choices=("09", "10", "both"), default="both", help="survey just one house (testing)")
+    ap.add_argument("--houses", default=None,
+                    help="survey these houses in this order instead of HOUSES: 'tunnel-09/aisle-02:0.0,tunnel-10/aisle-02:9.015,"
+                         "tunnel-11/aisle-02:18.03' (aisle id : aisle centre x in site metres). Any number; the route alternates "
+                         "front-to-back / back-to-front and crosses behind or in front of the houses (r1_nav.mission.farm_loop)")
     ap.add_argument("--max-steps", type=int, default=0, help="stop after N control steps (testing)")
     ap.add_argument("--upload-rec", default=os.environ.get("R1_UPLOAD_REC"),
                     help="rsync target for rec/ before POST /run_complete (not needed in the sim: shared mount)")
@@ -97,8 +101,11 @@ def main() -> int:
         w, h = (int(v) for v in a.plant_res.split("x"))
         env = Env(app, stage_path=STAGE, aisle_half_width=0.38, body_half_length=0.375, plant_cameras=True, plant_resolution=(w, h),
                   front_resolution=tuple(int(v) for v in a.front_res.split("x")))
-        houses = HOUSES if a.only == "both" else [x for x in HOUSES if x[0].startswith(f"tunnel-{a.only}")]
-        report = prepare_farm_run(env.stage, tunnels=tuple(x[0][7:9] for x in HOUSES), res=a.crop_res, log=log)
+        if a.houses:
+            houses = [(h.split(":")[0].strip(), float(h.split(":")[1])) for h in a.houses.split(",") if h.strip()]
+        else:
+            houses = HOUSES if a.only == "both" else [x for x in HOUSES if x[0].startswith(f"tunnel-{a.only}")]
+        report = prepare_farm_run(env.stage, tunnels=tuple(x[0][7:9] for x in houses), res=a.crop_res, log=log)
         (rec / "scene_prep.json").write_text(json.dumps(report, indent=1, default=str))
         (rec / "ground_truth_plants.json").write_text(json.dumps(report.get("crops", []), indent=1))
         chase = ChaseCam(env.stage); env.extra_products.append(chase.rp.hydra_texture)

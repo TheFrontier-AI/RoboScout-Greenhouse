@@ -41,3 +41,16 @@ def test_narrow_or_no_turn_survey_reverses_out():
     m = AisleMap.load(MAP)
     assert [l.kind for l in survey_aisle(m, "tunnel-09/aisle-02", turnaround=False)] == ["transit", "drive_in", "reverse_out"]
     assert m.get("tunnel-09/aisle-02").turnable() and not m.get("tunnel-09/aisle-01").traversable()
+
+
+def test_farm_loop_any_number_of_houses():
+    """Three (or more) houses: the drive-through alternates direction and crosses behind / in front, then docks."""
+    from r1_nav.mission import farm_loop
+    houses = [("tunnel-09/aisle-02", 0.0), ("tunnel-10/aisle-02", 9.0), ("tunnel-11/aisle-02", 18.0)]
+    legs = farm_loop(houses, head_y=3.26, back_y=-35.19, dock_xy=(2.0, 4.9), road_y=8.99, rows_end_m=38.04)
+    kinds = [(l.kind, l.aisle_id) for l in legs]
+    drives = [k for k in kinds if k[0] in ("drive_in", "drive_out")]
+    assert [a for _, a in drives] == [h for h, _ in houses]              # every house surveyed once, in order
+    assert [k for k, _ in drives] == ["drive_in", "drive_out", "drive_in"]  # front->back, back->front, front->back
+    assert kinds[-1][0] == "dock"
+    assert sum(1 for k, _ in kinds if k == "path") >= len(houses)        # a path leg between houses and home
