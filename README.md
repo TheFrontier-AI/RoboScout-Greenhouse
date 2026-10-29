@@ -43,6 +43,9 @@ Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. 
 | `deploy/nebius/` | One-VM stack (RTX PRO 6000): bootstrap and docker compose |
 | `docs/` | Mission spec, interfaces, environment, roadmap, hackathon plan (Thai) |
 
+## Evidence that it runs
+Real logs and outputs, unedited: cloud install on a fresh Nebius VM, the robot hand-off and the full pipeline (9 min 59 s to the farmer's report), the robot side on a **real Jetson Orin Nano** (install, 50 tests, upload to the cloud and the report back), and the run-3 recording the robot made while driving itself: **[docs/evidence/](docs/evidence/README.md)**.
+
 ## Gallery
 22 images (sim renders, real farm photos, the driven route) with captions: [docs/media/gallery/](docs/media/gallery/README.md)
 

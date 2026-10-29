@@ -117,6 +117,8 @@ It uploads only what the pipeline reads (jsonl, `side/`, `front/`, `zed/`), post
 
 ## 3. End-to-end test (what we ran)
 
+Raw logs of every step below are in [evidence/](evidence/README.md).
+
 Verified 2026-10-30 from a fresh checkout of `main` (commit `24d2f61`):
 
 1. **Cloud** — Nebius `gpu-rtx6000` VM (Ubuntu 24.04, driver 580, CUDA 13): `install_cloud.sh` took 2 min 15 s

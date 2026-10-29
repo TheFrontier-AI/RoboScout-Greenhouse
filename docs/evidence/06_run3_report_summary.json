@@ -1,0 +1,2266 @@
+{
+ "run": "farm_full3",
+ "generated": "2026-10-29 21:46:05",
+ "harvest": {
+  "source": "rtdetr",
+  "model": "/home/passin/Documents/Blender/TheFarm/r1_greenhouse_nav/vision_runs/rtdetr_v2_mixed/best",
+  "images": 978,
+  "by_aisle": {
+   "tunnel-09/aisle-02": {
+    "pass": 1573,
+    "reject": 28,
+    "not_ready": 2231
+   },
+   "tunnel-10/aisle-02": {
+    "pass": 1673,
+    "reject": 19,
+    "not_ready": 2262
+   },
+   "null": {
+    "pass": 29,
+    "reject": 0,
+    "not_ready": 39
+   }
+  },
+  "total": {
+   "pass": 3275,
+   "reject": 47,
+   "not_ready": 4532
+  },
+  "rule": "ripe red = pass, lesion = reject, green/turning = not ready; each frame counts only its own 0.5 m strip"
+ },
+ "plant_count": {
+  "source": "rtdetr plant_base",
+  "by_aisle": {
+   "tunnel-09/aisle-02": 8,
+   "tunnel-10/aisle-02": 32
+  },
+  "total": 40,
+  "plant_stops": null,
+  "plants_judged_by_vlm": null
+ },
+ "navigation_events": {
+  "counts": {
+   "status": 3637,
+   "command": 3,
+   "leg_start": 18,
+   "waypoint": 9,
+   "capture": 1035,
+   "leg_done": 16,
+   "enter": 4,
+   "slip": 2,
+   "aborted": 2
+  },
+  "commands": [
+   {
+    "t": 0.3166666831821203,
+    "cmd": "survey_farm",
+    "accepted": true,
+    "legs": [
+     "path",
+     "enter",
+     "drive_in",
+     "path",
+     "enter",
+     "drive_out",
+     "path",
+     "dock"
+    ],
+    "reason": null
+   },
+   {
+    "t": 648.0167004633695,
+    "cmd": "revisit",
+    "accepted": true,
+    "legs": [
+     "path",
+     "enter",
+     "drive_in",
+     "hold",
+     "turn_around",
+     "drive_out",
+     "path"
+    ],
+    "reason": null
+   },
+   {
+    "t": 693.5167028363794,
+    "cmd": "revisit",
+    "accepted": true,
+    "legs": [
+     "path",
+     "enter",
+     "drive_in",
+     "hold",
+     "turn_around",
+     "drive_out",
+     "path"
+    ],
+    "reason": null
+   }
+  ],
+  "legs_done": [
+   {
+    "t": 33.51666841469705,
+    "leg": {
+     "kind": "path",
+     "aisle_id": null,
+     "target_metre": null,
+     "note": "leave the dock, line up with the door",
+     "waypoints": [
+      [
+       2.0,
+       4.9
+      ],
+      [
+       0.0,
+       4.859999999999999
+      ]
+     ],
+     "final_heading_deg": -90.0
+    },
+    "metre": 0.021
+   },
+   {
+    "t": 33.61666841991246,
+    "leg": {
+     "kind": "enter",
+     "aisle_id": "tunnel-09/aisle-02",
+     "target_metre": -1.6,
+     "note": "enter through the front door"
+    },
+    "metre": -1.53
+   },
+   {
+    "t": 261.4166803006083,
+    "leg": {
+     "kind": "drive_in",
+     "aisle_id": "tunnel-09/aisle-02",
+     "target_metre": 40.05,
+     "note": "stop at every plant, drive out of the back"
+    },
+    "metre": 40.026,
+    "error_m": -0.024
+   },
+   {
+    "t": 347.6166847962886,
+    "leg": {
+     "kind": "path",
+     "aisle_id": null,
+     "target_metre": null,
+     "note": "cross to the next house",
+     "waypoints": [
+      [
+       0.0,
+       -36.79
+      ],
+      [
+       9.015,
+       -36.79
+      ]
+     ],
+     "final_heading_deg": 90.0
+    },
+    "metre": 39.391
+   },
+   {
+    "t": 347.716684801504,
+    "leg": {
+     "kind": "enter",
+     "aisle_id": "tunnel-10/aisle-02",
+     "target_metre": 40.05,
+     "note": "enter through the back"
+    },
+    "metre": 39.957
+   },
+   {
+    "t": 570.2166964057833,
+    "leg": {
+     "kind": "drive_out",
+     "aisle_id": "tunnel-10/aisle-02",
+     "target_metre": -1.6,
+     "note": "stop at every plant, drive out of the front"
+    },
+    "metre": -1.572,
+    "error_m": 0.028
+   },
+   {
+    "t": 647.8167004529387,
+    "leg": {
+     "kind": "path",
+     "aisle_id": null,
+     "target_metre": null,
+     "note": "return to the dock",
+     "waypoints": [
+      [
+       9.015,
+       4.859999999999999
+      ],
+      [
+       2.0,
+       4.859999999999999
+      ],
+      [
+       2.0,
+       4.9
+      ]
+     ],
+     "final_heading_deg": -90.0
+    },
+    "metre": -1.423
+   },
+   {
+    "t": 647.9167004581541,
+    "leg": {
+     "kind": "dock",
+     "aisle_id": null,
+     "target_metre": null,
+     "note": "docked"
+    },
+    "metre": -1.423,
+    "note": "headland transit not simulated"
+   },
+   {
+    "t": 680.4167021531612,
+    "leg": {
+     "kind": "path",
+     "aisle_id": null,
+     "target_metre": null,
+     "note": "to the door",
+     "waypoints": [
+      [
+       0.0,
+       4.859999999999999
+      ]
+     ],
+     "final_heading_deg": -90.0
+    },
+    "metre": -0.596
+   },
+   {
+    "t": 680.5167021583766,
+    "leg": {
+     "kind": "enter",
+     "aisle_id": "tunnel-09/aisle-02",
+     "target_metre": -1.6,
+     "note": "enter through the front door"
+    },
+    "metre": -1.513
+   },
+   {
+    "t": 690.216702664271,
+    "leg": {
+     "kind": "drive_in",
+     "aisle_id": "tunnel-09/aisle-02",
+     "target_metre": -0.0,
+     "note": "drive to the spot"
+    },
+    "metre": -0.026,
+    "error_m": -0.026
+   },
+   {
+    "t": 693.3167028259486,
+    "leg": {
+     "kind": "hold",
+     "aisle_id": "tunnel-09/aisle-02",
+     "target_metre": -0.0,
+     "note": "revisit"
+    },
+    "metre": -0.03
+   },
+   {
+    "t": 731.1167047973722,
+    "leg": {
+     "kind": "path",
+     "aisle_id": null,
+     "target_metre": null,
+     "note": "to the door",
+     "waypoints": [
+      [
+       0.0,
+       4.859999999999999
+      ]
+     ],
+     "final_heading_deg": -90.0
+    },
+    "metre": -1.587
+   },
+   {
+    "t": 731.2167048025876,
+    "leg": {
+     "kind": "enter",
+     "aisle_id": "tunnel-09/aisle-02",
+     "target_metre": -1.6,
+     "note": "enter through the front door"
+    },
+    "metre": -1.577
+   },
+   {
+    "t": 747.1167056318372,
+    "leg": {
+     "kind": "drive_in",
+     "aisle_id": "tunnel-09/aisle-02",
+     "target_metre": 1.4,
+     "note": "drive to the spot"
+    },
+    "metre": 1.375,
+    "error_m": -0.025
+   },
+   {
+    "t": 750.2167057935148,
+    "leg": {
+     "kind": "hold",
+     "aisle_id": "tunnel-09/aisle-02",
+     "target_metre": 1.4,
+     "note": "revisit"
+    },
+    "metre": 1.384
+   }
+  ],
+  "incidents": [
+   {
+    "t": 693.416702831164,
+    "type": "aborted",
+    "reason": "no room to turn: obstacle 0.02 m from centre (needs 0.51 m)",
+    "metre": -0.03
+   },
+   {
+    "t": 750.3167057987303,
+    "type": "aborted",
+    "reason": "no room to turn: obstacle 0.02 m from centre (needs 0.51 m)",
+    "metre": 1.384
+   }
+  ],
+  "final_state": "aborted",
+  "front_camera_checks": null
+ },
+ "localisation": {
+  "lidar_odometry": {
+   "scans": 7500,
+   "path_m": 122.97,
+   "odometry_vs_truth": {
+    "n": 7500,
+    "rmse_m": 0.234,
+    "median_m": 0.144,
+    "p90_m": 0.412,
+    "max_m": 0.5
+   },
+   "scan_to_map": {
+    "attempts": 7498,
+    "ok": 7497,
+    "applied_xy": 2674
+   },
+   "mean_confidence": 0.896
+  },
+  "cuvslam": null,
+  "lingbot": null
+ },
+ "steps": {
+  "detect": {
+   "status": "ok",
+   "reason": null,
+   "seconds": 56.3
+  },
+  "lidar_map": {
+   "status": "ok",
+   "reason": null,
+   "seconds": 51.3
+  }
+ },
+ "disease_summary": {
+  "rtdetr": {
+   "detections": 1473,
+   "by_label": {
+    "chlorosis (yellowing leaves)": 1358,
+    "fruit lesion": 112,
+    "leaf spots": 3
+   },
+   "spots": [
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": -0.03,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.727,
+     "image": "side/000005_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": -0.03,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.57,
+     "image": "side/000006_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": -0.03,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.501,
+     "image": "side/000007_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": -0.03,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.625,
+     "image": "side/000008_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.507,
+     "image": "side/000009_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.628,
+     "image": "side/000010_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.633,
+     "image": "side/000011_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.619,
+     "image": "side/000012_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_low",
+     "label": "fruit lesion",
+     "confidence": 0.583,
+     "image": "side/000012_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.537,
+     "image": "side/000012_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.519,
+     "image": "side/000012_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.514,
+     "image": "side/000012_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.675,
+     "image": "side/000013_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.671,
+     "image": "side/000013_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.636,
+     "image": "side/000013_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.571,
+     "image": "side/000013_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.523,
+     "image": "side/000013_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.44,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.612,
+     "image": "side/000014_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.91,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.598,
+     "image": "side/000016_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.91,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.576,
+     "image": "side/000018_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.91,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.664,
+     "image": "side/000019_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.91,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.618,
+     "image": "side/000019_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 0.91,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.507,
+     "image": "side/000019_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.39,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.753,
+     "image": "side/000022_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.39,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.535,
+     "image": "side/000024_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.39,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.511,
+     "image": "side/000025_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.39,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.727,
+     "image": "side/000026_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.39,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.542,
+     "image": "side/000026_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.86,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.798,
+     "image": "side/000028_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.86,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.876,
+     "image": "side/000030_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.86,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.535,
+     "image": "side/000030_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.86,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.775,
+     "image": "side/000032_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.86,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.62,
+     "image": "side/000032_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 1.86,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.571,
+     "image": "side/000033_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.766,
+     "image": "side/000034_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.75,
+     "image": "side/000034_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.546,
+     "image": "side/000034_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_left_mid",
+     "label": "fruit lesion",
+     "confidence": 0.59,
+     "image": "side/000035_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.509,
+     "image": "side/000036_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.825,
+     "image": "side/000037_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.814,
+     "image": "side/000037_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.597,
+     "image": "side/000037_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.506,
+     "image": "side/000037_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.654,
+     "image": "side/000038_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.771,
+     "image": "side/000039_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.736,
+     "image": "side/000039_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.34,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.528,
+     "image": "side/000039_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.542,
+     "image": "side/000041_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.708,
+     "image": "side/000042_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.585,
+     "image": "side/000043_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_right_low",
+     "label": "fruit lesion",
+     "confidence": 0.75,
+     "image": "side/000044_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.734,
+     "image": "side/000044_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.608,
+     "image": "side/000044_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.764,
+     "image": "side/000045_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.762,
+     "image": "side/000045_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_right_mid",
+     "label": "fruit lesion",
+     "confidence": 0.697,
+     "image": "side/000045_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.564,
+     "image": "side/000045_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.507,
+     "image": "side/000045_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 2.82,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.554,
+     "image": "side/000046_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.29,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.608,
+     "image": "side/000048_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.29,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.555,
+     "image": "side/000048_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.29,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.502,
+     "image": "side/000048_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.29,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.599,
+     "image": "side/000050_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.29,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.589,
+     "image": "side/000050_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.29,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.517,
+     "image": "side/000051_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.29,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.536,
+     "image": "side/000052_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.29,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.529,
+     "image": "side/000052_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.77,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.575,
+     "image": "side/000053_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.77,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.585,
+     "image": "side/000055_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.77,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.757,
+     "image": "side/000056_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.77,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.676,
+     "image": "side/000056_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.77,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.609,
+     "image": "side/000056_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.77,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.568,
+     "image": "side/000056_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 3.77,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.507,
+     "image": "side/000056_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.634,
+     "image": "side/000059_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.583,
+     "image": "side/000059_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.731,
+     "image": "side/000060_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.587,
+     "image": "side/000060_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.533,
+     "image": "side/000060_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.714,
+     "image": "side/000061_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.575,
+     "image": "side/000061_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.55,
+     "image": "side/000062_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.838,
+     "image": "side/000063_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.557,
+     "image": "side/000063_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.522,
+     "image": "side/000063_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.56,
+     "image": "side/000064_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.26,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.505,
+     "image": "side/000064_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.73,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.852,
+     "image": "side/000066_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.73,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.546,
+     "image": "side/000068_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.73,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.692,
+     "image": "side/000069_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.73,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.605,
+     "image": "side/000069_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.73,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.852,
+     "image": "side/000070_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.73,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.724,
+     "image": "side/000070_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.73,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.696,
+     "image": "side/000070_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.73,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.527,
+     "image": "side/000070_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 4.73,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.503,
+     "image": "side/000070_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_left_low",
+     "label": "fruit lesion",
+     "confidence": 0.632,
+     "image": "side/000072_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.592,
+     "image": "side/000072_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.555,
+     "image": "side/000072_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.547,
+     "image": "side/000073_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.516,
+     "image": "side/000074_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_right_low",
+     "label": "fruit lesion",
+     "confidence": 0.807,
+     "image": "side/000075_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_right_low",
+     "label": "fruit lesion",
+     "confidence": 0.667,
+     "image": "side/000075_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.52,
+     "image": "side/000075_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.539,
+     "image": "side/000076_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.2,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.595,
+     "image": "side/000077_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.68,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.523,
+     "image": "side/000078_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.68,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.52,
+     "image": "side/000080_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.68,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.824,
+     "image": "side/000081_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.68,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.822,
+     "image": "side/000081_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.68,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.556,
+     "image": "side/000081_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.68,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.533,
+     "image": "side/000081_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 5.68,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.526,
+     "image": "side/000082_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.14,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.658,
+     "image": "side/000085_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.14,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.561,
+     "image": "side/000085_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.14,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.759,
+     "image": "side/000088_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.14,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.707,
+     "image": "side/000088_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.14,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.562,
+     "image": "side/000088_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.14,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.541,
+     "image": "side/000088_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.582,
+     "image": "side/000091_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_left_low",
+     "label": "fruit lesion",
+     "confidence": 0.508,
+     "image": "side/000091_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.722,
+     "image": "side/000093_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.69,
+     "image": "side/000094_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.655,
+     "image": "side/000094_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.635,
+     "image": "side/000094_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.582,
+     "image": "side/000094_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.506,
+     "image": "side/000094_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.833,
+     "image": "side/000095_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.733,
+     "image": "side/000095_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.642,
+     "image": "side/000095_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.63,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.765,
+     "image": "side/000096_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.09,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.74,
+     "image": "side/000097_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.09,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.734,
+     "image": "side/000100_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.09,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.502,
+     "image": "side/000100_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.09,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.659,
+     "image": "side/000101_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.09,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.557,
+     "image": "side/000101_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.09,
+     "camera": "mast_right_mid",
+     "label": "fruit lesion",
+     "confidence": 0.523,
+     "image": "side/000101_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.09,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.546,
+     "image": "side/000102_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.56,
+     "camera": "mast_left_low",
+     "label": "fruit lesion",
+     "confidence": 0.626,
+     "image": "side/000103_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.56,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.558,
+     "image": "side/000104_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.56,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.756,
+     "image": "side/000107_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.56,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.56,
+     "image": "side/000107_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.56,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.662,
+     "image": "side/000108_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 7.56,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.542,
+     "image": "side/000108_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.02,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.501,
+     "image": "side/000109_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.02,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.702,
+     "image": "side/000111_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.02,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.537,
+     "image": "side/000111_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.02,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.545,
+     "image": "side/000112_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.725,
+     "image": "side/000115_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.719,
+     "image": "side/000115_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.633,
+     "image": "side/000115_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_left_low",
+     "label": "fruit lesion",
+     "confidence": 0.572,
+     "image": "side/000115_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.514,
+     "image": "side/000115_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.757,
+     "image": "side/000117_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.817,
+     "image": "side/000118_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.81,
+     "image": "side/000118_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.749,
+     "image": "side/000118_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.562,
+     "image": "side/000118_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.551,
+     "image": "side/000120_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.49,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.506,
+     "image": "side/000120_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.822,
+     "image": "side/000122_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.644,
+     "image": "side/000122_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.621,
+     "image": "side/000122_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.595,
+     "image": "side/000122_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.823,
+     "image": "side/000124_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.583,
+     "image": "side/000124_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.896,
+     "image": "side/000125_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.752,
+     "image": "side/000126_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.723,
+     "image": "side/000126_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.555,
+     "image": "side/000126_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.514,
+     "image": "side/000126_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.651,
+     "image": "side/000127_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 8.95,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.625,
+     "image": "side/000127_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.43,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.704,
+     "image": "side/000128_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.43,
+     "camera": "mast_left_low",
+     "label": "fruit lesion",
+     "confidence": 0.56,
+     "image": "side/000128_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.43,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.661,
+     "image": "side/000129_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.43,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.725,
+     "image": "side/000130_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.43,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.769,
+     "image": "side/000131_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.43,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.532,
+     "image": "side/000131_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.43,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.699,
+     "image": "side/000132_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.43,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.586,
+     "image": "side/000132_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.43,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.537,
+     "image": "side/000132_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.91,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.845,
+     "image": "side/000135_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.91,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.676,
+     "image": "side/000135_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.91,
+     "camera": "mast_left_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.54,
+     "image": "side/000135_mast_left_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.91,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.806,
+     "image": "side/000137_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.91,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.612,
+     "image": "side/000137_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.91,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.604,
+     "image": "side/000137_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.91,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.541,
+     "image": "side/000137_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 9.91,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.612,
+     "image": "side/000139_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.4,
+     "camera": "mast_left_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.57,
+     "image": "side/000140_mast_left_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.4,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.739,
+     "image": "side/000143_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.4,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.597,
+     "image": "side/000143_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.4,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.522,
+     "image": "side/000143_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.4,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.717,
+     "image": "side/000144_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.4,
+     "camera": "mast_right_mid",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.591,
+     "image": "side/000144_mast_right_mid.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.4,
+     "camera": "mast_right_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.696,
+     "image": "side/000145_mast_right_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.89,
+     "camera": "mast_left_high",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.556,
+     "image": "side/000149_mast_left_high.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.89,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.904,
+     "image": "side/000150_mast_right_low.png"
+    },
+    {
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 10.89,
+     "camera": "mast_right_low",
+     "label": "chlorosis (yellowing leaves)",
+     "confidence": 0.865,
+     "image": "side/000150_mast_right_low.png"
+    }
+   ],
+   "ground_truth_check": [
+    {
+     "plant": "/CropSwap/T09_R3_P41",
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 18.37,
+     "truth": "fruit_lesion_strong",
+     "detectable_by_this_model": true,
+     "found": true,
+     "detections_nearby": [
+      [
+       "fruit lesion",
+       0.844
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.648
+      ],
+      [
+       "fruit lesion",
+       0.6
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.545
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.604
+      ]
+     ]
+    },
+    {
+     "plant": "/CropSwap/T09_R3_P14",
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 6.37,
+     "truth": "leaf_spots_strong",
+     "detectable_by_this_model": true,
+     "found": false,
+     "detections_nearby": [
+      [
+       "chlorosis (yellowing leaves)",
+       0.523
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.52
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.824
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.822
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.556
+      ]
+     ]
+    },
+    {
+     "plant": "/CropSwap/T09_R3_P72",
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 32.1,
+     "truth": "leaf_spots_strong",
+     "detectable_by_this_model": true,
+     "found": false,
+     "detections_nearby": [
+      [
+       "chlorosis (yellowing leaves)",
+       0.635
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.613
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.523
+      ],
+      [
+       "fruit lesion",
+       0.658
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.563
+      ]
+     ]
+    },
+    {
+     "plant": "/CropSwap/T09_R2_P58",
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 25.88,
+     "truth": "wilting_strong",
+     "detectable_by_this_model": false,
+     "found": null,
+     "detections_nearby": [
+      [
+       "chlorosis (yellowing leaves)",
+       0.677
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.624
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.884
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.622
+      ],
+      [
+       "fruit lesion",
+       0.737
+      ]
+     ]
+    },
+    {
+     "plant": "/CropSwap/T09_R2_P27",
+     "aisle": "tunnel-09/aisle-02",
+     "metre": 12.14,
+     "truth": "chlorosis_strong",
+     "detectable_by_this_model": true,
+     "found": true,
+     "detections_nearby": [
+      [
+       "fruit lesion",
+       0.605
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.515
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.513
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.642
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.581
+      ]
+     ]
+    },
+    {
+     "plant": "/CropSwap/T10_R2_P11",
+     "aisle": "tunnel-10/aisle-02",
+     "metre": 5.09,
+     "truth": "chlorosis_strong",
+     "detectable_by_this_model": true,
+     "found": true,
+     "detections_nearby": [
+      [
+       "chlorosis (yellowing leaves)",
+       0.884
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.86
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.855
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.85
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.848
+      ]
+     ]
+    },
+    {
+     "plant": "/CropSwap/T10_R3_P33",
+     "aisle": "tunnel-10/aisle-02",
+     "metre": 14.81,
+     "truth": "fruit_lesion_strong",
+     "detectable_by_this_model": true,
+     "found": true,
+     "detections_nearby": [
+      [
+       "chlorosis (yellowing leaves)",
+       0.82
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.742
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.672
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.627
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.838
+      ]
+     ]
+    },
+    {
+     "plant": "/CropSwap/T10_R3_P66",
+     "aisle": "tunnel-10/aisle-02",
+     "metre": 29.44,
+     "truth": "defoliation_strong",
+     "detectable_by_this_model": false,
+     "found": null,
+     "detections_nearby": [
+      [
+       "chlorosis (yellowing leaves)",
+       0.717
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.713
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.768
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.671
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.597
+      ]
+     ]
+    },
+    {
+     "plant": "/CropSwap/T10_R2_P49",
+     "aisle": "tunnel-10/aisle-02",
+     "metre": 21.88,
+     "truth": "leaf_spots_strong",
+     "detectable_by_this_model": true,
+     "found": false,
+     "detections_nearby": [
+      [
+       "chlorosis (yellowing leaves)",
+       0.721
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.664
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.644
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.608
+      ],
+      [
+       "chlorosis (yellowing leaves)",
+       0.847
+      ]
+     ]
+    }
+   ],
+   "found_of_detectable": "4/7",
+   "detections_not_near_any_anomaly_plant": 1151
+  },
+  "vlm": {
+   "model": null,
+   "requests": null,
+   "status": null,
+   "flagged": [],
+   "anomaly_plants_flagged": null,
+   "flags_not_near_any_anomaly_plant": null,
+   "ground_truth_check": null
+  },
+  "healthy_plants": 0
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "steps": 7500,
+ "duration_s": 750.3,
+ "legs_steps": {
+  "path": 2670,
+  "enter": 4,
+  "drive_in": 2534,
+  "drive_out": 2225,
+  "dock": 1,
+  "null": 2,
+  "hold": 62,
+  "turn_around": 2
+ },
+ "events": 4726,
+ "event_types": {
+  "status": 3637,
+  "capture": 1035,
+  "leg_start": 18,
+  "leg_done": 16,
+  "waypoint": 9,
+  "enter": 4,
+  "command": 3,
+  "slip": 2,
+  "aborted": 2
+ }
+}

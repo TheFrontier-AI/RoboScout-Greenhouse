@@ -60,11 +60,16 @@ We are building R1, a narrow differential-drive robot with six side cameras. It 
 - Watering: the pump, tank and nozzles are designed; the API is drafted. Then measure the side aisles on site and fine-tune the eyes on our own frames.
 
 ## Honest status
-- The robot is simulated: all runs are in the Isaac twin.
-- The diseased plant is a labelled synthetic test asset, not a real diagnosis.
-- Two of tunnel-09's three aisles are narrower than the robot plus margin and are reported as skipped.
-- Model outputs are screening aids, not lab diagnoses.
+- The robot drives in the Isaac Sim twin of our farm; the robot software (navigation stack, recorder, hub client) was installed from a fresh clone and tested on a **real Jetson Orin Nano** and on an ARM64 DGX Spark, and a recorded run was uploaded from the Jetson to the cloud hub, which ran the full pipeline and returned the report. The Jetson has not yet driven a physical chassis.
+- The cloud side was installed from a fresh clone on a Nebius RTX PRO 6000 VM and ran the whole pipeline on run 3 in 9 min 59 s.
+- Diseased plants in the twin are labelled synthetic test assets; model outputs are screening aids, not lab diagnoses. Wilting and defoliation are not yet detected; plant counting from the side cameras does not work yet.
+- The fine-tuned detector weights are not in the repo (available from the author on request); everything else installs with one script per side.
+- Raw logs and outputs of all of the above: **[docs/evidence/](evidence/README.md)**.
 
 ## Links
 - Repo: https://github.com/TheFrontier-AI/RoboScout-Greenhouse (Apache-2.0)
-- Video: <YouTube link> (file: TheFarm/r1_runs/RoboFarm_demo_v3.mp4, 2:19)
+- Evidence it runs (unedited logs, reports, the driven route): [docs/evidence/](evidence/README.md)
+- Install and run, both halves: [docs/INSTALL.md](INSTALL.md)
+- Technical report: [docs/TECHNICAL_REPORT.md](TECHNICAL_REPORT.md) · System overview: [docs/SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md)
+- Gallery (22 captioned images): [docs/media/gallery/](media/gallery/README.md)
+- Video: 3-minute demo film (file `ROBOFARM_DEMO_3min_1080p.mp4`, 2:42; link added at submission)
