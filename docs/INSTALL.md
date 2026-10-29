@@ -23,6 +23,10 @@ ARM64 machine standing in for the Jetson. Steps marked *optional* can be skipped
 
 ---
 
+## 0. Supported platforms
+
+Verified (logs in [evidence/](evidence/README.md)): **robot** on a Jetson Orin Nano Super (JetPack 6, Python 3.10) and on an ARM64 DGX Spark; **cuVSLAM** on the Jetson (cuvslam 17.0.1 cu12 aarch64, 188 FPS stereo); **cloud** on a Nebius `gpu-rtx6000` VM (Ubuntu 24.04, CUDA 13, Python 3.12). Expected to work: any Linux with Python ≥ 3.10 for the robot side; any x86-64 Linux with an NVIDIA GPU (CUDA 12.x/13.x) for the cloud side; CPU-only cloud runs with GPU steps skipped. Simulation needs NVIDIA Isaac Sim 5.1 on x86-64.
+
 ## 1. Cloud (Nebius VM)
 
 **VM:** Ubuntu 24.04 + CUDA image (`ubuntu24.04-cuda13.0`), one RTX PRO 6000 (`gpu-rtx6000`, preset `1gpu-24vcpu-218gb`)

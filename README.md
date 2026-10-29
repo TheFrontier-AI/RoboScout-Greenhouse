@@ -49,6 +49,24 @@ Real logs and outputs, unedited: cloud install on a fresh Nebius VM, the robot h
 ## Gallery
 22 images (sim renders, real farm photos, the driven route) with captions: [docs/media/gallery/](docs/media/gallery/README.md)
 
+## Supported platforms (tested)
+
+| Part | Platform | Status |
+|---|---|---|
+| **Robot** software (`r1_nav`, recorder, hub client, `robot_upload_run.py`) | **NVIDIA Jetson Orin Nano Super 8 GB**, JetPack 6 (L4T R36.4), Python 3.10 | **verified**: install 1 min 33 s, 50 tests, hand-off to the cloud and report back |
+| | ARM64 Linux (NVIDIA DGX Spark, Ubuntu, Python 3.13) | **verified**: install, 50 tests, cross-network hand-off |
+| | any Linux with Python ≥ 3.10, `rsync`, `ssh` | expected (pure Python: numpy, pillow, scipy) |
+| **cuVSLAM** on the robot (R181-S stereo) | Jetson Orin Nano, cuvslam 17.0.1 cu12 aarch64 wheel, JetPack CUDA 12.6 | **verified**: 188 FPS stereo, 82 FPS stereo-inertial |
+| **Cloud** (hub + analysis pipeline) | **Nebius `gpu-rtx6000`** (RTX PRO 6000), Ubuntu 24.04 + CUDA 13 image, Python 3.12 | **verified**: install 2 min 15 s, full pipeline 9 min 59 s |
+| | any x86-64 Linux + NVIDIA GPU, CUDA 12.x or 13.x (`TORCH_INDEX` cu128 / cu130) | expected |
+| | CPU only | pipeline runs with `detect` on CPU (slow) and GPU steps skipped |
+| **Simulation** (digital twin, `scripts/run_farm.py`) | NVIDIA Isaac Sim 5.1 on x86-64 + RTX GPU (Nebius `gpu-rtx6000` used) | verified for all recorded runs |
+| **Models** | Nemotron 3.5 Super VL, Nemotron 3 Super — Nebius Token Factory (hosted) | verified; one `NEBIUS_API_KEY` |
+| | Cosmos Reason 2 — self-hosted vLLM container (`deploy/nebius/docker-compose.yml`) | verified on the Nebius VM; optional |
+| | RT-DETRv2 fine-tuned weights | **not in git — request from the author** (77 MB); without them `detect` is skipped |
+
+Install steps and the logs of every "verified" row: [docs/INSTALL.md](docs/INSTALL.md), [docs/evidence/](docs/evidence/README.md).
+
 ## Install and run (cloud + robot)
 Step-by-step install for both halves, verified from a fresh clone on a Nebius RTX PRO 6000 VM (cloud) and on a **Jetson Orin Nano** (robot): **[docs/INSTALL.md](docs/INSTALL.md)**.
 Fine-tuned detector weights are not in this repo: contact the author (see INSTALL.md).
