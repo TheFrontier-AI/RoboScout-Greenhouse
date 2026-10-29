@@ -22,9 +22,9 @@ All 3:2, ≤ 2 MB. Renders are from the NVIDIA Isaac Sim digital twin of our far
 | 16 | ![](16_real_farm_aerial_tunnel_greenhouses.jpg) | *Real photo* — the row of tunnel greenhouses the digital twin was built from |
 | 17 | ![](17_real_tomato_aisle.jpg) | *Real photo* — inside a tomato tunnel on the farm, the environment R1 is designed to survey |
 | 18 | ![](18_real_tunnel_greenhouses_exterior.jpg) | *Real photo* — the tunnel greenhouses from outside, matched in the Isaac Sim twin |
-| 19 | ![](19_sim_whole_farm_aerial.jpg) | The whole farm in the twin: greenhouses, ponds, orchard plots, sheds (Blender scene V16) |
-| 20 | ![](20_sim_farm_aerial_greenhouses_ponds.jpg) | Aerial of the greenhouse block and the four ponds in the twin |
-| 21 | ![](21_sim_ponds_and_greenhouses.jpg) | Ponds and the tunnel greenhouses in the twin |
+| 19 | ![](19_sim_whole_farm_aerial.jpg) | Farm layout of the twin (Blender layout model, scene V16, 25 Oct): greenhouses, ponds, orchard plots, sheds — the current Isaac Sim scene is shown in images 01–06 |
+| 20 | ![](20_sim_farm_aerial_greenhouses_ponds.jpg) | Aerial of the greenhouse block and the four ponds (Blender layout model, scene V16) |
+| 21 | ![](21_sim_ponds_and_greenhouses.jpg) | Ponds and the tunnel greenhouses (Blender layout model, scene V16) |
 | 22 | ![](22_route_run3.png) | Run 3, the route R1 drove on its own: dock → tunnel-09 → yard → tunnel-10 → dock — 117 m, 12.5 min, 161 plant stops |
 | 23 | ![](23_two_observers_fusion.png) | Two observers on run 3: the robot's LiDAR estimate and cuVSLAM stereo fused, scored against the recorded truth |
 | 24 | ![](24_teach_map_self_built.png) | Mapping by demonstration: the farm as the robot recorded it on one taught drive — map, dock and doors built by the robot, no distances typed |
