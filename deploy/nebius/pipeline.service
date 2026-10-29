@@ -1,0 +1,26 @@
+# R1 robot hub + post-survey analysis pipeline (deploy/nebius/start_pipeline.sh) as a systemd service on the Nebius VM.
+#   sudo cp deploy/nebius/pipeline.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#   sudo systemctl enable --now pipeline && journalctl -u pipeline -f
+# Adjust User / paths if the repo is not at /home/ubuntu/TheFarm/r1_greenhouse_nav (see docs/PIPELINE_th.md).
+[Unit]
+Description=R1 robot hub + analysis pipeline watcher
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/TheFarm/r1_greenhouse_nav
+Environment=HOME=/home/ubuntu
+Environment=RUNS_DIR=/home/ubuntu/runs
+Environment=PY=/home/ubuntu/venv2/bin/python
+Environment=HUB_PORT=8090
+Environment=PIPELINE_AUTO=0
+ExecStart=/bin/bash /home/ubuntu/TheFarm/r1_greenhouse_nav/deploy/nebius/start_pipeline.sh
+Restart=always
+RestartSec=10
+KillMode=control-group
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

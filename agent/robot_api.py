@@ -5,16 +5,20 @@ in the dashboard format (status.json, frames.jsonl, findings.jsonl, decisions.js
   python3 agent/robot_api.py --data runs/demo --map data/tunnel09_aisle_map_v18.json --port 8090
 
 HERMES side:  POST /command {cmd...,"reasoning": "..."}  GET /status  GET /findings?since=N  GET /map  GET /health
-Robot side:   GET /next_command (204 if none)  POST /status {..}  POST /frame (multipart: meta JSON + image jpeg)"""
+Robot side:   GET /next_command (204 if none)  POST /status {..}  POST /frame (multipart: meta JSON + image jpeg)
+              POST /run_complete {"run": name, "path": <run dir on this server>, "summary": {..}} when the survey ends:
+              writes <run dir>/run_complete.json (the cloud/pipeline watcher picks it up); with PIPELINE_AUTO=1 the hub
+              also spawns `python3 -m cloud.pipeline run <run dir>` itself (docs/PIPELINE_th.md)."""
 from __future__ import annotations
-import argparse, json, os, queue, shutil, sys, threading, time
+import argparse, json, os, queue, shutil, subprocess, sys, threading, time
 from email.parser import BytesParser
 from email.policy import HTTP
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 from r1_nav.aisle_map import AisleMap            # noqa: E402
 from r1_nav.commands import plan_command          # noqa: E402
 from r1_nav.cameras import SIDE_CAMERAS           # noqa: E402
@@ -91,6 +95,28 @@ class Hub:
             self.detect_q.put((image, {**meta, "image_path": rel}))
         return {"stored": rel, "inspect_queued": self.inspect_q.qsize(), "detect_queued": self.detect_q.qsize()}
 
+    def run_complete(self, body: dict) -> dict:
+        """Robot says its survey is over: write <run dir>/run_complete.json (+ runs.jsonl here) and, with PIPELINE_AUTO=1,
+        start the analysis pipeline on it. The run dir is body["path"] (a dir on this server: shared mount or rsync
+        target), else PIPELINE_RUNS_DIR/<run>, else this hub's data dir."""
+        run = str(body.get("run") or time.strftime("run_%Y%m%d_%H%M%S"))
+        if body.get("path"):
+            run_dir = Path(body["path"])
+        elif os.environ.get("PIPELINE_RUNS_DIR"):
+            run_dir = Path(os.environ["PIPELINE_RUNS_DIR"]) / run
+        else:
+            run_dir = self.data
+        if not run_dir.is_dir():
+            raise ValueError(f"run dir not found on this server: {run_dir}")
+        marker = {"run": run, "path": str(run_dir), "ts": time.time(), "summary": body.get("summary"),
+                  "source": body.get("source", "robot")}
+        (run_dir / "run_complete.json").write_text(json.dumps(marker, ensure_ascii=False, indent=1))
+        self._append("runs.jsonl", marker)
+        auto = os.environ.get("PIPELINE_AUTO") == "1"
+        if auto:
+            threading.Thread(target=launch_pipeline, args=(run_dir,), daemon=True).start()
+        return {"ok": True, "run": run, "path": str(run_dir), "pipeline": "spawned" if auto else "marker written"}
+
     def _inspect_worker(self) -> None:
         while True:
             image, meta = self.inspect_q.get()
@@ -144,6 +170,15 @@ class Hub:
             self._append("findings.jsonl", row)
 
 
+def launch_pipeline(run_dir: Path) -> int:
+    """`python3 -m cloud.pipeline run <run_dir>` as a child process (own torch/CUDA, own log in <run_dir>/analysis/)."""
+    (run_dir / "analysis").mkdir(exist_ok=True)
+    with open(run_dir / "analysis" / "pipeline.out", "a") as out:
+        r = subprocess.run([sys.executable, "-m", "cloud.pipeline", "run", str(run_dir)], cwd=str(ROOT), stdout=out, stderr=subprocess.STDOUT)
+    print(f"[hub] pipeline for {run_dir} exited {r.returncode}", flush=True)
+    return r.returncode
+
+
 def make_handler(hub: Hub):
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):                 # quiet
@@ -161,7 +196,8 @@ def make_handler(hub: Hub):
             u = urlparse(self.path)
             if u.path == "/health":
                 return self._json(200, {"ok": True, "map": hub.amap.house_id if hub.amap else None,
-                                        "eyes": bool(os.environ.get("EYES_BASE_URL"))})
+                                        "eyes": bool(os.environ.get("EYES_BASE_URL")),
+                                        "pipeline_auto": os.environ.get("PIPELINE_AUTO") == "1"})
             if u.path == "/status":
                 return self._json(200, hub.status)
             if u.path == "/map":
@@ -200,6 +236,8 @@ def make_handler(hub: Hub):
                     parts = {p.get_param("name", header="content-disposition"): p.get_payload(decode=True)
                              for p in msg.iter_parts()}
                     return self._json(200, hub.frame(json.loads(parts["meta"]), parts["image"]))
+                if path == "/run_complete":
+                    return self._json(200, hub.run_complete(json.loads(self._body() or b"{}")))
             except (KeyError, ValueError, TypeError) as e:
                 return self._json(400, {"error": str(e)})
             self._json(404, {"error": "not found"})

@@ -57,3 +57,10 @@ HERMES (Nemotron @ Token Factory) ──POST /command──▶ robot API ◀─�
 ## 4) ชั้นล่างบนตัวหุ่น (ไม่พึ่งเครือข่าย)
 `wheel_cmd = [left_rad_s, right_rad_s]` ที่ 20 Hz; SAFETY (e-stop, หยุดเมื่อมีสิ่งกีดขวาง < 0.6 ม., STUCK) ทำบนหุ่นเสมอ
 เน็ตหลุด: เดินช่วงปัจจุบันให้จบ → ถอยออกรอที่หัวทางเดิน → เก็บภาพไว้ใน outbox แล้วส่งเมื่อต่อได้
+
+## 5) หุ่น → เซิร์ฟเวอร์: จบงานสำรวจ (`POST /run_complete`)
+`{"run": "<ชื่อ run>", "path": "<โฟลเดอร์ rec บนเซิร์ฟเวอร์>", "summary": {...}, "source": "robot"}` ส่งครั้งเดียวตอน `run_farm.py` จบ
+(ใน sim `rec/` เป็น shared mount; หุ่นจริงใช้ `--upload-rec` rsync ก่อน) hub เขียน `<path>/run_complete.json` แล้วระบบวิเคราะห์
+(`cloud/pipeline`: RT-DETR, VLM ต่อจุดหยุด, แผนที่ LiDAR, cuVSLAM, lingbot, Cosmos หน้า, รายงาน) รันต่อเอง → `<path>/analysis/report.json`
++ `report_th.md` + `report_en.md` ตอบกลับ `{"ok": true, "run", "path", "pipeline": "marker written|spawned"}`; path ไม่มีจริง → 400
+รายละเอียด: [PIPELINE_th.md](PIPELINE_th.md)

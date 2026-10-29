@@ -3,12 +3,14 @@ Stdlib HTTP only. Tolerates the hub being down: frames are queued to an on-disk 
 is re-sent, and while the hub is marked down no network call blocks the control loop.
 
   GET  /next_command → 200 cmd JSON | 204      POST /status  JSON
-  POST /frame        multipart: meta (JSON string) + image (jpeg)      GET /health"""
+  POST /frame        multipart: meta (JSON string) + image (jpeg)      GET /health
+  POST /run_complete {"run", "path", "summary"}  survey finished → server runs the analysis pipeline on that run dir"""
 from __future__ import annotations
 import io
 import json
 import os
 import struct
+import subprocess
 import time
 import urllib.error
 import urllib.request
@@ -42,6 +44,21 @@ def multipart(meta: dict, image: bytes, mime: str = "image/jpeg") -> tuple[bytes
             f"{json.dumps(meta, ensure_ascii=False)}\r\n--{b}\r\nContent-Disposition: form-data; name=\"image\"; "
             f"filename=\"frame.{ext}\"\r\nContent-Type: {mime}\r\n\r\n").encode() + image + f"\r\n--{b}--\r\n".encode()
     return body, f"multipart/form-data; boundary={b}"
+
+
+def rsync_dir(src: str | Path, target: str, log=print, timeout_s: float = 3600.0) -> str | None:
+    """rsync a run dir to `target` ("user@host:/runs/farm/rec" or a local path). Returns the path on the server (the
+    part after ':'), or None when rsync failed. Never raises: the robot must finish its shutdown either way."""
+    src = str(Path(src).resolve()).rstrip("/") + "/"
+    try:
+        r = subprocess.run(["rsync", "-a", "--partial", src, target.rstrip("/") + "/"], capture_output=True, text=True, timeout=timeout_s)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        log(f"[cloud_link] rsync failed: {e}")
+        return None
+    if r.returncode != 0:
+        log(f"[cloud_link] rsync exit {r.returncode}: {(r.stderr or '').strip()[-200:]}")
+        return None
+    return target.split(":", 1)[1] if ":" in target else target
 
 
 class CloudLink:
@@ -95,6 +112,19 @@ class CloudLink:
         if r and r[0] == 200:
             self._pending_status = None
             return True
+        return False
+
+    def post_run_complete(self, run_dir: str | Path, summary: dict | None = None, server_path: str | None = None) -> bool:
+        """Tell the hub the survey is over. `server_path` is where the run dir lives on the server (rsync target or
+        shared mount); default: the same absolute path (sim: rec dir is a shared mount)."""
+        run_dir = Path(run_dir).resolve()
+        name = run_dir.parent.name if run_dir.name == "rec" else run_dir.name
+        body = {"run": name, "path": server_path or str(run_dir), "summary": summary, "source": "robot"}
+        r = self._request("POST", "/run_complete", json.dumps(body, ensure_ascii=False, default=float).encode(), "application/json")
+        if r and r[0] == 200:
+            self.log(f"[cloud_link] run_complete accepted: {r[1]}")
+            return True
+        self.log(f"[cloud_link] run_complete not delivered ({'hub down' if r is None else r[0]})")
         return False
 
     def send_frame(self, meta: dict, image: bytes, mime: str = "image/jpeg") -> bool:

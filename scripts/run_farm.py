@@ -9,7 +9,11 @@ third-person chase camera every --chase-every steps, front camera every --front-
 for videos, detection datasets and 3-D SLAM. No training.
 
   /isaac-sim/python.sh scripts/run_farm.py --record /runs/farm --api-url http://127.0.0.1:8090
-  /isaac-sim/python.sh scripts/run_farm.py --record /runs/farm --offline"""
+  /isaac-sim/python.sh scripts/run_farm.py --record /runs/farm --offline
+
+When the survey ends and the hub is enabled, the robot POSTs /run_complete so the server runs the analysis pipeline
+(cloud/pipeline) on the rec dir. In the sim the rec dir is already a shared mount with the hub, so the path is posted
+as is; on a real robot add --upload-rec user@server:/runs/<name>/rec to rsync rec/ there first."""
 from __future__ import annotations
 import argparse, collections, json, math, os, sys, time
 from pathlib import Path
@@ -18,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from r1_nav.cameras import FRONT_CAMERA                                  # noqa: E402
 from r1_nav.mission import Leg, farm_loop, revisit_from_yard             # noqa: E402
-from sim.cloud_link import CloudLink, encode_image                       # noqa: E402
+from sim.cloud_link import CloudLink, encode_image, rsync_dir            # noqa: E402
 from sim.executor import ExecutorConfig, LegExecutor                     # noqa: E402
 from sim.lidar_odometry import LidarWheelOdometry, scan_points          # noqa: E402
 from sim.scan_localizer import ScanToMapLocalizer                        # noqa: E402
@@ -68,6 +72,8 @@ def main() -> int:
     ap.add_argument("--max-sim-s", type=float, default=7200.0); ap.add_argument("--idle-exit-s", type=float, default=600.0)
     ap.add_argument("--only", choices=("09", "10", "both"), default="both", help="survey just one house (testing)")
     ap.add_argument("--max-steps", type=int, default=0, help="stop after N control steps (testing)")
+    ap.add_argument("--upload-rec", default=os.environ.get("R1_UPLOAD_REC"),
+                    help="rsync target for rec/ before POST /run_complete (not needed in the sim: shared mount)")
     a = ap.parse_args()
     rec = a.record; [(rec / d).mkdir(parents=True, exist_ok=True) for d in ("frames", "chase", "front", "side")]
     files = {n: open(rec / f"{n}.jsonl", "a") for n in ("steps", "events", "frames")}
@@ -273,6 +279,15 @@ def main() -> int:
             (rec / "summary.json").write_text(json.dumps(summ, indent=1, default=float))
             for f in files.values():
                 f.close()
+            if link.enabled:                                   # hand the finished run to the server-side pipeline
+                try:
+                    server_path = rsync_dir(rec, a.upload_rec, log) if a.upload_rec else None
+                    if a.upload_rec and server_path is None:
+                        log("rec upload failed: run_complete not sent (re-run with --upload-rec later)")
+                    else:
+                        link.post_run_complete(rec, summ, server_path)
+                except Exception as e:
+                    log(f"run_complete failed: {e}")
         finally:
             os._exit(code)
 
