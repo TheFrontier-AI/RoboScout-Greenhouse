@@ -49,6 +49,13 @@ Real logs and outputs, unedited: cloud install on a fresh Nebius VM, the robot h
 ## Gallery
 22 images (sim renders, real farm photos, the driven route) with captions: [docs/media/gallery/](docs/media/gallery/README.md)
 
+## The robot makes its own map (teach mode)
+Walk or push the robot through the farm once with the recorder on; `scripts/teach_map.py` turns that drive into the
+LiDAR map the robot localises on and the site graph it plans routes on — dock, doors, paths with measured lengths. The
+farmer names the houses and confirms; nobody types a distance or draws a route. Verified on run 3: 32 967-point map,
+5-node site graph, 1 500 / 1 500 scans localised on the self-built map at 0.23 m RMSE
+([docs/INSTALL.md §2d](docs/INSTALL.md), [evidence 10](docs/evidence/README.md), [figure](docs/media/gallery/24_teach_map_self_built.png)).
+
 ## Supported platforms (tested)
 
 | Part | Platform | Status |

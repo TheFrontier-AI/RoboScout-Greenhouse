@@ -26,3 +26,5 @@ All 3:2, ≤ 2 MB. Renders are from the NVIDIA Isaac Sim digital twin of our far
 | 20 | ![](20_sim_farm_aerial_greenhouses_ponds.jpg) | Aerial of the greenhouse block and the four ponds in the twin |
 | 21 | ![](21_sim_ponds_and_greenhouses.jpg) | Ponds and the tunnel greenhouses in the twin |
 | 22 | ![](22_route_run3.png) | Run 3, the route R1 drove on its own: dock → tunnel-09 → yard → tunnel-10 → dock — 117 m, 12.5 min, 161 plant stops |
+| 23 | ![](23_two_observers_fusion.png) | Two observers on run 3: the robot's LiDAR estimate and cuVSLAM stereo fused, scored against the recorded truth |
+| 24 | ![](24_teach_map_self_built.png) | Mapping by demonstration: the farm as the robot recorded it on one taught drive — map, dock and doors built by the robot, no distances typed |

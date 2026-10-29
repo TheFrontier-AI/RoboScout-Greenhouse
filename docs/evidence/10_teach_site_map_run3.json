@@ -1,0 +1,156 @@
+{
+ "schema_version": 1,
+ "frame": "site_world_z_up_metres",
+ "metadata": {
+  "source": "robot",
+  "created": "2026-10-29T21:48:34+00:00",
+  "confirmed_by": null,
+  "confirmed_at": null,
+  "scale_known": true,
+  "anchors_used": [],
+  "revision": 1,
+  "taught": true,
+  "taught_from": "recording",
+  "note": "built by scripts/teach_map.py from a taught drive; rename houses and confirm before cross-house commands"
+ },
+ "nodes": [
+  {
+   "id": "dock",
+   "kind": "dock",
+   "xy": [
+    2.015,
+    4.897
+   ],
+   "heading_deg": -90.2,
+   "label": "where the taught drive started"
+  },
+  {
+   "id": "tunnel-09/door-1",
+   "kind": "door",
+   "house": "tunnel-09",
+   "xy": [
+    -0.016,
+    4.789
+   ],
+   "heading_deg": -92.3,
+   "label": "entered tunnel-09 here during the taught drive"
+  },
+  {
+   "id": "tunnel-09/door-2",
+   "kind": "door",
+   "house": "tunnel-09",
+   "xy": [
+    0.013,
+    -37.18
+   ],
+   "heading_deg": -90.7,
+   "label": "left tunnel-09 here during the taught drive"
+  },
+  {
+   "id": "tunnel-10/door-1",
+   "kind": "door",
+   "house": "tunnel-10",
+   "xy": [
+    9.007,
+    -36.697
+   ],
+   "heading_deg": -272.0,
+   "label": "entered tunnel-10 here during the taught drive"
+  },
+  {
+   "id": "tunnel-10/door-2",
+   "kind": "door",
+   "house": "tunnel-10",
+   "xy": [
+    8.964,
+    5.254
+   ],
+   "heading_deg": -270.2,
+   "label": "left tunnel-10 here during the taught drive"
+  }
+ ],
+ "edges": [
+  {
+   "a": "dock",
+   "b": "tunnel-09/door-1",
+   "length_m": 3.57,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [
+    "taught: the robot was driven along this path"
+   ],
+   "blocked": false,
+   "provenance": "teach_map.py: path length measured by the robot's own odometry"
+  },
+  {
+   "a": "tunnel-09/door-1",
+   "b": "tunnel-09/door-2",
+   "length_m": 42.24,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [
+    "taught: the robot was driven along this path"
+   ],
+   "blocked": false,
+   "provenance": "teach_map.py: path length measured by the robot's own odometry"
+  },
+  {
+   "a": "tunnel-09/door-2",
+   "b": "tunnel-10/door-1",
+   "length_m": 12.79,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [
+    "taught: the robot was driven along this path"
+   ],
+   "blocked": false,
+   "provenance": "teach_map.py: path length measured by the robot's own odometry"
+  },
+  {
+   "a": "tunnel-10/door-1",
+   "b": "tunnel-10/door-2",
+   "length_m": 42.11,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [
+    "taught: the robot was driven along this path"
+   ],
+   "blocked": false,
+   "provenance": "teach_map.py: path length measured by the robot's own odometry"
+  },
+  {
+   "a": "tunnel-10/door-2",
+   "b": "tunnel-09/door-1",
+   "length_m": 14.04,
+   "width_m": null,
+   "surface": "unknown",
+   "notes": [
+    "taught: the robot was driven along this path"
+   ],
+   "blocked": false,
+   "provenance": "teach_map.py: path length measured by the robot's own odometry"
+  }
+ ],
+ "layers": [],
+ "landmarks": [],
+ "houses_taught": {
+  "tunnel-09": {
+   "aisles": {
+    "tunnel-09/aisle-02": {
+     "metre_min": -1.58,
+     "metre_max": 40.02,
+     "length_m": 41.6
+    }
+   }
+  },
+  "tunnel-10": {
+   "aisles": {
+    "tunnel-10/aisle-02": {
+     "metre_min": -1.57,
+     "metre_max": 39.96,
+     "length_m": 41.52
+    }
+   }
+  }
+ }
+}

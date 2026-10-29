@@ -1,0 +1,55 @@
+{
+ "rec": "/home/passin/Documents/Blender/TheFarm/r1_runs/farm_2026-10-29/vm_runs/farm_full3/rec",
+ "steps": 7500,
+ "taught_path_m": 123.0,
+ "map_points": 32967,
+ "cell_m": 0.05,
+ "nodes": [
+  "dock",
+  "tunnel-09/door-1",
+  "tunnel-09/door-2",
+  "tunnel-10/door-1",
+  "tunnel-10/door-2"
+ ],
+ "edges": 5,
+ "houses": {
+  "tunnel-09": {
+   "aisles": {
+    "tunnel-09/aisle-02": {
+     "metre_min": -1.58,
+     "metre_max": 40.02,
+     "length_m": 41.6
+    }
+   }
+  },
+  "tunnel-10": {
+   "aisles": {
+    "tunnel-10/aisle-02": {
+     "metre_min": -1.57,
+     "metre_max": 39.96,
+     "length_m": 41.52
+    }
+   }
+  }
+ },
+ "localisation": {
+  "self_built": {
+   "points": 32967,
+   "scans": 1500,
+   "accepted": 1500,
+   "accepted_frac": 1.0,
+   "fix_rmse_m": 0.234,
+   "fix_median_m": 0.144,
+   "guess_rmse_m": 0.234
+  },
+  "plan_derived": {
+   "points": 27103,
+   "scans": 1500,
+   "accepted": 1500,
+   "accepted_frac": 1.0,
+   "fix_rmse_m": 0.227,
+   "fix_median_m": 0.032,
+   "guess_rmse_m": 0.234
+  }
+ }
+}

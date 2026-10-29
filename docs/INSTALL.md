@@ -151,6 +151,43 @@ Each house needs an aisle map (`data/<house>_aisle_map_*.json`, like `tunnel09_a
 geometry; identical tunnels can share one map with an x offset, which is how tunnel-10 is handled today. The report
 groups harvest and health per house automatically (`by_aisle`), so nothing changes on the cloud side.
 
+## 2d. Mapping by demonstration — teach mode (no distances typed)
+
+The robot makes its own map. Nobody measures the farm or draws a route:
+
+1. **Teach drive.** Put the robot at its dock and walk it once through the farm — push it, drive it with a controller, or
+   (in simulation) let it drive — with the recorder running. It records its 2-D LiDAR scans and its own pose estimate
+   at 10 Hz (`steps.jsonl`). That is all the input there is.
+2. **Build the maps.**
+   ```bash
+   python3 scripts/teach_map.py --rec <run>/rec --validate
+   ```
+   writes `<run>/rec/teach/`:
+   - `prior_map_xy.npy` — the farm as the LiDAR saw it, scans placed with the robot's own poses (the map the
+     localiser matches against; same format the plan-derived map had);
+   - `site_map.json` — the site graph: the dock, a door node wherever the drive entered or left a house, and edges
+     along the taught path with their measured lengths, plus each house's aisle length — in the `r1_nav.site_map`
+     schema, unconfirmed;
+   - `teach_map.png`, `teach_report.json`.
+3. **Name and confirm.** The farmer renames the houses (`house-1` → "tunnel-11") and confirms the map — by hand in
+   the JSON, or by talking to HERMES through the `farm-site-map` skill. Confirmation is what unlocks cross-house
+   commands.
+4. **Use it.** Start the hub with `R1_SITE_MAP=<run>/rec/teach/site_map.json` and copy `prior_map_xy.npy` where
+   the robot loads its prior; then command as in 2b: *survey the farm*, *go to tunnel-11*, *return to dock*. The robot
+   plans the route on the graph it built and localises on the map it recorded.
+
+**Verified on run 3 as the taught drive** (`docs/evidence/10_teach_map_run3.json`, figure
+`docs/media/gallery/24_teach_map_self_built.png`): from 7 500 steps / 123 m of driving, `teach_map.py` built a
+32 967-point map of both greenhouses and the yard, a site graph of the dock and four doors (dock → tunnel-09 front
+→ tunnel-09 back → 12.8 m behind the houses → tunnel-10 back → tunnel-10 front → 14.0 m → home) with both aisles
+measured at 41.5–41.6 m, and the site map loads, validates and routes in `r1_nav.site_map`. Localising the same
+1 500 scans on the self-built map accepted every scan (1 500 / 1 500) with a fix error of 0.23 m RMSE — the same as
+on the plan-derived map (0.23 m).
+
+The self-built map carries the pose error of the drive that taught it (median fix 0.14 m against 0.03 m for the
+drawn plan); building it from cuVSLAM poses, and letting the robot teach itself with `discover_house`, are the next
+steps. Teach mode on the physical robot uses the same recorder with the motors idle.
+
 ## 2c. Which farm? Deploying on another farm (anywhere)
 
 Nothing in the code names our farm. A farm is **three data files plus one confirmation**; point the system at them and
