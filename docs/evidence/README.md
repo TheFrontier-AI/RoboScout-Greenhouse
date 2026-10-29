@@ -12,6 +12,8 @@ Raw logs and outputs from the real runs, copied as they were (only the server IP
 | [05_jetson_handoff_to_cloud.log](05_jetson_handoff_to_cloud.log) | **Jetson → cloud**: a recorded run uploaded from the Jetson over the farm's internet, hub accepted it, pipeline ran (83 s), `/run_status` = `done` with both reports |
 | [06_run3_report_en.md](06_run3_report_en.md) / [06_run3_report_th.md](06_run3_report_th.md) | The farmer's report the pipeline wrote for run 3 (English / Thai), as produced — not edited |
 | [06_run3_report_summary.json](06_run3_report_summary.json) | The machine-readable report for run 3: harvest counts per aisle, plant count, disease screening summary, navigation events, localisation, step status |
+| [08_two_observer_fusion_run3.json](08_two_observer_fusion_run3.json) | `scripts/fuse_localisation.py` on run 3: the robot's own estimate (wheels + gyro + LiDAR scan-to-map) vs cuVSLAM stereo as an independent second observer, and the two fused — scored against the recorded truth (figure: [../media/gallery/23_two_observers_fusion.png](../media/gallery/23_two_observers_fusion.png)) |
+| [09_cuvslam_on_jetson.json](09_cuvslam_on_jetson.json) | **cuVSLAM on the real Jetson Orin Nano** (25 W): stereo 188 fps, stereo + IMU 82 fps, 600/600 frames tracked over 60 s / 11 m of ZED 2i data, metric scale (Sim3 scale 1.003), ATE 3–4 mm on the segment |
 | [07_run3_recording_summary.json](07_run3_recording_summary.json) | What the robot recorded while driving run 3 on its own: 7 500 control steps over 750 s, legs (`path`, `enter`, `drive_in`, `drive_out`, `hold`, `turn_around`, `dock`), 4 726 events incl. 1 035 camera captures |
 
 The drive itself:

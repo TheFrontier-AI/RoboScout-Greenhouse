@@ -86,6 +86,37 @@ A 30 s, 450-frame segment of tunnel-09 gave 3.8 / 4.2 / 6.4 mm for the three mod
 
 **Caveat.** The simulated images have no noise, motion blur, rolling shutter, calibration error or IMU noise. Real numbers will be worse; the sim establishes the method and the software path, not the field accuracy.
 
+### 3.3b cuVSLAM as a second observer, and on the Jetson (measured 2026-10-30)
+
+Two things were measured after the first draft of this report; both are in `docs/evidence/`.
+
+**On the robot computer.** The NVIDIA cuVSLAM 17.0.1 wheel (cu12, aarch64) was installed into the robot venv on a
+Jetson Orin Nano Super 8 GB (JetPack 6, 25 W mode) and run on 600 ZED 2i stereo frames (1280x720, 60 s, 11.0 m of the
+run-3 route): **stereo 188 fps, stereo + IMU 82 fps**, 600/600 frames tracked, Sim3 scale 1.003 (metric), ATE 3-4 mm
+on the segment. The camera's own tracking is far faster than the 10 Hz control loop, so it can run on the robot beside
+the LiDAR localiser without competing for the GPU (`docs/evidence/09_cuvslam_on_jetson.json`).
+
+**As an independent observer of the whole route** (`scripts/fuse_localisation.py`, run 3, offline). The robot's own
+estimate (wheels + gyro + LiDAR scan-to-map, the one that actually drove) is compared with the cuVSLAM stereo path
+placed in the farm frame using only the dock pose and the robot's own first 20-60 s of motion - never the ground
+truth - and with a fusion in which cuVSLAM supplies the relative motion between steps while the robot's scan-to-map
+fixes re-anchor it and keep the camera-to-farm alignment current. Scored against the recorded truth over 6 474
+synchronised steps:
+
+| estimate | RMSE (m) | inside aisles | outside (yard, doors) |
+|---|---|---|---|
+| robot: wheels + gyro + LiDAR scan-to-map | 0.263 | 0.300 | 0.038 |
+| cuVSLAM stereo, anchored at the dock only | 0.22-0.51 (depends on the anchoring window) | 0.22-0.49 | 0.24-0.55 |
+| fused: cuVSLAM relative motion + scan-to-map anchoring | **0.226-0.234** | **0.258-0.267** | 0.038 |
+
+Reading: cuVSLAM agrees with the LiDAR-based estimate to within a few tens of centimetres over 111 m from a one-off
+anchor at the dock, which is what an independent observer is for - a disagreement much larger than that means a wheel
+slip or a LiDAR ambiguity (the two identical greenhouses). Fusing it improves in-aisle localisation by about 12 % and
+changes nothing outdoors, where scan-to-map already dominates. This is the design: LiDAR + map remains the anchor,
+cuVSLAM is the second, physically independent observer and the odometry inside the rows, and the 3-D map built from it
+(3.4) is the robot's own, updatable model of the farm. Status: measured offline on recorded data; running the fusion
+live on the Jetson is the next step.
+
 ### 3.4 Camera-only 3-D mapping and the SLAM benchmark
 
 The server builds a 3-D model of the greenhouse two ways:

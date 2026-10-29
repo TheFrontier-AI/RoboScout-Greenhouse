@@ -93,6 +93,15 @@ source .venv-robot/bin/activate
 export ROBOT_API_URL=http://<SERVER_IP>:8090           # the hub
 ```
 
+*cuVSLAM on the Jetson (R181-S stereo camera, optional):* install NVIDIA's wheel into the same venv and point it at
+the JetPack CUDA libraries — verified on a Jetson Orin Nano Super (JetPack 6): stereo 188 fps, stereo + IMU 82 fps.
+
+```bash
+.venv-robot/bin/pip install https://github.com/nvidia-isaac/cuVSLAM/releases/download/v17.0.1/cuvslam-17.0.1+cu12-cp310-cp310-manylinux_2_35_aarch64.whl
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+.venv-robot/bin/python scripts/cuvslam_r181.py --data <zed EuRoC dir> --mode stereo      # or inertial
+```
+
 The robot must be able to `ssh ubuntu@<SERVER_IP>` without a password (put its public key in the VM's
 `~/.ssh/authorized_keys`); that is the rsync channel for the run directory.
 

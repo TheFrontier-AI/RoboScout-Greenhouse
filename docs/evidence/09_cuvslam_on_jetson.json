@@ -1,0 +1,28 @@
+{
+ "device": "NVIDIA Jetson Orin Nano Super 8 GB (JetPack 6, L4T R36.4.7, 25 W mode), cuvslam 17.0.1+cu12 wheel in the robot venv",
+ "input": "ZED 2i stereo 1280x720 at 10 Hz, 600 frames = 60 s, 11.0 m of the run-3 route (Astra re-render), IMU 400 Hz",
+ "stereo": {
+  "method": "cuVSLAM stereo",
+  "frames": 600,
+  "tracked": 600,
+  "track_s": 3.1943,
+  "fps": 187.8356,
+  "path_m": 10.9732,
+  "ate_rmse_m": 0.0032,
+  "ate_median_m": 0.0022,
+  "ate_max_m": 0.0107,
+  "sim3_scale": 1.0025
+ },
+ "inertial": {
+  "method": "cuVSLAM inertial",
+  "frames": 600,
+  "tracked": 600,
+  "track_s": 7.3508,
+  "fps": 81.6243,
+  "path_m": 10.9732,
+  "ate_rmse_m": 0.0039,
+  "ate_median_m": 0.0031,
+  "ate_max_m": 0.0087,
+  "sim3_scale": 1.0022
+ }
+}

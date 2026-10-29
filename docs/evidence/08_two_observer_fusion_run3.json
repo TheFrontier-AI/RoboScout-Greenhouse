@@ -1,0 +1,39 @@
+{
+ "steps": 5868,
+ "route_s": 630.6,
+ "robot_estimate_m": {
+  "rmse": 0.26317883803163505,
+  "median": 0.20536433372725768,
+  "max": 0.49995495070508106
+ },
+ "cuvslam_dock_anchored_m": {
+  "rmse": 0.22073764843615667,
+  "median": 0.20960355216804327,
+  "max": 0.36562229270692087
+ },
+ "fused_m": {
+  "rmse": 0.22642977048568302,
+  "median": 0.23240234412182256,
+  "max": 0.5645995027322245
+ },
+ "inside_aisles_rmse_m": {
+  "robot": 0.3,
+  "cuvslam": 0.216,
+  "fused": 0.258
+ },
+ "outside_rmse_m": {
+  "robot": 0.038,
+  "cuvslam": 0.236,
+  "fused": 0.038
+ },
+ "scan_to_map_fixes_applied": 1381,
+ "disagreement_m": {
+  "median": 0.286,
+  "p95": 0.562,
+  "max": 0.652
+ },
+ "steps_flagged": 608,
+ "slip_events": 2,
+ "slip_events_seen_by_monitor": 0,
+ "align_window_s": 60.0
+}
