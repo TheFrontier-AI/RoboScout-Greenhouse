@@ -49,5 +49,14 @@
    "median_err_m": 0.053
   },
   "note": "grid = every free map cell 0.5 m apart (>=0.4 m from any map point, <=6 m from one) x 12 headings, so the robot can be found OFF the taught path. Evaluated with scans recorded on the path (the only scans that exist); path+grid keeps path-only accuracy while allowing off-path starts; grid alone, without the path prior, is confused by cells inside the planting beds. Off-path scans will be collected in field trials."
+ },
+ "off_path_synthetic_test": {
+  "cells": 30,
+  "offset_m_median": 2.33,
+  "found_1m": 3,
+  "ambiguous": 19,
+  "ambiguous_best_correct": 0,
+  "wrong": 8,
+  "verdict": "off-path relocalisation not achieved: the taught map only contains what was seen from the path"
  }
 }

@@ -141,12 +141,13 @@ place that is not symmetric — a door, the dock, the road.
 *Figure 8 — 60 random put-down points on run 3: green, a single LiDAR scan finds the place; yellow, the LiDAR says
 "tunnel-09 or tunnel-10"; magenta, wrong; circled, the camera's tie-break (blue correct, red wrong).*
 
-**Off the taught path.** The search can also cover every free cell of the map (`Relocalizer(..., grid_m=0.5)`: cells
-0.5 m apart, at least 0.4 m from any map point, 12 headings - 47 028 hypotheses on our farm, 0.7 s), so a robot set
-down in the yard away from any path is still searched for. With the path hypotheses kept as well, accuracy on the
-recorded scans is unchanged (8 found, 28 ambiguous with the right place leading in 11, 4 wrong of 40); the grid alone,
-without the path prior, is confused by cells inside the planting beds (3 found, 14 wrong), so the path prior stays on.
-Scans from genuinely off-path places do not exist in the recording; they will be collected in the field trials.
+**Off the taught path - not yet.** The search can cover every free cell of the map (`Relocalizer(..., grid_m=0.5)`,
+47 028 hypotheses, 0.7 s), and with the path hypotheses kept the accuracy on recorded scans is unchanged. A test with
+scans synthesised from the robot's own map at 30 free cells 1-3 m off the path did not succeed (3 found, 19 ambiguous,
+8 wrong): the map holds only what the LiDAR saw from the path, so a viewpoint beside the path sees surfaces that were
+never recorded. Off-path starts therefore remain future work, with a clear plan: record a wider map on the led drive
+(look around at the yard edges), use the cuVSLAM 3-D map which sees more than a 2-D scan, add a "go to the nearest
+graph node" leg before the normal route, and test with real scans. Until then: put the robot down on a path it knows.
 
 What the farmer sees: "relocalised at tunnel-10, metre 14 (camera: the tree through the door)" or "ambiguous:
 tunnel-09 or tunnel-10 — moving to the door to check". The robot never silently guesses. Wiring this into the live
