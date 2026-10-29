@@ -92,9 +92,11 @@ Real stack on Nebius: [deploy/nebius/README_th.md](deploy/nebius/README_th.md). 
 4. One aisle (76 m round trip) in ≤ 8 min at 0.25 m/s.
 
 ## Honest status
-- The robot itself is still being assembled. Everything robot-side runs in the Isaac twin.
-- The side aisles of tunnel-09 (0.55 m) are narrower than the robot plus margin. They are reported as skipped, not attempted.
-- Headland transit and docking are not simulated yet (the env has a single start). No policy training was done for this entry.
+- The robot drives in the Isaac Sim twin of our farm; the recorded full-farm run (dock → tunnel-09 → yard → tunnel-10 → dock, 117 m, 161 plant stops) is the source of every result here. The physical chassis is being assembled; the robot software has been installed and tested on the real Jetson Orin Nano and has handed a survey to the cloud from it.
+- Two side aisles of tunnel-09 (0.55 m) are narrower than the robot plus margin and are reported as skipped, not attempted.
+- Fruit grading works; plant counting from the side cameras and whole-plant symptoms (wilting, defoliation) are the next targets. Disease screening is a visual aid, not a diagnosis.
+- cuVSLAM is verified on recorded data and on the Jetson; its live fusion with the LiDAR localiser on the robot is the next step. No policy training was done for this entry.
+- Fine-tuned detector weights are available from the author on request.
 
 ## License and credits
 Apache-2.0 (see `LICENSE`). Third-party models keep their own licences (see `cloud/README_cloud.md` and `cloud/mapping/README_mapping.md`).
