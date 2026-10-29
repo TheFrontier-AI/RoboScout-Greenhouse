@@ -1,6 +1,6 @@
 """Raw, unedited videos from one scripts/run_farm.py recording (no captions, no cuts; real sim time):
   chase.mp4        third-person camera locked behind the robot (rendered every --chase-every steps)
-  front.mp4        robot front camera
+  front.mp4        robot front camera (real time: one frame per --front-every steps)
   side_<cam>.mp4   the six plant cameras, one frame per plant stop (full 1080x1920 PNGs stay in rec/side/)
   lidar.mp4        planar C1 scan every 0.1 s, robot-centred top view (forward = up), colour = range
   slam_map.mp4     2-D map growing from the scans, placed with the robot's OWN pose estimate (scan-to-map + odometry);
@@ -87,12 +87,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--rec", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--chase-every", type=int, default=2); ap.add_argument("--map-every", type=int, default=5)
+    ap.add_argument("--front-every", type=int, default=5, help="run_farm --front-every (control steps per front frame)")
     a = ap.parse_args(); a.out.mkdir(parents=True, exist_ok=True)
     step_s = 0.1
     if any((a.rec / "chase").glob("*.jpg")):
         encode(str(a.rec / "chase" / "*.jpg"), a.out / "chase.mp4", 1 / (step_s * a.chase_every), glob=True); print("ok chase")
     if any((a.rec / "front").glob("*.jpg")):
-        encode(str(a.rec / "front" / "*.jpg"), a.out / "front.mp4", 1.0, glob=True); print("ok front")
+        encode(str(a.rec / "front" / "*.jpg"), a.out / "front.mp4", 1 / (step_s * a.front_every), glob=True); print("ok front")
     for cam in SIDE:
         if any((a.rec / "side").glob(f"*_{cam}.png")):
             encode(str(a.rec / "side" / f"*_{cam}.png"), a.out / f"side_{cam}.mp4", 2.0, glob=True); print("ok", cam)
