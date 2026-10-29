@@ -52,6 +52,9 @@ fi
 
 if [ "$WANT_LINGBOT" = 1 ]; then
   echo "== lingbot-map (docker image lingbot:blackwell)"
+  command -v docker >/dev/null || { echo "docker missing: run deploy/nebius/bootstrap_vm.sh first (docker + NVIDIA container toolkit)"; exit 1; }
+  # the pipeline (and the systemd service) call docker without sudo: the service user must be in the docker group
+  id -nG "$USER" | grep -qw docker || { sudo usermod -aG docker "$USER"; echo "added $USER to the docker group: log out and in (or restart the pipeline service) before the lingbot step can run"; }
   bash deploy/nebius/lingbot/build.sh
 fi
 

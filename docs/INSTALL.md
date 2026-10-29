@@ -117,11 +117,20 @@ It uploads only what the pipeline reads (jsonl, `side/`, `front/`, `zed/`), post
 
 ## 3. End-to-end test (what we ran)
 
-1. Cloud: fresh VM → §1 (`install_cloud.sh`, `.env` with the Token Factory key, weights copied in) → `start_pipeline.sh`.
-2. Robot: fresh clone on an ARM64 machine → §2 (`install_robot.sh`) → `robot_upload_run.py --wait` with a recorded run
-   (`farm_full3`, 161 plant stops, two greenhouses: 966 side images, 1 501 front frames, 2.9 GB uploaded).
-3. Result on the server: `~/runs/farm_full3/rec/analysis/{detect,vlm_stops,lidar_map,report}.done`, `report.json`,
-   `report_th.md`, `report_en.md`; `curl "<hub>/run_status?run=farm_full3"` → `"state": "done"`.
+Verified 2026-10-30 from a fresh checkout of `main` (commit `24d2f61`):
+
+1. **Cloud** — Nebius `gpu-rtx6000` VM (Ubuntu 24.04, driver 580, CUDA 13): `install_cloud.sh` took 2 min 15 s
+   (torch 2.14.1+cu130, transformers 5.22, 28 offline tests pass); `.env` with the Token Factory key; weights copied
+   in; `start_pipeline.sh` → `/health` ok.
+2. **Robot** — fresh clone on an ARM64 machine (the Jetson stand-in): `install_robot.sh` → 50 offline tests pass
+   (this test caught a missing `scipy` dependency, fixed in the same commit series). Then
+   `robot_upload_run.py --wait` handed over the recorded run `farm_full3` (161 plant stops, two greenhouses,
+   978 side images, 1 501 front frames, 2.9 GB).
+3. **Result** — the hub accepted `/run_complete`; the watcher ran `detect → vlm_stops → lidar_map → report`
+   (cuvslam skipped: no `zed/` on R1; lingbot skipped: docker not usable by the service user; cosmos_front skipped:
+   `EYES_BASE_URL` unset) and finished in **9 min 59 s** end to end; `GET /run_status?run=farm_full3` → `"state": "done"`,
+   `analysis/report.json`, `report_en.md`, `report_th.md` present. The report counted 3 276 ripe / 4 534 not ready /
+   47 reject fruit over the two houses and listed the suspect plants with Nemotron's descriptions and actions.
 
 Offline checks on either side (no GPU, no network): `python3 -m pytest -q` (114 tests).
 
