@@ -49,6 +49,9 @@ Real logs and outputs, unedited: cloud install on a fresh Nebius VM, the robot h
 ## Gallery
 22 images (sim renders, real farm photos, the driven route) with captions: [docs/media/gallery/](docs/media/gallery/README.md)
 
+## How the robot knows where it is
+Sensors, the self-built map, the LiDAR estimator (0.26 m over the farm), cuVSLAM as a second observer (6.4 cm; 188 FPS on the Jetson), their fusion, and relocalisation when the robot is put down anywhere (LiDAR candidates → Nemotron VL tie-break, 83 % → driving confirms) — one document with figures and every experiment: **[docs/LOCALISATION_REPORT.md](docs/LOCALISATION_REPORT.md)**.
+
 ## The robot makes its own map (teach mode)
 Walk or push the robot through the farm once with the recorder on; `scripts/teach_map.py` turns that drive into the
 LiDAR map the robot localises on and the site graph it plans routes on — dock, doors, paths with measured lengths. The
