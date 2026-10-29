@@ -122,10 +122,15 @@ Verified 2026-10-30 from a fresh checkout of `main` (commit `24d2f61`):
 1. **Cloud** — Nebius `gpu-rtx6000` VM (Ubuntu 24.04, driver 580, CUDA 13): `install_cloud.sh` took 2 min 15 s
    (torch 2.14.1+cu130, transformers 5.22, 28 offline tests pass); `.env` with the Token Factory key; weights copied
    in; `start_pipeline.sh` → `/health` ok.
-2. **Robot** — fresh clone on an ARM64 machine (the Jetson stand-in): `install_robot.sh` → 50 offline tests pass
+2. **Robot** — fresh clone on an ARM64 machine (DGX Spark): `install_robot.sh` → 50 offline tests pass
    (this test caught a missing `scipy` dependency, fixed in the same commit series). Then
    `robot_upload_run.py --wait` handed over the recorded run `farm_full3` (161 plant stops, two greenhouses,
    978 side images, 1 501 front frames, 2.9 GB).
+   **Real Jetson** — the same on a **Jetson Orin Nano Super 8 GB (JetPack 6, L4T R36.4.7, Python 3.10)**:
+   `install_robot.sh` 1 min 33 s (the JetPack image has no `python3-venv`; the script bootstraps pip itself —
+   found and fixed here), **50 tests pass in 49 s**, and `robot_upload_run.py --wait` uploaded a 2-stop run over the
+   farm's internet to the hub, which ran the pipeline in 83 s → `"state": "done"`, `report_th.md`/`report_en.md`
+   (first contact needed `StrictHostKeyChecking=accept-new` in the rsync ssh options — also fixed here).
 3. **Result** — the hub accepted `/run_complete`; the watcher ran `detect → vlm_stops → lidar_map → report`
    (cuvslam skipped: no `zed/` on R1; lingbot skipped: docker not usable by the service user; cosmos_front skipped:
    `EYES_BASE_URL` unset) and finished in **9 min 59 s** end to end; `GET /run_status?run=farm_full3` → `"state": "done"`,

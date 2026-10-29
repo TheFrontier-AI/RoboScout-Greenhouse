@@ -44,7 +44,7 @@ Built for the *Nebius x NVIDIA Global AI Hackathon 2026 — Physical AI track*. 
 | `docs/` | Mission spec, interfaces, environment, roadmap, hackathon plan (Thai) |
 
 ## Install and run (cloud + robot)
-Step-by-step install for both halves, verified on a fresh Nebius VM and an ARM64 box: **[docs/INSTALL.md](docs/INSTALL.md)**.
+Step-by-step install for both halves, verified from a fresh clone on a Nebius RTX PRO 6000 VM (cloud) and on a **Jetson Orin Nano** (robot): **[docs/INSTALL.md](docs/INSTALL.md)**.
 Fine-tuned detector weights are not in this repo: contact the author (see INSTALL.md).
 
 ## Quick start
