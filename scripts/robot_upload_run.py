@@ -24,8 +24,9 @@ INCLUDE = ["*.jsonl", "*.json", "*.npy", "*.csv", "side/***", "front/***", "zed/
 def rsync_run(rec: Path, dest: str, log=print) -> str | None:
     """rsync the pipeline inputs of `rec` to `dest` (user@host:/path or a local path). Returns the server path."""
     src = str(rec.resolve()).rstrip("/") + "/"
-    cmd = ["rsync", "-a", "--partial", "--mkpath"] + [f"--include={p}" for p in INCLUDE] + \
-          ["--include=*/", "--exclude=*", src, dest.rstrip("/") + "/"]
+    # accept-new: a robot's first contact with a new server must not hang on a host-key prompt (known hosts still pinned)
+    cmd = ["rsync", "-a", "--partial", "--mkpath", "-e", "ssh -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=20"] + \
+          [f"--include={p}" for p in INCLUDE] + ["--include=*/", "--exclude=*", src, dest.rstrip("/") + "/"]
     log("[upload] " + " ".join(cmd[:4]) + f" ... {src} -> {dest}")
     r = subprocess.run(cmd, text=True)
     if r.returncode != 0:
