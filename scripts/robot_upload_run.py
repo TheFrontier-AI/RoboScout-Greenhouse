@@ -63,7 +63,7 @@ def main() -> int:
     link = CloudLink(a.hub, outbox=rec.parent / "outbox", timeout_s=15.0)
     if link.health() is None:
         print(f"hub not reachable at {a.hub}"); return 4
-    if not link.post_run_complete(rec, summary, server_path):
+    if not link.post_run_complete(rec, summary, server_path, run=run):
         return 5
     print(f"run '{run}' handed to {a.hub} (server path {server_path})")
     if not a.wait:

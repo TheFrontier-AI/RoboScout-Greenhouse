@@ -114,11 +114,13 @@ class CloudLink:
             return True
         return False
 
-    def post_run_complete(self, run_dir: str | Path, summary: dict | None = None, server_path: str | None = None) -> bool:
+    def post_run_complete(self, run_dir: str | Path, summary: dict | None = None, server_path: str | None = None,
+                          run: str | None = None) -> bool:
         """Tell the hub the survey is over. `server_path` is where the run dir lives on the server (rsync target or
-        shared mount); default: the same absolute path (sim: rec dir is a shared mount)."""
+        shared mount); default: the same absolute path (sim: rec dir is a shared mount). `run` names the run on the
+        hub (what GET /run_status?run= is polled with); default: the run dir's name (its parent's when it is `rec`)."""
         run_dir = Path(run_dir).resolve()
-        name = run_dir.parent.name if run_dir.name == "rec" else run_dir.name
+        name = run or (run_dir.parent.name if run_dir.name == "rec" else run_dir.name)
         body = {"run": name, "path": server_path or str(run_dir), "summary": summary, "source": "robot"}
         r = self._request("POST", "/run_complete", json.dumps(body, ensure_ascii=False, default=float).encode(), "application/json")
         if r and r[0] == 200:
