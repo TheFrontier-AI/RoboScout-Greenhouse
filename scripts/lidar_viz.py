@@ -1,15 +1,15 @@
-"""Paper-style LiDAR view for render_cinematic.py runs: an oblique 3-D view of the real planar (2-D) scan.
-Every scan so far is accumulated in the world frame into one point cloud; the current scan is highlighted.
-The camera is world-fixed in orientation and pans smoothly with the robot, so the map builds up on screen.
-Colour = range from the sensor at capture (turbo). Real sensor data only: nothing is extruded or invented.
-Same frame clock as the other raw videos.
+"""LiDAR view for render_cinematic.py runs, styled after driving-dataset point-cloud figures.
+Camera sits behind and above the robot and turns with it (game-style chase), robot in the centre.
+Points are the real planar (2-D) C1 scans: the last few seconds are kept in the world frame for density,
+drawn large with a soft glow and coloured by distance from the robot (turbo: near = blue, far = red).
+Nothing is extruded or invented. Same frame clock as the other raw videos.
 
   python3 scripts/lidar_viz.py --run <render dir> --out <dir> [--fps 20] [--size 1920x1080]"""
 from __future__ import annotations
 import argparse, json, math, subprocess
 from pathlib import Path
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 try:
     FONT = ImageFont.truetype("DejaVuSans.ttf", 22); FONT_S = ImageFont.truetype("DejaVuSans.ttf", 16)
@@ -17,9 +17,9 @@ except OSError:
     FONT = FONT_S = ImageFont.load_default()
 RMAX = 12.0                                # metres
 SENSOR_Z = 0.512                           # C1 mount height (m)
-CAM_OFFSET = np.array([-19.0, -21.0, 25.0])  # world-frame offset of the camera from its look-at point
-FOLLOW = 0.45                              # look-at = FOLLOW * robot + (1 - FOLLOW) * route centre
-SMOOTH_S = 1.5                             # look-at smoothing window (s)
+CAM_BACK, CAM_UP, LOOK_AHEAD = 9.0, 7.0, 4.0   # chase camera, robot frame (m)
+KEEP_S = 6.0                               # seconds of scans kept on screen
+HEADING_SMOOTH_S = 0.6                     # camera yaw smoothing so turns in place don't snap
 
 
 def turbo(u: np.ndarray) -> np.ndarray:
@@ -33,8 +33,12 @@ def turbo(u: np.ndarray) -> np.ndarray:
     return (np.clip(c, 0, 1) * 255).astype(np.uint8)
 
 
+def cmap(d: np.ndarray) -> np.ndarray:
+    return turbo(0.1 + 0.85 * np.clip(d / RMAX, 0, 1))
+
+
 class Camera:
-    def __init__(self, w, h, pos, look, fov_deg=50.0):
+    def __init__(self, w, h, pos, look, fov_deg=60.0):
         self.w, self.h, self.f = w, h, (w / 2) / math.tan(math.radians(fov_deg) / 2)
         p, t = np.asarray(pos, float), np.asarray(look, float)
         fwd = (t - p) / np.linalg.norm(t - p)
@@ -55,39 +59,39 @@ def hits_world(rec):
     l = rec["lidar"]; rr = l["ranges"]; n = len(rr); ox, oy = l["origin"]
     k = np.array([i for i, r in enumerate(rr) if r is not None]); r = np.array([rr[i] for i in k], float)
     if not len(k):
-        return np.zeros((0, 2)), np.zeros(0)
+        return np.zeros((0, 2))
     a = math.radians(l["yaw_deg"]) - math.pi / 2 + (-math.pi + 2 * math.pi * k / n)
-    return np.stack([ox + r * np.cos(a), oy + r * np.sin(a)], -1), r
+    return np.stack([ox + r * np.cos(a), oy + r * np.sin(a)], -1)
 
 
 def heading(rec) -> float:
     return math.radians(rec["lidar"]["yaw_deg"]) - math.pi / 2       # robot forward direction in the world
 
 
-def look_points(recs, fps):
-    """Smoothed look-at point per frame: part robot, part route centre, so the built map stays in view."""
-    xy = np.array([r["robot"][:2] for r in recs], float); centre = (xy.min(0) + xy.max(0)) / 2
-    tgt = FOLLOW * xy + (1 - FOLLOW) * centre
-    k = max(1, int(SMOOTH_S * fps)); pad = np.pad(tgt, ((k, k), (0, 0)), mode="edge")
-    ker = np.ones(2 * k + 1) / (2 * k + 1)
-    sm = np.stack([np.convolve(pad[:, j], ker, mode="valid") for j in range(2)], -1)
-    return np.c_[sm, np.zeros(len(sm))]
+def smoothed_headings(recs, fps):
+    h = np.unwrap([heading(r) for r in recs]); k = max(1, int(HEADING_SMOOTH_S * fps))
+    pad = np.pad(h, k, mode="edge"); return np.convolve(pad, np.ones(2 * k + 1) / (2 * k + 1), mode="valid")
 
 
-def draw_grid(d, cam, look, R=30, step=1.0):
-    """World-fixed 1 m ground grid (5 m lines brighter), faded with distance from the look-at point."""
-    cx, cy = math.floor(look[0]), math.floor(look[1])
-    t = np.linspace(-R, R, 120)
+def chase_camera(w, h, rec, yaw):
+    x, y = rec["robot"][:2]; c, s = math.cos(yaw), math.sin(yaw)
+    pos = (x - CAM_BACK * c, y - CAM_BACK * s, CAM_UP)
+    look = (x + LOOK_AHEAD * c, y + LOOK_AHEAD * s, 0.0)
+    return Camera(w, h, pos, look)
+
+
+def draw_grid(d, cam, rec, R=24, step=2.0):
+    """World-fixed ground grid, faded with distance from the robot."""
+    x0, y0 = rec["robot"][:2]; cx, cy = step * math.floor(x0 / step), step * math.floor(y0 / step)
+    t = np.linspace(-R, R, 96)
     for axis in (0, 1):
-        for v in np.arange(-R, R + 1, step):
-            line_at = (cx if axis == 0 else cy) + v
-            xy = np.stack([np.full_like(t, line_at), cy + t], -1) if axis == 0 else np.stack([cx + t, np.full_like(t, line_at)], -1)
+        for v in np.arange(-R, R + step, step):
+            xy = np.stack([np.full_like(t, cx + v), cy + t], -1) if axis == 0 else np.stack([cx + t, np.full_like(t, cy + v)], -1)
             uv, _, ok = cam.project(np.c_[xy, np.zeros(len(xy))])
-            dist = np.hypot(xy[:, 0] - look[0], xy[:, 1] - look[1])
-            major = line_at % 5 == 0
+            dist = np.hypot(xy[:, 0] - x0, xy[:, 1] - y0)
             for i in range(len(t) - 1):
                 if ok[i] and ok[i + 1] and dist[i] < R:
-                    a = int((44 if major else 26) * (1 - dist[i] / R) ** 1.1) + 8
+                    a = int(40 * (1 - dist[i] / R)) + 10
                     d.line([tuple(uv[i]), tuple(uv[i + 1])], fill=(a, a, a), width=1)
 
 
@@ -98,27 +102,13 @@ def draw_robot(d, cam, rec):
     def world(p):
         p = np.atleast_2d(np.asarray(p, float))
         return np.c_[x0 + p[:, 0] * c - p[:, 1] * s, y0 + p[:, 0] * s + p[:, 1] * c, p[:, 2]]
-    corners = world([(x, y, z) for z in (0, H) for x in (-L / 2, L / 2) for y in (-W / 2, W / 2)])
-    uv, _, ok = cam.project(corners)
-    edges = [(0, 1), (1, 3), (3, 2), (2, 0), (4, 5), (5, 7), (7, 6), (6, 4), (0, 4), (1, 5), (2, 6), (3, 7)]
-    for a, b in edges:
+    uv, _, ok = cam.project(world([(x, y, z) for z in (0, H) for x in (-L / 2, L / 2) for y in (-W / 2, W / 2)]))
+    for a, b in [(0, 1), (1, 3), (3, 2), (2, 0), (4, 5), (5, 7), (7, 6), (6, 4), (0, 4), (1, 5), (2, 6), (3, 7)]:
         if ok[a] and ok[b]:
             d.line([tuple(uv[a]), tuple(uv[b])], fill=(255, 220, 0), width=2)
-    tip, _, okt = cam.project(world([(L / 2 + 0.7, 0, 0.02), (L / 2 + 0.2, 0.22, 0.02), (L / 2 + 0.2, -0.22, 0.02)]))
+    tip, _, okt = cam.project(world([(L / 2 + 0.6, 0, 0.02), (L / 2 + 0.2, 0.2, 0.02), (L / 2 + 0.2, -0.2, 0.02)]))
     if okt.all():
         d.polygon([tuple(p) for p in tip], fill=(255, 220, 0))                 # heading arrow
-    sen, _, oks = cam.project(np.array([[*rec["lidar"]["origin"], SENSOR_Z]]))
-    if oks[0]:
-        x, y = sen[0]; d.ellipse([x - 5, y - 5, x + 5, y + 5], fill=(255, 255, 255))
-
-
-def precompute(recs):
-    """World-frame hits of every scan, coloured once by range at capture (stable colours, no flicker)."""
-    out = []
-    for r in recs:
-        xy, rng = hits_world(r)
-        out.append((xy, turbo(np.clip(rng / RMAX, 0, 1) * 0.85 + 0.08)))
-    return out
 
 
 def splat(img: np.ndarray, uv, col, ok, size: int):
@@ -133,48 +123,33 @@ def splat(img: np.ndarray, uv, col, ok, size: int):
 def colorbar(d, w, h):
     x0, y0, bw, bh = w - 70, h // 2 - 160, 16, 320
     for k in range(bh):
-        c = tuple(int(x) for x in turbo(np.array([(1 - k / bh) * 0.85 + 0.08]))[0])
-        d.line([(x0, y0 + k), (x0 + bw, y0 + k)], fill=c)
+        d.line([(x0, y0 + k), (x0 + bw, y0 + k)], fill=tuple(int(x) for x in cmap(np.array([(1 - k / bh) * RMAX]))[0]))
     d.rectangle([x0, y0, x0 + bw, y0 + bh], outline=(120, 120, 120))
     for m in (0, 4, 8, 12):
         y = y0 + bh - bh * m / RMAX
         d.line([(x0 - 5, y), (x0, y)], fill=(160, 160, 160)); d.text((x0 - 44, y - 9), f"{m} m", fill=(170, 170, 170), font=FONT_S)
-    d.text((x0 - 30, y0 - 28), "range", fill=(170, 170, 170), font=FONT_S)
+    d.text((x0 - 50, y0 - 28), "distance", fill=(170, 170, 170), font=FONT_S)
 
 
-def render(recs, i, w, h, cloud, looks) -> Image.Image:
-    cur = recs[i]; look = looks[i]
-    cam = Camera(w, h, look + CAM_OFFSET, look)
-    base = Image.new("RGB", (w, h), (0, 0, 0)); d = ImageDraw.Draw(base)
-    draw_grid(d, cam, look)
-    path = np.array([r["robot"][:2] for r in recs[: i + 1]], float)              # driven path on the ground
-    uv, _, ok = cam.project(np.c_[path, np.zeros(len(path))])
-    pts = [tuple(p) for p, k in zip(uv, ok) if k]
-    if len(pts) > 1:
-        d.line(pts, fill=(235, 235, 235), width=2)
-
-    img = np.asarray(base).copy()
-    old = [c for c in cloud[: i] if len(c[0])]
-    if old:                                                                    # accumulated map (all earlier scans)
-        xy = np.concatenate([c[0] for c in old]); col = (np.concatenate([c[1] for c in old]) * 0.8).astype(np.uint8)
+def render(recs, i, w, h, cloud, yaws, keep) -> Image.Image:
+    cur = recs[i]; cam = chase_camera(w, h, cur, yaws[i])
+    base = Image.new("RGB", (w, h)); draw_grid(ImageDraw.Draw(base), cam, cur)
+    pts = Image.new("RGB", (w, h)); img = np.asarray(pts).copy()
+    rx, ry = cur["robot"][:2]
+    scans = [c for c in cloud[max(0, i - keep): i + 1] if len(c)]
+    if scans:
+        xy = np.concatenate(scans)
         uv, z, ok = cam.project(np.c_[xy, np.full(len(xy), SENSOR_Z)])
-        near = z < 26; splat(img, uv, col, ok & ~near, 2); splat(img, uv, col, ok & near, 3)
-    xy, col = cloud[i]
-    if len(xy):                                                                # current scan, highlighted
-        uv, z, ok = cam.project(np.c_[xy, np.full(len(xy), SENSOR_Z)])
-        o = cur["lidar"]["origin"]; src, _, oks = cam.project(np.array([[*o, SENSOR_Z]]))
-        rays = Image.new("RGB", (w, h)); rd = ImageDraw.Draw(rays)                # faint beam fan of the live scan
-        if oks[0]:
-            for n_, ((u, v), c, k) in enumerate(zip(uv, col, ok)):
-                if k and n_ % 2 == 0:
-                    rd.line([tuple(src[0]), (u, v)], fill=tuple(int(x) // 6 for x in c), width=1)
-        img = np.maximum(img, np.asarray(rays))
-        splat(img, uv, np.clip(col.astype(int) + 90, 0, 255).astype(np.uint8), ok, 4)
-    out = Image.fromarray(img); d = ImageDraw.Draw(out)
-    draw_robot(d, cam, cur)
-    colorbar(d, w, h)
-    n_pts = sum(len(c[0]) for c in cloud[: i + 1])
-    d.text((32, h - 50), f"R1 planar LiDAR (C1, 500 beams, 12 m)  |  scans: {i + 1}  |  points: {n_pts:,}  |  t = {cur['t']:.2f} s",
+        col = cmap(np.hypot(xy[:, 0] - rx, xy[:, 1] - ry))                      # colour by distance from the robot now
+        size = np.clip(np.round(60 / np.maximum(z, 1)), 3, 7).astype(int)       # bigger when closer to the camera
+        for s in np.unique(size):
+            splat(img, uv, col, ok & (size == s), int(s))
+    pts = Image.fromarray(img)
+    glow = pts.filter(ImageFilter.GaussianBlur(6))
+    out = np.clip(np.asarray(base, int) + np.asarray(glow, int) * 1.6 + np.asarray(pts, int), 0, 255).astype(np.uint8)
+    out = Image.fromarray(out); d = ImageDraw.Draw(out)
+    draw_robot(d, cam, cur); colorbar(d, w, h)
+    d.text((32, h - 50), f"R1 planar LiDAR (C1, 500 beams, 12 m)  |  last {KEEP_S:.0f} s of scans  |  t = {cur['t']:.2f} s",
            fill=(180, 180, 180), font=FONT)
     return out
 
@@ -190,9 +165,9 @@ def main():
     recs = sorted([r for r in recs if r.get("lidar")], key=lambda r: r["frame"])
     lo, hi = (map(int, a.frames.split(":")) if a.frames else (0, len(recs)))
     tmp = a.out / "_lidar3d_frames"; tmp.mkdir(exist_ok=True)
-    cloud, looks = precompute(recs), look_points(recs, a.fps)
+    cloud, yaws, keep = [hits_world(r) for r in recs], smoothed_headings(recs, a.fps), int(KEEP_S * a.fps)
     for i in range(lo, min(hi, len(recs))):
-        render(recs, i, w, h, cloud, looks).save(tmp / f"{i - lo:05d}.png")
+        render(recs, i, w, h, cloud, yaws, keep).save(tmp / f"{i - lo:05d}.png")
     if not a.frames:
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(a.fps), "-i", str(tmp / "%05d.png"),
                         "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", str(a.out / "lidar.mp4")], check=True)

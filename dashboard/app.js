@@ -113,8 +113,31 @@ function indexState(s) {
     b.findings.push(Object.assign({ camera: fr?.camera }, r, { _frame: fr }));
     if (b.worst == null || (SEVERITY[r.status] ?? -1) > (SEVERITY[b.worst] ?? -1)) b.worst = r.status;
   }
-  const findingByFrame = new Map(findings.map((r) => [r.frame_id, r]));
+  const findingByFrame = new Map();   // Cosmos and RT-DETR may both report a frame: merge issues, worst status wins
+  for (const r of findings) {
+    const prev = findingByFrame.get(r.frame_id);
+    if (!prev) { findingByFrame.set(r.frame_id, r); continue; }
+    const worse = (SEVERITY[r.status] ?? -1) > (SEVERITY[prev.status] ?? -1) ? r.status : prev.status;
+    findingByFrame.set(r.frame_id, Object.assign({}, prev, r, { status: worse, issues: [...(prev.issues || []), ...(r.issues || [])] }));
+  }
   return { frames, findings, frameById, byKey, findingByFrame };
+}
+
+// harvest totals from RT-DETR findings: latest finding per (aisle, 0.5 m, camera), so repeat passes do not add up
+function harvestTotals(findings) {
+  const latest = new Map();
+  for (const r of findings) {
+    if (r.source !== "rtdetr" || !r.harvest) continue;
+    const k = `${key(r.aisle, r.metre)}|${r.camera}`;
+    const prev = latest.get(k);
+    if (!prev || (r.frame_id ?? 0) >= (prev.frame_id ?? 0)) latest.set(k, r);
+  }
+  const t = { plants: 0, pass: 0, not_ready: 0, reject: 0, frames: latest.size };
+  for (const r of latest.values()) {
+    t.pass += r.harvest.pass || 0; t.not_ready += r.harvest.not_ready || 0; t.reject += r.harvest.reject || 0;
+    t.plants += (r.plants || []).length;
+  }
+  return t;
 }
 
 // ---------------------------------------------------------------- map rendering
@@ -323,6 +346,7 @@ function renderDynamic(s, idx) {
 
 function thumbHTML(frame, finding, opts = {}) {
   const cam = opts.cam || frame?.camera || "";
+  const portrait = /^mast_/.test(cam) ? " portrait" : "";
   if (!frame || !frame.image_url) return `<div class="thumb missing"><span>${esc(cam.replace("mast_", ""))}<br>no image</span></div>`;
   const st = finding?.status || "";
   const boxes = (finding?.issues || []).filter((i) => Array.isArray(i.bbox_norm) && i.bbox_norm.length === 4).map((i) => {
@@ -332,7 +356,7 @@ function thumbHTML(frame, finding, opts = {}) {
       (opts.labels ? `<span>${esc(String(i.label || "").split(/[(,]/)[0].trim())} ${(Number(i.confidence) * 100).toFixed(0)}%</span>` : "") + "</div>";
   }).join("");
   const rev = frame.purpose === "revisit" ? `<span class="badge revisit">revisit</span>` : "";
-  return `<div class="thumb ${esc(st)}" data-img="${esc(frame.image_url)}" data-cap="${esc(`${frame.camera} · ${shortAisle(frame.aisle)} @ ${fmtM(frame.metre)} · frame ${frame.frame_id}${st ? " · " + st : ""}`)}">` +
+  return `<div class="thumb ${esc(st)}${portrait}" data-img="${esc(frame.image_url)}" data-cap="${esc(`${frame.camera} · ${shortAisle(frame.aisle)} @ ${fmtM(frame.metre)} · frame ${frame.frame_id}${st ? " · " + st : ""}`)}">` +
     `<img loading="lazy" src="${esc(frame.image_url)}" alt="${esc(cam)}">${boxes}` +
     `<div class="cap"><span>${esc(cam.replace("mast_", ""))}</span>${rev}</div></div>`;
 }
@@ -377,15 +401,21 @@ function renderDetail(s, idx) {
       ${i.evidence ? `<div class="ev">${esc(i.evidence)}</div>` : ""}
       <div class="meta">${esc(r.camera || "")} · frame ${esc(r.frame_id)} · ${esc(r.purpose || r._frame?.purpose || "inspect")}${r.model ? " · " + esc(r.model) : ""}</div>
     </div>`)).join("");
-  const sums = [...new Set(b.findings.filter((r) => r.status !== "healthy").map((r) => r.summary).filter(Boolean))].slice(0, 3);
+  // health summaries only; the detector's summary line is about fruit grading and lives in the harvest box
+  const sums = [...new Set(b.findings.filter((r) => r.status !== "healthy" && r.source !== "rtdetr").map((r) => r.summary).filter(Boolean))].slice(0, 3);
   const counts = b.findings.reduce((c, r) => ((c[r.status] = (c[r.status] || 0) + 1), c), {});
+  const h = harvestTotals(b.findings);
+  const harvestHTML = h.frames ? `<div class="harvest-title">Harvest at this metre · ผลผลิตที่จุดนี้</div><div class="harvest">
+      <span><b>${h.plants}</b> plants <i>ต้น</i></span><span class="pass"><b>${h.pass}</b> ripe · pass <i>ผ่าน</i></span>
+      <span class="notready"><b>${h.not_ready}</b> not ready <i>ยังไม่สุก</i></span><span class="reject"><b>${h.reject}</b> reject <i>ไม่ผ่าน</i></span></div>` : "";
   $("detail").innerHTML = `
     <div class="detail-title"><span class="where">${esc(shortAisle(b.aisle))} @ ${b.metre.toFixed(1)} m</span>
       <span class="status ${esc(worst)}">${esc(worst.replace("_", " "))} · ${STATUS_TH[worst] || ""}</span>
       <span class="muted">${passes > 1 ? passes + " passes · " : ""}${Object.entries(counts).map(([k, n]) => `${n} ${k}`).join(", ")}</span></div>
     ${sums.map((t) => `<div class="summary">${esc(t)}</div>`).join("")}
     <div class="cams">${cams}</div>
-    ${issueHTML || `<div class="empty">No issues at this metre · ไม่พบปัญหา</div>`}`;
+    ${issueHTML || `<div class="empty">No issues at this metre · ไม่พบปัญหา</div>`}
+    ${harvestHTML}`;
 }
 
 function renderCapture(s, idx) {
@@ -472,9 +502,19 @@ function renderKpis(s, idx) {
     cov = `${Math.min(100, Math.round((ms.size / (Math.floor(a.length / 0.5) + 1)) * 100))}%`;
   }
   const k = (cls, label, th, v) => `<div class="kpi ${cls}"><div class="k">${label}<i>${th}</i></div><div class="v">${v}</div></div>`;
+  const group = (title, th) => `<div class="kpi-group">${title}<i>${th}</i></div>`;
+  // Two separate jobs, two separate panels: plant health (disease screening) and harvest (fruit grading / count).
+  const det = { suspect: 0, disease: 0 };
+  for (const r of idx.findings) if (r.source === "rtdetr" && r.status in det) det[r.status]++;
   $("kpis").innerHTML = k("", "Frames", "ภาพ", idx.frames.length) + k("", "Aisle coverage", "ครอบคลุม", cov) +
+    group("Plant health · disease screening", "สุขภาพต้น · ตรวจโรค (Cosmos + Nemotron-VL + RT-DETR)") +
     k("healthy", "Healthy", "ปกติ", c.healthy) + k("suspect", "Suspect", "น่าสงสัย", c.suspect) +
-    k("disease", "Disease", "พบโรค", c.disease) + k("", "Not plant", "ไม่ใช่พืช", c.not_plant);
+    k("disease", "Disease", "พบโรค", c.disease) + k("", "Not plant", "ไม่ใช่พืช", c.not_plant) +
+    (det.suspect + det.disease ? k("suspect", "Detector flags", "RT-DETR พบใบผิดปกติ", det.suspect + det.disease) : "");
+  const h = harvestTotals(idx.findings);
+  if (h.frames) $("kpis").innerHTML += group("Harvest · fruit grading", "ผลผลิต · คัดเกรดผล (RT-DETR)") +
+    k("", "Plants", "จำนวนต้น", h.plants) + k("healthy", "Ripe · pass", "สุก ผ่าน", h.pass) +
+    k("suspect", "Not ready", "ยังไม่สุก", h.not_ready) + k("disease", "Reject", "ไม่ผ่าน", h.reject);
 }
 
 // ---------------------------------------------------------------- main loop

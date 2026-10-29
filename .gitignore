@@ -11,3 +11,4 @@ outbox/
 .venv-vision/
 vision_data/
 NEBIUS_SERVER*
+vision_runs/

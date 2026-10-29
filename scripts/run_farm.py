@@ -140,8 +140,39 @@ def main() -> int:
                 ex.load(legs, cmd.get("cmd"))
             publish({"reply": "accepted" if ok else "rejected"})
 
+        sit_n = [0]
+
+        def front_range(o, half_deg=15.0):
+            r = o.get("lidar_m") if o else None
+            if r is None or not len(r):
+                return None
+            n = len(r)                                         # R180 raw azimuth: beam k at -pi + 2pi k/n + pi/2
+            vals = [float(r[k]) for k in range(n)
+                    if abs(math.degrees(((-math.pi + 2 * math.pi * k / n + math.pi / 2) + math.pi) % (2 * math.pi) - math.pi)) <= half_deg
+                    and math.isfinite(float(r[k]))]
+            return round(min(vals), 3) if vals else None
+
+        def report_situation(ev):
+            """SAFETY stopped the robot: send the latest front frame for Cosmos Reason to explain to HERMES."""
+            img = obs.get("front_rgb", last_front) if obs else last_front
+            if img is None:
+                return
+            sit_n[0] += 1
+            meta = {"frame_id": 900000 + sit_n[0], "camera": FRONT_CAMERA, "purpose": "situation",
+                    "trigger": ev["type"], "why": ev.get("why") or ev.get("reason") or "", "aisle": ex.aisle,
+                    "metre": round(ex.metre, 2) if ex.aisle else None, "xy": ex.xy, "lidar_front_m": front_range(obs),
+                    "t": float(obs["timestamp_s"]), "pose_confidence": round(ex.confidence, 3)}
+            data, mime = encode_image(img)
+            if link.enabled:
+                link.send_frame(meta, data, mime)
+            rel = f"frames/situation_{sit_n[0]:03d}.jpg"; (rec / rel).write_bytes(data)
+            write("frames", {**meta, "image_path": rel})
+            log(f"situation report {sit_n[0]} ({ev['type']}) sent to HERMES via Cosmos Reason")
+
         def dispatch(events):
             for ev in events:
+                if ev["type"] in ("obstacle_stop", "stuck") or (ev["type"] == "aborted" and "obstacle" in str(ev.get("reason", ""))):
+                    report_situation(ev)
                 write("events", {"t": float(obs["timestamp_s"]), **{k: v for k, v in ev.items() if k != "meta"},
                                  **({"frame_id": ev["meta"]["frame_id"]} if "meta" in ev else {})})
                 if ev["type"] != "capture":

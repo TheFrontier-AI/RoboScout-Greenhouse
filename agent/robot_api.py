@@ -32,6 +32,12 @@ class Hub:
         self.findings: list[dict] = []
         self.inspect_q: queue.Queue[tuple[bytes, dict]] = queue.Queue()
         threading.Thread(target=self._inspect_worker, daemon=True).start()
+        self.detect_q: queue.Queue[tuple[bytes, dict]] = queue.Queue()
+        self.situations: list[dict] = []             # SAFETY stops explained by Cosmos Reason (cloud/eyes/situation)
+        self.situation_q: queue.Queue[tuple[bytes, dict]] = queue.Queue()
+        threading.Thread(target=self._situation_worker, daemon=True).start()
+        if os.environ.get("DETECTOR_MODEL"):       # local RT-DETR: fruit grading, plant count, leaf anomalies
+            threading.Thread(target=self._detect_worker, daemon=True).start()
         env = os.environ.get                       # dashboard service chips (configured, not health-checked)
         (data / "services.json").write_text(json.dumps({
             "nemotron": {"live": bool(env("NEBIUS_API_KEY")), "model": env("BRAIN_MODEL", ""), "detail": "Nebius Token Factory"},
@@ -42,9 +48,18 @@ class Hub:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
     def command(self, cmd: dict) -> dict:
-        if cmd.get("cmd") == "set_map":            # after a human confirms the discovered map
+        if cmd.get("cmd") == "notify":             # HERMES -> farmer alert; nothing is sent to the robot
+            reply = {"status": "accepted", "reason": "farmer notified", "legs": []}
+            self._append("alerts.jsonl", {"ts": time.time(), "message": cmd.get("message", ""),
+                                          "situation": cmd.get("situation"), "reasoning": cmd.get("reasoning", "")})
+        elif cmd.get("cmd") == "set_map":            # after a human confirms the discovered map
             p = Path(cmd["path"]); self.amap = AisleMap.load(p); shutil.copyfile(p, self.data / "aisle_map.json")
             reply = {"status": "accepted", "reason": f"map {self.amap.house_id} loaded", "legs": []}
+        elif cmd.get("cmd") == "survey_farm" or (cmd.get("cmd") == "revisit" and self.amap is not None
+                                                  and not str(cmd.get("aisle", "")).startswith(self.amap.house_id + "/")):
+            # farm-level goals span several houses: the robot plans them against its own farm map (run_farm.py)
+            reply = {"status": "accepted", "reason": "farm-level goal: planned on the robot", "legs": []}
+            self.commands.put(cmd)
         else:
             reply = plan_command(cmd, self.amap).to_dict()
             if reply["status"] == "accepted":
@@ -67,9 +82,14 @@ class Hub:
         rel = f"frames/{meta.get('frame_id', int(time.time() * 1000))}_{meta.get('camera', 'cam')}.jpg"
         (self.data / rel).write_bytes(image)
         self._append("frames.jsonl", {**meta, "image_path": rel})
+        if meta.get("purpose") == "situation":
+            self.situation_q.put((image, {**meta, "image_path": rel}))
+            return {"stored": rel, "situation_queued": self.situation_q.qsize()}
         if os.environ.get("EYES_BASE_URL") and meta.get("camera") in SIDE_CAMERAS and meta.get("pose_confidence", 1) >= 0.5:
             self.inspect_q.put((image, {**meta, "image_path": rel}))
-        return {"stored": rel, "inspect_queued": self.inspect_q.qsize()}
+        if os.environ.get("DETECTOR_MODEL") and meta.get("camera") in SIDE_CAMERAS and meta.get("pose_confidence", 1) >= 0.5:
+            self.detect_q.put((image, {**meta, "image_path": rel}))
+        return {"stored": rel, "inspect_queued": self.inspect_q.qsize(), "detect_queued": self.detect_q.qsize()}
 
     def _inspect_worker(self) -> None:
         while True:
@@ -82,6 +102,43 @@ class Hub:
             except Exception as e:                                     # keep the hub alive if the endpoint is down
                 row = {k: meta.get(k) for k in ("frame_id", "aisle", "metre", "camera", "image_path")} | \
                       {"status": "error", "issues": [], "summary": f"inspect failed: {e}"}
+            with self.lock:
+                self.findings.append(row)
+            self._append("findings.jsonl", row)
+
+
+    def _situation_worker(self) -> None:
+        keep = ("frame_id", "trigger", "why", "aisle", "metre", "xy", "lidar_front_m", "image_path", "t")
+        while True:
+            image, meta = self.situation_q.get()
+            row = {k: meta.get(k) for k in keep}
+            try:
+                if not os.environ.get("EYES_BASE_URL"):
+                    raise RuntimeError("no EYES_BASE_URL")
+                from cloud.eyes.situation import describe_situation      # lazy: needs openai + endpoint
+                row |= describe_situation(image, meta)
+            except Exception as e:
+                row |= {"what": "unknown", "description": f"situation report failed: {e}", "blocking_path": True,
+                        "likely_to_move": False, "crop_concern": "", "confidence": 0.0}
+            row["ts"] = time.time()
+            with self.lock:
+                self.situations.append(row)
+            self._append("situations.jsonl", row)
+
+    def _detect_worker(self) -> None:
+        import io
+        from PIL import Image
+        from vision.detector import Detector, to_finding                # lazy: needs torch + transformers
+        det = Detector(os.environ["DETECTOR_MODEL"], threshold=float(os.environ.get("DETECTOR_THRESHOLD", "0.5")))
+        while True:
+            image, meta = self.detect_q.get()
+            try:
+                im = Image.open(io.BytesIO(image))
+                f = to_finding(det.detect(im), im, meta)
+                row = {k: meta.get(k) for k in ("frame_id", "aisle", "metre", "camera", "image_path", "purpose")} | f
+            except Exception as e:
+                row = {k: meta.get(k) for k in ("frame_id", "aisle", "metre", "camera", "image_path")} | \
+                      {"status": "error", "issues": [], "source": "rtdetr", "summary": f"detector failed: {e}"}
             with self.lock:
                 self.findings.append(row)
             self._append("findings.jsonl", row)
@@ -118,6 +175,11 @@ def make_handler(hub: Hub):
                 with hub.lock:
                     rows = hub.findings[since:]
                 return self._json(200, {"next": since + len(rows), "findings": rows})
+            if u.path == "/situations":
+                since = int(parse_qs(u.query).get("since", ["0"])[0])
+                with hub.lock:
+                    rows = hub.situations[since:]
+                return self._json(200, {"next": since + len(rows), "situations": rows})
             if u.path == "/next_command":
                 try:
                     return self._json(200, hub.commands.get_nowait())

@@ -85,12 +85,35 @@ def wait_idle(poll_s: float) -> dict:
         time.sleep(poll_s)
 
 
+def decide_situation(sit: dict) -> tuple[dict | None, str]:
+    """HERMES policy for a SAFETY stop explained by Cosmos Reason. Returns (command or None, why).
+    The robot's SAFETY already holds the wheels and resumes by itself when the lane clears (it gives up after
+    blocked_timeout_s), so HERMES never commands motion here: it waits, or tells the farmer what needs a person."""
+    what, where = sit.get("what", "unknown"), sit.get("aisle") or "the yard"
+    at = f"{where}" + (f" metre {sit['metre']:.1f}" if isinstance(sit.get("metre"), (int, float)) else "")
+    desc = sit.get("description", "")
+    if sit.get("crop_concern"):
+        return ({"cmd": "notify", "message": f"Crop issue at {at}: {sit['crop_concern']} ({desc})"},
+                f"Cosmos Reason saw a crop problem in the lane at {at}; a person should fix it")
+    if what in ("person", "animal") or (sit.get("likely_to_move") and what != "unknown"):
+        return None, f"Cosmos Reason: {what} at {at} ({desc}); it should move on, the robot waits safely"
+    if what == "nothing_visible":
+        return ({"cmd": "notify", "message": f"LiDAR stop at {at} but the camera sees a clear lane; check the sensor"},
+                "LiDAR and camera disagree; the robot keeps waiting under SAFETY")
+    if what in ("vehicle_or_cart", "crate_or_bin", "tool_or_hose", "fallen_plant_or_branch", "debris",
+                "door_or_gate_closed", "water_or_mud", "other"):
+        return ({"cmd": "notify", "message": f"Path blocked at {at}: {desc or what}. Please clear it; the robot waits."},
+                f"Cosmos Reason: {what} blocks the lane at {at}; it will not move by itself")
+    return ({"cmd": "notify", "message": f"Robot stopped at {at}; the camera report failed, please check"},
+            "no usable camera report")
+
+
 def run(house: str, poll_s: float = 3.0, survey_until: float | None = None, farm: bool = False,
         max_revisits: int | None = None) -> str:
     """farm=True: one drive-through survey of every house (survey_farm); revisits are queued by the robot until the
     survey is done, and at most max_revisits spots are revisited (most votes first; the rest are reported as new)."""
     since, findings, spots, stuck, quiet = 0, [], [], 0, 0
-    revisits = 0
+    revisits, sit_since, situations = 0, 0, []
 
     def send(cmd: dict, why: str) -> dict:
         cmd["reasoning"] = _nemotron(f"In one sentence, explain this robot command to a farmer: {json.dumps(cmd)}. Context: {why}", why)
@@ -111,6 +134,17 @@ def run(house: str, poll_s: float = 3.0, survey_until: float | None = None, farm
         time.sleep(poll_s)
         res = _get(f"/findings?since={since}"); since = res["next"]; findings += res["findings"]
         st = _get("/status")
+        try:
+            sr = _get(f"/situations?since={sit_since}"); sit_since = sr["next"]
+        except Exception:
+            sr = {"situations": []}
+        for sit in sr["situations"]:                  # Cosmos Reason explains each SAFETY stop; HERMES decides
+            situations.append(sit)
+            cmd, why = decide_situation(sit)
+            if cmd is not None:
+                send(cmd, why)
+            else:
+                send({"cmd": "notify", "message": why, "situation": sit.get("what"), "wait": True}, why)
         for s in [s for s in spots if s.state == "revisiting"]:
             judge_revisit(findings, s)
         for s in cluster(res["findings"], spots):
@@ -138,13 +172,17 @@ def run(house: str, poll_s: float = 3.0, survey_until: float | None = None, farm
             break
     send({"cmd": "return_to_dock"}, "inspection finished")
     summary = [{"aisle": s.aisle, "metre": s.metre, "labels": sorted(set(s.labels)), "state": s.state} for s in spots]
+    events = [{"what": x.get("what"), "where": x.get("aisle") or "yard", "metre": x.get("metre"),
+               "description": x.get("description"), "crop_concern": x.get("crop_concern")} for x in situations]
     report = _nemotron(
         "Write a short farmer report (Thai then English) from these greenhouse inspection spots. Spot states mean: "
         "confirmed = the robot re-inspected and still sees the symptoms (Thai: ยืนยันว่าพบอาการ); "
         "cleared = the re-inspection did not see the symptoms (Thai: ตรวจซ้ำแล้วไม่พบอาการ — NOT treated/removed); "
         "revisiting/new = not yet re-inspected. Never claim the disease was treated or removed. List the labels the "
-        "model reported, recommend a person checks the plant, and note this is not a lab diagnosis. Spots: "
-        + json.dumps(summary, ensure_ascii=False), json.dumps(summary, ensure_ascii=False, indent=1))
+        "model reported, recommend a person checks the plant, and note this is not a lab diagnosis. Also list, under a "
+        "separate heading, what stopped the robot on the way (from its camera reports) and what a person should do. "
+        "Spots: " + json.dumps(summary, ensure_ascii=False) + " Stops: " + json.dumps(events, ensure_ascii=False),
+        json.dumps({"spots": summary, "stops": events}, ensure_ascii=False, indent=1))
     print(report)
     return report
 
