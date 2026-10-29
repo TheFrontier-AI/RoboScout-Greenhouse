@@ -50,15 +50,23 @@ def ask_front(client, model: str, pick: tuple) -> dict:
     where = f"in {aisle} at metre {metre:.1f}" if aisle and leg in ("drive_in", "drive_out") else "outdoors between greenhouses" if leg in ("path", "dock") else "at a greenhouse doorway"
     b64 = base64.b64encode(p.read_bytes()).decode()
     t0 = time.time()
-    r = client.chat.completions.create(model=model, temperature=0.2, max_tokens=1024, messages=[{"role": "user", "content": [
+    r = client.chat.completions.create(model=model, temperature=0.2, max_tokens=2048, messages=[{"role": "user", "content": [
         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
         {"type": "text", "text": PROMPT.format(where=where, doing=DOING.get(leg, "keep driving"))}]}])
     lat = time.time() - t0
-    txt = re.sub(r"<think>.*?</think>", "", r.choices[0].message.content or "", flags=re.S)
+    msg = r.choices[0].message                           # vLLM reasoning parsers may put the whole reply in reasoning_content
+    raw = msg.content or getattr(msg, "reasoning_content", None) or getattr(msg, "reasoning", None) or ""
+    txt = re.sub(r"<think>.*?</think>", "", raw, flags=re.S).split("</think>")[-1]
+    txt = re.sub(r"```(?:json)?", "", txt).strip()
     try:
         out = json.loads(re.search(r"\{.*\}", txt, re.S).group(0))
-    except Exception:
-        out = {"scene": txt[:400], "parse_error": True}
+    except Exception:                                    # truncated or prose reply: salvage what we can
+        m = re.search(r'"scene"\s*:\s*"(.*?)(?:"\s*,|$)', txt, re.S)
+        out = {"scene": (m.group(1) if m else txt)[:600], "parse_error": True}
+        for k in ("path_clear", "recommendation", "confidence"):
+            mm = re.search(rf'"{k}"\s*:\s*("?)([^",}}]+)\1', txt)
+            if mm:
+                out[k] = mm.group(2).strip()
     return {"t": round(t, 2), "frame": p.name, "leg": leg, "aisle": aisle, "metre": metre, "trigger": why, "latency_s": round(lat, 2), **out}
 
 
