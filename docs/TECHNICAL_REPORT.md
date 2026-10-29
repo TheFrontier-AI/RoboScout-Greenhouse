@@ -231,6 +231,22 @@ refinement (`docs/NEW_SITE_GUIDE.md`, `docs/evidence/10_teach_map_run3.json`).
 
 *Figure — The site graph the robot built from that drive: dock, doors and measured path lengths; anything off the graph is 'do not go'*
 
+### 3.7 Relocalisation: put down anywhere
+
+A robot placed somewhere other than its dock must find itself on the map it built. `sim/relocalize.py` searches every
+place along the taught path (0.5 m spacing, both directions: 1 476 hypotheses on our farm), scores each by the fit of
+the current LiDAR scan to the map, refines the best with the driving matcher, and reports ambiguity instead of a
+guess when two far-apart places fit equally well — which, in two identical greenhouses, is the normal case inside the
+aisles. Measured on run 3 from single scans at 40 random places: 8 found outright (median 5 cm), 30 flagged ambiguous,
+2 wrong; 74 ms per scan on the Spark CPU. The tie is broken by vision: the current front image and a reference image
+from the led drive at each candidate place are given to Nemotron 3.5 Super VL, which on 16 ambiguous scans decided 12
+and was right in 10 (83 %), citing features a LiDAR cannot see — the lone tree through the far door, the grey block at
+the base of the white wall, the irrigation line, the building beyond the house (`docs/evidence/12_vlm_place_check.jsonl`).
+Motion prunes candidates that stop fitting the map but is not allowed to choose between symmetric rivals: left to the
+LiDAR alone, driving on chose the wrong twin 9 times in 10 (`docs/evidence/13_relocalize_eval_run3.json`). The design
+that follows is LiDAR for candidates, the camera for the decision, driving for confirmation; wiring it into the live
+start-up of the robot is the next step.
+
 ## 4. Perception
 
 ### 4.1 RT-DETRv2 for fruit, plant bases and leaf anomalies

@@ -196,6 +196,8 @@ navigation stack alone. HERMES never sees a coordinate or a wheel; it names a de
 
 ## 2c. Which farm? Deploying on another farm (anywhere)
 
+(Put the robot down somewhere other than the dock? See [NEW_SITE_GUIDE.md §6](NEW_SITE_GUIDE.md): `scripts/relocalize_eval.py`, `scripts/vlm_place_check.py`.)
+
 Nothing in the code names our farm. A farm is **three data files plus one confirmation**; point the system at them and
 every command above works on that farm. House names are whatever those files call them.
 

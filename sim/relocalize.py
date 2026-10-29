@@ -92,12 +92,16 @@ class Track:
 
 
 class HypothesisTracker:
-    """Keep the ambiguous candidates alive and let motion decide. Start from one scan's candidates (Relocalizer),
+    """Keep the ambiguous candidates alive while the robot drives. Motion PRUNES: a candidate that stops matching the
+    map dies. Motion does not DECIDE between symmetric rivals - in two identical greenhouses the LiDAR evidence stays
+    equal however far the robot drives (measured on run 3: motion-only decisions were wrong 9 times out of 10), so the
+    default decide_margin is high and the tie is broken by the vision-language model (scripts/vlm_place_check.py) or
+    by reaching a place that is not symmetric (a door, the dock, the road). Start from one scan's candidates (Relocalizer),
     then for every new scan: move each hypothesis by the robot's own odometry delta, re-refine it on the map, score it,
     accumulate; drop hypotheses that stop matching; stop when the best beats every far-away rival by `decide_margin`.
     This is how the robot, put down on a known path, finds out which greenhouse it is in by driving a little."""
 
-    def __init__(self, reloc: Relocalizer, keep: int = 8, decide_margin: float = 0.12, drop_below: float = 0.35,
+    def __init__(self, reloc: Relocalizer, keep: int = 8, decide_margin: float = 0.30, drop_below: float = 0.35,
                  same_place_m: float = 3.0):
         self.reloc, self.keep, self.decide_margin, self.drop_below, self.same_place_m = reloc, keep, decide_margin, drop_below, same_place_m
         self.hyps: list[list] = []          # [x, y, h, cumulative score, n]
@@ -115,7 +119,9 @@ class HypothesisTracker:
             if all(math.hypot(x - c[0], y - c[1]) > self.same_place_m for c in cands):
                 cands.append((float(x), float(y), float(h)))
         self.hyps = [[c[0], c[1], c[2], self.reloc._score(body, *c), 1] for c in cands[: self.keep]]
-        self.last_odom = tuple(odom_xyh); self.metres = 0.0; self.steps = 0
+        self.last_odom = tuple(odom_xyh)
+        if not getattr(self, "_restart", False):
+            self.metres = 0.0; self.steps = 0
 
     def update(self, scan_xy: np.ndarray, odom_xyh) -> Track:
         ox, oy, oh = odom_xyh; lx, ly, lh = self.last_odom
@@ -139,6 +145,9 @@ class HypothesisTracker:
             if all(math.hypot(r[0] - m[0], r[1] - m[1]) > self.same_place_m for m in merged):
                 merged.append(r)
         self.hyps = merged[: self.keep] or new[:1]
+        if not self.hyps:                                 # every hypothesis died: start over from this scan
+            self._restart = True; self.start(scan, (ox, oy, oh)); self._restart = False
+            return Track(None, False, round(self.metres, 2), self.steps, len(self.hyps), 0.0)
         best = self.hyps[0]; best_mean = best[3] / best[4]
         rivals = [r[3] / r[4] for r in self.hyps[1:]]
         margin = best_mean - max(rivals) if rivals else 1.0

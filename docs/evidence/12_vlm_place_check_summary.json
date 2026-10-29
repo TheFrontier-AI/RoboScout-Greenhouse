@@ -1,0 +1,10 @@
+{
+ "model": "nvidia/Nemotron-3.5-Super-VL",
+ "ambiguous_cases": 16,
+ "vlm_correct": 10,
+ "vlm_wrong": 2,
+ "vlm_unsure": 0,
+ "errors": 4,
+ "accuracy_when_decided": 0.833,
+ "median_latency_s": 4.8
+}

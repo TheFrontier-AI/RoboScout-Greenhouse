@@ -1,0 +1,23 @@
+{
+ "rec": "/home/passin/Documents/Blender/TheFarm/r1_runs/farm_2026-10-29/vm_runs/farm_full3/rec",
+ "map_points": 32967,
+ "hypotheses": 1476,
+ "single_scan": {
+  "n": 40,
+  "correct_1m": 8,
+  "ambiguous": 30,
+  "wrong_confident": 2,
+  "s_per_scan": 0.074,
+  "median_err_m_when_correct": 0.052
+ },
+ "drive_and_track": {
+  "n": 40,
+  "decided_correct_1m": 1,
+  "decided_wrong": 9,
+  "undecided": 30,
+  "undecided_but_best_correct": 11,
+  "metres_to_decide_median": 16.0,
+  "metres_to_decide_max": 16.0
+ },
+ "note": "two identical greenhouses: LiDAR geometry alone cannot tell tunnel-09 from tunnel-10 inside the aisles; outdoors (dock, road, yard) it can. The ambiguous cases are flagged, not guessed."
+}

@@ -125,10 +125,36 @@ returns. `survey_house h5` takes the shortest graph path from wherever the robot
 
 ---
 
-## 5. What is and is not in this version
+## 6. Put the robot down anywhere: how it finds itself
+
+Normally a survey starts at the dock. If someone puts the robot down somewhere else on a path it knows, it does not
+assume it is at the dock — it works out where it is, in three steps, and says so when it cannot:
+
+1. **LiDAR candidates (80 ms).** `sim/relocalize.py` tries every place along the taught path (every 0.5 m, both
+   directions — 1 476 hypotheses on our farm), scores each by how well the current scan fits the map there, and refines
+   the best with the same matcher the robot drives with. Outdoors — at the dock, on the road, in the yard — one place
+   wins. Inside an aisle the answer is honest: "tunnel-09 or tunnel-10, same spot in either", because the two houses are
+   identical to a LiDAR. On run 3, from a single scan at 40 random places: 8 found outright (5 cm median error),
+   30 flagged ambiguous, 2 wrong.
+2. **The camera decides (5 s).** For an ambiguous pair the robot's front image and a reference image from the led
+   drive at each candidate place go to Nemotron 3.5 Super VL with one question: which reference is where I am? It
+   answers with evidence a LiDAR cannot see — the lone tree visible through the far door, the grey block at the base of
+   the white wall, the irrigation line, the building behind the house. On 16 ambiguous run-3 scans it decided 12 and
+   was right in 10 (83 %); the other 4 ran out of reply length (`scripts/vlm_place_check.py`).
+3. **Driving confirms.** The surviving candidates are carried along as the robot moves; one that stops fitting the map
+   dies. Driving alone is not allowed to choose between two symmetric places — we measured that it chooses wrong (9 of
+   10) in identical houses — so the choice stays with the camera or with reaching a place that is not symmetric
+   (a door, the dock, the road), and until then the robot drives only what both candidates allow.
+
+What the farmer sees: on the dashboard the robot reports "relocalised at tunnel-10, metre 14 (camera: the tree
+through the door)" or "ambiguous: tunnel-09 or tunnel-10 — moving to the door to check". It never silently guesses.
+
+Evidence: `docs/evidence/13_relocalize_eval_run3.json`, `12_vlm_place_check.jsonl`.
+
+## 7. What is and is not in this version
 
 In this version: the led drive, the map and site graph built from it, naming and confirmation, route planning on the
-graph, and all commands above — verified on our farm's recorded drive. Next: building the map from cuVSLAM poses as well
+graph, all commands above, and relocalisation from an unknown start (LiDAR candidates, camera tie-break, motion pruning) — verified offline on our farm's recorded drive; wiring relocalisation into the live start-up of the robot is the next step. Next: building the map from cuVSLAM poses as well
 as LiDAR (tighter than the odometry that taught it), and the aisle map generated from the LiDAR bed walls for houses the
 recorder did not already know.
 
