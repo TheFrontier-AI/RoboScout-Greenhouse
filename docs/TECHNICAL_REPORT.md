@@ -311,6 +311,13 @@ navigation stack alone. HERMES never sees a coordinate or a wheel; it names a de
 
 HERMES is the agent runtime: Hermes Agent with our `r1-robot-control` skill, plus a deterministic fallback loop (`agent/brain_loop.py`) that executes the same decision procedure so that the robot API cannot tell the two apart. It runs **NVIDIA Nemotron 3 Super (120B-A12B)** on Nebius Token Factory for reasoning text and for the farmer's report.
 
+**What ran where.** On the recorded run 3 the goal decisions were produced by the deterministic fallback loop
+(`agent/brain_loop.py`, the skill's decision procedure in code) with Nemotron writing the explanations and the report.
+Hermes Agent itself was then run live against the hub with the `r1-robot-control` skill and Nemotron 3 Super on
+Token Factory: in 29 s and 14 tool calls it checked health and status, commanded `survey_house tunnel-09` (accepted;
+the hub reported two too-narrow aisles skipped), read the findings, judged that no revisit was needed, and sent
+`return_to_dock`, stating its reason for each command (`docs/evidence/11_hermes_agent_live_nemotron.log`).
+
 Principles:
 - **Goals, never wheels.** HERMES sends `survey_farm`, `survey_house`, `revisit <aisle> <metre>`, `go_to_house`, `return_to_dock`, `notify`. The robot validates every command against its confirmed aisle and site maps (`r1_nav/commands.py`) and rejects what does not fit, with a reason. A human confirms every map before the robot uses it.
 - **Verify before alarming.** Disease flags are clustered within 1 m; after the survey the strongest clusters are revisited and the six revisit shots are judged again; a flag is cleared only when all six come back healthy. On run 3 HERMES ordered revisits at tunnel-09 metre 0 and 1.4 (chlorosis flags); both came back healthy and the two false alarms never reached the farmer. On an earlier run with a stronger lesion the revisit confirmed it (early blight 0.89–0.99).

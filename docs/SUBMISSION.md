@@ -12,7 +12,7 @@ We are building R1, a narrow differential-drive robot with six side cameras. It 
 - **Sees:** six plant cameras (1080×1920, the real Rapoo C260 resolution) plus a front camera.
   - Every 0.5 m the frames are screened by **two NVIDIA models**: Cosmos-Reason2-8B (self-hosted on an RTX PRO 6000) and Nemotron-3.5-Super-VL (Nebius Token Factory).
   - If either one says "suspect", the spot is revisited.
-- **Decides:** **HERMES** is Hermes Agent plus a fallback loop, running **NVIDIA Nemotron 3 Super** on **Nebius Token Factory**.
+- **Decides:** **HERMES** is Hermes Agent (NousResearch) with our skills, running **NVIDIA Nemotron 3 Super** on **Nebius Token Factory** — verified live against the hub (evidence 11); a deterministic fallback loop with the same decision procedure drove the recorded run.
   - It sends goals only, never wheel commands: survey, revisit a metre, go to another greenhouse, dock.
   - It explains every decision in plain language and writes a Thai and English report for the farmer.
 - **Maps:** cloud SLAM (MapAnything) turns real drone video into a 3-D farm map as a **Nebius Serverless Job** (H200, 55 s for 200 frames).

@@ -147,6 +147,7 @@ def main() -> None:
     steps = load_steps(a.rec)
     m = build_map(steps, a.every, a.cell, a.min_hits)
     np.save(out / "prior_map_xy.npy", m)
+    np.save(out / "path_xyh.npy", np.array([[s["xy"][0], s["xy"][1], s["heading_deg"]] for s in steps], float))  # for sim.relocalize
     site = site_skeleton(steps, source="robot")          # SOURCES in r1_nav.site_map: the robot measured it
     (out / "site_map.json").write_text(json.dumps(site, indent=1, ensure_ascii=False))
     xy = np.array([s["xy"] for s in steps]); path_m = float(np.linalg.norm(np.diff(xy, axis=0), axis=1).sum())
