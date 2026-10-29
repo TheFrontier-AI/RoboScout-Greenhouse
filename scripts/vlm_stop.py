@@ -133,6 +133,7 @@ def summarize(rows: list[dict], rec: Path, model: str, match_m: float = 0.7) -> 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--videos", type=Path); ap.add_argument("--detection", type=Path)
+    ap.add_argument("--render-pngs", type=Path, help="instead of videos: a render_route side dir (<ns>_plant_<cam>.png); metadata from --detection findings.jsonl")
     ap.add_argument("--side-pngs", type=Path, help="instead of videos: a run_farm rec/side dir (<frame_id>_<mast_cam>.png) + rec/frames.jsonl")
     ap.add_argument("--rec", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--base-url", required=True); ap.add_argument("--model", required=True)
@@ -153,12 +154,13 @@ def main():
         per_cam = {}
         for cam in ORDER:
             ms = sorted(meta[f"mast_{cam}"], key=lambda x: x[0])
-            per_cam[cam] = list(zip(ms, frames(a.videos / f"side_{cam}.mp4")))
+            per_cam[cam] = [(x, None) for x in ms] if a.render_pngs else list(zip(ms, frames(a.videos / f"side_{cam}.mp4")))
         n_stops = min(len(v) for v in per_cam.values())
         stops = []
         for k in range(n_stops):
             (ns, m), _ = per_cam["left_mid"][k]
-            imgs = encode_views([Image.frombytes("RGB", (1080, 1920), per_cam[cam][k][1]) for cam in ORDER], a.long_side)
+            imgs = encode_views([Image.open(a.render_pngs / f"{per_cam[cam][k][0][0]}_plant_{cam}.png").convert("RGB") if a.render_pngs
+                                 else Image.frombytes("RGB", (1080, 1920), per_cam[cam][k][1]) for cam in ORDER], a.long_side)
             stops.append({"stop": k, "ns": ns, **m, "images": imgs})
     n_stops = len(stops)
     print(f"{n_stops} stops x 6 views -> {n_stops} requests to {a.model}", flush=True)
