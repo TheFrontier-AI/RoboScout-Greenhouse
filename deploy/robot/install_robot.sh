@@ -16,9 +16,17 @@ VENV="${VENV:-$REPO/.venv-robot}"
 need() { command -v "$1" >/dev/null 2>&1 || { echo "missing: $1 (sudo apt-get install -y $2)"; exit 1; }; }
 need python3 python3; need rsync rsync; need ssh openssh-client
 python3 -c 'import sys; assert sys.version_info >= (3, 10), "Python >= 3.10 required"'
-python3 -m venv --help >/dev/null 2>&1 || { echo "python3-venv missing (sudo apt-get install -y python3-venv)"; exit 1; }
 
-[ -x "$VENV/bin/python" ] || python3 -m venv "$VENV"
+if [ ! -x "$VENV/bin/pip" ]; then
+  rm -rf "$VENV"
+  if ! python3 -m venv "$VENV" 2>/dev/null; then
+    # JetPack images ship python3 without ensurepip (no python3-venv package, no passwordless sudo):
+    # make the venv without pip and bootstrap pip from PyPA instead
+    rm -rf "$VENV"; python3 -m venv --without-pip "$VENV"
+    python3 -c 'import urllib.request; urllib.request.urlretrieve("https://bootstrap.pypa.io/get-pip.py", "/tmp/get-pip.py")'
+    "$VENV/bin/python" /tmp/get-pip.py -q
+  fi
+fi
 "$VENV/bin/pip" install -q --upgrade pip
 "$VENV/bin/pip" install -q -r requirements/robot.txt -r requirements/dev.txt
 echo "venv: $VENV  ($("$VENV/bin/python" --version), $(uname -m))"
