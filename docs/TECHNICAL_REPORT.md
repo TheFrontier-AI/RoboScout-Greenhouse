@@ -10,6 +10,14 @@ Frontier RoboFarm is an autonomous greenhouse scout: a narrow four-wheel robot (
 
 ## 1. Introduction
 
+![The farm's digital twin in NVIDIA Isaac Sim: CCTV view as R1 leaves its dock](media/gallery/01_farm_overview_isaac_sim.jpg)
+
+*Figure — The farm's digital twin in NVIDIA Isaac Sim: CCTV view as R1 leaves its dock*
+
+![The real farm: inside a tomato tunnel the twin was built from](media/gallery/17_real_tomato_aisle.jpg)
+
+*Figure — The real farm: inside a tomato tunnel the twin was built from*
+
 Agriculture sustains millions of livelihoods and underpins food security, and much of its essential work is still repetitive manual labour. In a tomato greenhouse a farmer inspects hundreds or thousands of plants one by one — checking health, judging ripeness, looking for problems before they spread. Frontier RoboFarm began with one question: how can a farmer monitor thousands of plants, detect problems early and make better decisions without walking every row? The answer had to be affordable, practical and accessible.
 
 We started from real greenhouse environments in Thailand and built an autonomous robot that navigates on its own, inspects crops at close range, collects consistent plant-level data and turns observations into actions a farmer can take. Thailand is the starting point; the problem is shared by farmers everywhere. We designed and assembled the robot ourselves from commercially available components with local sourcing wherever practical, so that farmers, researchers and developers can build, repair and adapt agricultural robots; the hardware will be published as an open-source project. RoboFarm is our expression of technological self-reliance — Physical AI brought out of the laboratory and into working farms.
@@ -23,6 +31,10 @@ The benefit is a farmer's time: scouting becomes the robot's job, and the farmer
 ## 2. Robot platform: R1 (R180) and R181-S
 
 ### 2.1 Mechanics and sensors
+
+![R180 assembly overview from the CAD model (R181-S adds the ZED 2i stereo rig)](media/gallery/15_r180_assembly_cad.jpg)
+
+*Figure — R180 assembly overview from the CAD model (R181-S adds the ZED 2i stereo rig)*
 
 | | R180 (run 3) | R181-S (Astra re-render) |
 |---|---|---|
@@ -38,6 +50,14 @@ Skid steering was chosen because it has no steering linkage, tolerates mud and u
 R181-S changes only the front camera. The ZED 2i sits where the single camera was (`/Robot/Physics_Base/Sensors/front_rgb`); nothing else was retrained or re-tuned. Its three contributions are visual odometry with metric scale (cuVSLAM, §3.3), 3-D obstacles that a single-plane LiDAR cannot see (a hose on the floor, a hanging branch) and metric depth for the 3-D map (§3.4). The camera costs about US$549. Figure: `docs/media/figures/fig_r181s_zed_stereo_depth.jpg`.
 
 ### 2.2 Digital twin in Isaac Sim 5.1
+
+![The whole farm in the twin: greenhouses, ponds, orchard plots, sheds](media/gallery/19_sim_whole_farm_aerial.jpg)
+
+*Figure — The whole farm in the twin: greenhouses, ponds, orchard plots, sheds*
+
+![R1 driving tunnel-09 in the twin, stopping at every plant (chase camera)](media/gallery/02_robot_in_tunnel09.jpg)
+
+*Figure — R1 driving tunnel-09 in the twin, stopping at every plant (chase camera)*
 
 The farm twin was built from our own photos and drone survey (two tunnels, tunnel-09 and tunnel-10, a yard between their back doors, a dock in front). Plants are 672 instances from the Tomato-Assets-V1 library, with nine synthetic anomaly plants hidden among them (2 chlorosis, 3 leaf spots, 2 fruit lesion, 1 wilting, 1 defoliation) whose positions are known only to the evaluation script.
 
@@ -60,6 +80,14 @@ AprilTags or similar markers in a greenhouse would have to be printed, mounted, 
 
 ### 3.2 Wheel odometry, gyro and LiDAR
 
+![A 2-D LiDAR scan in the robot frame: bed walls on both sides, the aisle ahead](media/gallery/10_lidar_scan.jpg)
+
+*Figure — A 2-D LiDAR scan in the robot frame: bed walls on both sides, the aisle ahead*
+
+![Run 3, the route the robot drove on its own: dock → tunnel-09 → yard → tunnel-10 → dock, 117 m, 161 plant stops](media/gallery/22_route_run3.png)
+
+*Figure — Run 3, the route the robot drove on its own: dock → tunnel-09 → yard → tunnel-10 → dock, 117 m, 161 plant stops*
+
 **Dead reckoning.** Wheel encoders give distance, the gyro gives heading; integrating them gives a pose that drifts (skid-steer scrub during turns, slip on a wet floor, gyro bias). Dead reckoning alone is the "guess"; the LiDAR corrects it.
 
 **LiDAR odometry in the aisle** (`sim/lidar_odometry.py`). Consecutive scans are matched with scan-to-keyframe ICP (iterative closest point): find the rigid transform (Δx, Δy, Δθ) that minimises the sum of squared distances between the current scan points and their nearest neighbours in the keyframe. Plant stems and posts along the beds give the scan structure along the aisle, so the match measures how far the robot really moved, which the wheels cannot know when they slip. A bare corridor (two smooth walls) is degenerate along its axis; the implementation detects this (the match's information matrix is near-singular along the aisle) and falls back to the wheels for that axis.
@@ -69,6 +97,14 @@ AprilTags or similar markers in a greenhouse would have to be printed, mounted, 
 **Result (run 3, original scene, 123 m, 12.5 min of sim time, 7,500 control steps):** the robot's own position vs. truth had **RMSE 0.23 m, median 0.14 m, max 0.50 m**. On the Astra re-render of the same route the LiDAR+wheels reference is 0.25 / 0.18 / 0.49 m. Figures `fig_run3_route_vs_estimate.png`, `fig_lidar_2d_scan.png`, `fig_lidar_slam_map_astra_scene.png`.
 
 ### 3.3 Visual SLAM with cuVSLAM (R181-S)
+
+![ZED 2i stereo depth from the R181-S camera](media/gallery/09_zed2i_stereo_depth.jpg)
+
+*Figure — ZED 2i stereo depth from the R181-S camera*
+
+![3-D map of the greenhouse: stereo depth placed with cuVSLAM poses](media/gallery/11_cuvslam_3d_map.jpg)
+
+*Figure — 3-D map of the greenhouse: stereo depth placed with cuVSLAM poses*
 
 NVIDIA cuVSLAM is a GPU feature-based visual odometry/SLAM library. It tracks sparse image features across frames, triangulates them and estimates camera motion by minimising reprojection error, with local bundle adjustment over a sliding window and loop-closure-free drift behaviour that is adequate for a 100 m route. Three modes were evaluated:
 
@@ -91,6 +127,10 @@ A 30 s, 450-frame segment of tunnel-09 gave 3.8 / 4.2 / 6.4 mm for the three mod
 **Caveat.** The simulated images have no noise, motion blur, rolling shutter, calibration error or IMU noise. Real numbers will be worse; the sim establishes the method and the software path, not the field accuracy.
 
 ### 3.3b cuVSLAM as a second observer, and on the Jetson (measured 2026-10-30)
+
+![Two observers on run 3: the robot's LiDAR estimate and cuVSLAM stereo, and their fusion, scored against the recorded truth](media/gallery/23_two_observers_fusion.png)
+
+*Figure — Two observers on run 3: the robot's LiDAR estimate and cuVSLAM stereo, and their fusion, scored against the recorded truth*
 
 Two things were measured after the first draft of this report; both are in `docs/evidence/`.
 
@@ -122,6 +162,10 @@ cuVSLAM is the second, physically independent observer and the odometry inside t
 live on the Jetson is the next step.
 
 ### 3.4 Camera-only 3-D mapping and the SLAM benchmark
+
+![lingbot-map: 3-D reconstruction from the front camera alone](media/gallery/12_lingbot_map_3d.jpg)
+
+*Figure — lingbot-map: 3-D reconstruction from the front camera alone*
 
 The server builds a 3-D model of the greenhouse two ways:
 
@@ -159,9 +203,41 @@ Plant-stop logic: the stop pitch is the nominal plant spacing (0.45 m), and each
 
 ---
 
+### 3.6 Mapping by demonstration (teach mode)
+
+The robot makes its own map. A person leads it once along every path it may use — dock, door, aisle, the yard to the
+next house, home — while the recorder stores the 2-D LiDAR scans and the robot's own pose estimate at 10 Hz. A person
+leads because a farm has ponds, an orchard, a road and soft ground that a robot must not learn by driving into them:
+the led drive defines where the robot may go, and anything off that graph is refused. `scripts/teach_map.py` turns the
+recording into the LiDAR prior map the localiser matches against (scans placed with the robot's own poses, 5 cm
+cells, cells hit twice or more) and the site graph in the `r1_nav.site_map` schema: the dock, a door node wherever the
+drive entered or left a house, edges along the taught path with their measured lengths, and each aisle's measured
+length. The farmer names the houses and confirms the graph; from then on the robot is commanded by name
+(`survey_house`, `go_to_house`, `survey_farm`) and plans its route on the graph it built.
+
+On run 3 as the led drive (7 500 steps, 123 m) the script produced a 32 967-point map of both greenhouses and the yard
+and a five-node graph — dock → tunnel-09 front door → tunnel-09 back door (42.2 m) → 12.8 m behind the houses →
+tunnel-10 back door → tunnel-10 front door (42.1 m) → 14.0 m home — with both aisles measured at 41.5–41.6 m; the
+graph loads, validates and routes. Re-localising the same 1 500 scans on the self-built map accepted every scan with
+a fix error of 0.23 m RMSE, equal to the plan-derived map (0.23 m). The self-built map carries the pose error of the
+drive that taught it (median fix 0.14 m against 0.03 m on the drawn plan); building it from cuVSLAM poses is the next
+refinement (`docs/NEW_SITE_GUIDE.md`, `docs/evidence/10_teach_map_run3.json`).
+
+![The farm as the robot recorded it on one led drive: 32 967 LiDAR points, no distances typed](media/gallery/24_teach_map_self_built.png)
+
+*Figure — The farm as the robot recorded it on one led drive: 32 967 LiDAR points, no distances typed*
+
+![The site graph the robot built from that drive: dock, doors and measured path lengths; anything off the graph is 'do not go'](media/gallery/25_teach_site_graph.png)
+
+*Figure — The site graph the robot built from that drive: dock, doors and measured path lengths; anything off the graph is 'do not go'*
+
 ## 4. Perception
 
 ### 4.1 RT-DETRv2 for fruit, plant bases and leaf anomalies
+
+![RT-DETRv2 fruit grading on the six mast views of one plant stop](media/gallery/08_fruit_grading_rtdetr.jpg)
+
+*Figure — RT-DETRv2 fruit grading on the six mast views of one plant stop*
 
 **Model.** RT-DETRv2 (ResNet-18 backbone, `PekingU/rtdetr_v2_r18vd`, Apache-2.0) is a real-time detection transformer: a CNN backbone, an efficient hybrid encoder that mixes multi-scale features, and a transformer decoder with a fixed set of object queries that predicts boxes and classes directly, without anchors or non-maximum suppression. It is end-to-end (one forward pass, set prediction with Hungarian matching at training time) and small enough to run at camera rate on a Jetson or on a slice of an RTX PRO 6000. We fine-tuned it on our own data (`vision/train_rtdetr.py`).
 
@@ -182,17 +258,29 @@ Plant count from `plant_base`: 16 and 29 plants of ~168 per aisle — not usable
 
 ### 4.2 Nemotron 3.5 Super VL: one request per plant stop
 
+![One plant stop: six views, detector boxes, Nemotron 3.5 Super VL verdict, description and next step](media/gallery/07_six_cameras_nemotron_explains.jpg)
+
+*Figure — One plant stop: six views, detector boxes, Nemotron 3.5 Super VL verdict, description and next step*
+
 A vision-language model is better than a box detector at the questions a farmer asks: *is this plant healthy, what is wrong, what should I do?* NVIDIA Nemotron 3.5 Super VL (hosted on Nebius Token Factory) is given **all six views of a stop in one message** — left high/mid/low is the plant in the left row, right high/mid/low the plant in the right row — so it sees each plant top to bottom and the number of calls equals the number of stops, not stops × cameras (`scripts/vlm_stop.py`). The prompt asks for a status per plant, a list of issues with confidence, a 3–5 sentence agronomist-style description and a next step; the answer is parsed as JSON and checked against the hidden anomaly plants.
 
 Run on the Astra scene: 161 requests, 322 plants judged, 1.25 M tokens, ~8 s per request with four workers. Typical description: *"upper-canopy yellowing, lower leaves green; stems and fruit look normal; likely nutrient issue — check soil nitrogen and irrigation uniformity."* Health and harvest are always reported on separate pages so that a sick plant is never mistaken for a ripe one.
 
 ### 4.3 Cosmos Reason 2 for the front camera
 
+![Between greenhouses: the front camera is sent to Cosmos Reason on events](media/gallery/04_robot_crossing_yard.jpg)
+
+*Figure — Between greenhouses: the front camera is sent to Cosmos Reason on events*
+
 Cosmos Reason 2 (8B, served with vLLM on an RTX PRO 6000) is the robot's situational reasoner, not its plant inspector. It is asked about the **front camera** at the moments the navigation design calls "open your eyes": every change of leg (leaving the dock, a doorway, crossing the yard), every 10 s of driving, and whenever SAFETY stops the robot. The prompt states where the robot is and what it is about to do and asks for a short description, whether the path is clear, hazards, and one of continue / slow_down / stop / ask_human as JSON (`scripts/cosmos_front.py`). HERMES uses the answer to wait (a person, an animal) or to notify the farmer (a hose, a cart, a fallen plant).
 
 Measured: 83 checks on the original scene and 68 on the Astra scene (1,501 and 1,296 front frames). When the model answers in JSON its round trip is about **1.5 s**; when it narrates to the 2,048-token limit it takes about **25 s** and the JSON has to be salvaged from the prose (the parser strips reasoning tags and code fences and recovers the `scene` and `recommendation` fields from a truncated answer). In the Astra-scene run 9 of 68 answers parsed cleanly, all "continue"; the scene descriptions were accurate (doorway, aisle, planters, clear path). A multi-image per-stop request (the §4.2 pattern) is not supported by this model and failed on all 322 plants, which confirms the division of labour: Cosmos for the front camera and situations, Nemotron VL for the plants.
 
 ### 4.4 Disease screening: detector + VLM
+
+![Plant-health card at a sick plant: boxes, Nemotron's description and the recommended action, kept separate from harvest](media/gallery/13_plant_health_card.jpg)
+
+*Figure — Plant-health card at a sick plant: boxes, Nemotron's description and the recommended action, kept separate from harvest*
 
 Nine anomaly plants are hidden in the 672. Detection is scored per plant: a plant counts as found when a flag lands within 0.7 m of its row position.
 
@@ -226,6 +314,10 @@ Interfaces (`agent/robot_api.py`, `docs/INTERFACES_th.md`): from HERMES `POST /c
 ---
 
 ## 6. Cloud pipeline and system integration
+
+![The farmer's report: ripe / not ready / reject per greenhouse and the flagged plants with photos, position and next step](media/gallery/14_survey_report.jpg)
+
+*Figure — The farmer's report: ripe / not ready / reject per greenhouse and the flagged plants with photos, position and next step*
 
 ### 6.1 One system
 
