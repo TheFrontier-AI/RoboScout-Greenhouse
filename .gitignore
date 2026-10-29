@@ -12,3 +12,4 @@ outbox/
 vision_data/
 NEBIUS_SERVER*
 vision_runs/
+docs/demo/*.mp4

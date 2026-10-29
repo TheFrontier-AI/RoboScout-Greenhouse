@@ -1,0 +1,150 @@
+{
+ "fps": 30,
+ "size": [
+  1920,
+  1080
+ ],
+ "total_s": 297.467,
+ "voice": "en-AU-NatashaNeural",
+ "narration_lufs": -16.0,
+ "disease_freeze": {
+  "start_s": 71.7,
+  "end_s": 119.067,
+  "route_time_s": 107.116672,
+  "stop": 25,
+  "aisle": "tunnel-09/aisle-02",
+  "metre": 11.85
+ },
+ "segments": [
+  {
+   "id": "s0_open",
+   "start_s": 0.0,
+   "end_s": 22.433,
+   "chase_route_time_s": [
+    0.0,
+    22.87
+   ],
+   "chase_speed": 2.0,
+   "narration_start_s": 0.35,
+   "narration_end_s": 22.099
+  },
+  {
+   "id": "s1_edge",
+   "start_s": 22.433,
+   "end_s": 52.3,
+   "chase_route_time_s": [
+    22.9,
+    62.02
+   ],
+   "chase_speed": 1.31,
+   "narration_start_s": 22.783,
+   "narration_end_s": 51.939
+  },
+  {
+   "id": "s2_stops",
+   "start_s": 52.3,
+   "end_s": 71.7,
+   "chase_route_time_s": [
+    62.01,
+    107.21
+   ],
+   "chase_speed": 2.33,
+   "narration_start_s": 52.65,
+   "narration_end_s": 71.35
+  },
+  {
+   "id": "s3_disease_freeze",
+   "start_s": 71.7,
+   "end_s": 119.067,
+   "chase_route_time_s": [
+    107.12,
+    107.12
+   ],
+   "chase_speed": 0,
+   "narration_start_s": 72.05,
+   "narration_end_s": 118.726
+  },
+  {
+   "id": "s4_hermes",
+   "start_s": 119.067,
+   "end_s": 145.3,
+   "chase_route_time_s": [
+    107.12,
+    185.82
+   ],
+   "chase_speed": 3.0,
+   "narration_start_s": 119.417,
+   "narration_end_s": 144.935
+  },
+  {
+   "id": "ff_t09",
+   "start_s": 145.3,
+   "end_s": 149.0,
+   "chase_route_time_s": [
+    185.77,
+    244.97
+   ],
+   "chase_speed": 16.0
+  },
+  {
+   "id": "s5_yard_safety",
+   "start_s": 149.0,
+   "end_s": 177.8,
+   "chase_route_time_s": [
+    245.0,
+    329.96
+   ],
+   "chase_speed": 2.95,
+   "narration_start_s": 149.35,
+   "narration_end_s": 177.466
+  },
+  {
+   "id": "s6_r181s",
+   "start_s": 177.8,
+   "end_s": 207.367,
+   "chase_route_time_s": [
+    330.01,
+    359.58
+   ],
+   "chase_speed": 1.0,
+   "narration_start_s": 178.15,
+   "narration_end_s": 207.024
+  },
+  {
+   "id": "s7_maps",
+   "start_s": 207.367,
+   "end_s": 237.7,
+   "chase_route_time_s": [
+    359.58,
+    600.13
+   ],
+   "chase_speed": 7.93,
+   "narration_start_s": 207.717,
+   "narration_end_s": 237.352
+  },
+  {
+   "id": "s8_results",
+   "start_s": 237.7,
+   "end_s": 271.6,
+   "chase_route_time_s": [
+    600.0,
+    647.6
+   ],
+   "chase_speed": 1.404,
+   "narration_start_s": 238.05,
+   "narration_end_s": 271.262
+  },
+  {
+   "id": "s9_pipeline",
+   "start_s": 271.6,
+   "end_s": 297.467,
+   "chase_route_time_s": [
+    647.8,
+    647.8
+   ],
+   "chase_speed": 0,
+   "narration_start_s": 271.95,
+   "narration_end_s": 295.623
+  }
+ ]
+}
