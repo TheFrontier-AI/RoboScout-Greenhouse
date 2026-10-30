@@ -58,8 +58,12 @@ def plan_gif(graph_json, map_xy, dock, out: Path, cases=(4, 2)):
             if not here: here = "yard-high" if P[k][1] > 4 else ("yard-low" if P[k][1] < -36 else "gap between the houses")
             ax.set_title(f"put down #{c['case']}\nnow at: {here}", fontsize=8, loc="left", color="#1a7f37")
         routes = [" → ".join(str(x).replace("house-", "").replace("/row-", " row").replace("/door-", " door ").replace("yard-", "yard ").replace(" low->high", "↑").replace(" high->low", "↓") for x in c["hermes"]["route"]) for c in panels]
-        fig.suptitle("HERMES plans in named places on the robot's scene graph; the robot drives the geometry\n" + "\n".join(f"#{c['case']}: {r}" for c, r in zip(panels, routes)), fontsize=6.8, y=0.995)
-        fig.tight_layout(rect=(0, 0, 1, 0.90))
+        import textwrap
+        lines = ["HERMES plans in named places on the robot's scene graph; the robot drives the geometry"]
+        for c, r in zip(panels, routes):
+            lines += textwrap.wrap(f"#{c['case']}: {r}", 86)
+        fig.suptitle("\n".join(lines), fontsize=6.6, y=0.995)
+        fig.tight_layout(rect=(0, 0, 1, 0.86))
         frames.append(frame_to_image(fig)); plt.close(fig)
     frames += [frames[-1]] * 12
     return save_gif(frames, out)
