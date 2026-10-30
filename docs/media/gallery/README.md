@@ -1,6 +1,6 @@
 # RoboFarm gallery
 
-All 3:2, ≤ 2 MB. Renders are from the NVIDIA Isaac Sim digital twin of our farm (Astra scene) unless marked *real photo*.
+Pictures taken from the demo film are the full 1920×1080 frame (01, 02, 04, 11-14); the others are 3:2; all ≤ 2 MB. Renders are from the NVIDIA Isaac Sim digital twin of our farm (Astra scene) unless marked *real photo*.
 
 | # | Image | Caption |
 |---|---|---|
