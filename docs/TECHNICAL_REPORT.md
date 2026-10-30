@@ -80,10 +80,6 @@ AprilTags or similar markers in a greenhouse would have to be printed, mounted, 
 
 *Figure — A 2-D LiDAR scan in the robot frame: bed walls on both sides, the aisle ahead*
 
-![Run 3, the route the robot drove on its own: dock → tunnel-09 → yard → tunnel-10 → dock, 117 m, 161 plant stops](media/gallery/22_route_run3.png)
-
-*Figure — Run 3, the route the robot drove on its own: dock → tunnel-09 → yard → tunnel-10 → dock, 117 m, 161 plant stops*
-
 **Dead reckoning.** Wheel encoders give distance, the gyro gives heading; integrating them gives a pose that drifts (skid-steer scrub during turns, slip on a wet floor, gyro bias). Dead reckoning alone is the "guess"; the LiDAR corrects it.
 
 **LiDAR odometry in the aisle** (`sim/lidar_odometry.py`). Consecutive scans are matched with scan-to-keyframe ICP (iterative closest point): find the rigid transform (Δx, Δy, Δθ) that minimises the sum of squared distances between the current scan points and their nearest neighbours in the keyframe. Plant stems and posts along the beds give the scan structure along the aisle, so the match measures how far the robot really moved, which the wheels cannot know when they slip. A bare corridor (two smooth walls) is degenerate along its axis; the implementation detects this (the match's information matrix is near-singular along the aisle) and falls back to the wheels for that axis.

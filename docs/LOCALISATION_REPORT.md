@@ -5,9 +5,6 @@ new farm from one led drive, and how it finds itself when it is put down somewhe
 is from the recorded full-farm run (run 3) in the Isaac Sim twin of our farm; the files behind each number are listed
 in Section 8.
 
-![Run 3: the route the robot drove on its own](media/gallery/22_route_run3.png)
-
-*Figure 1 — Run 3: dock → tunnel-09 → yard → tunnel-10 → dock, 117 m, 12.5 min, 161 plant stops, driven on sensor
 data alone. The recorded ground truth was used only to score the estimates below.*
 
 ---
@@ -294,9 +291,6 @@ the twin's render passes and real farm photographs. The vision-language models a
 reason, the ground layer stops. On "not drivable ahead" the robot stops, marks the place on its map and plans again,
 whatever the planner or HERMES asked for. The same pass labels the plants: canopy, stems, fruit and yellowing leaves become a plant layer of the map (where the rows really hold plants, where to stop for the close look), while the fine grading of fruit and lesions stays with RT-DETRv2 at the stops and Nemotron VL.
 
-![What the robot sees when put down beside a path: six of the 40 off-path test poses](media/gallery/27_offpath_front_views.jpg)
-
-*Figure 9 — Six of the 40 off-path put-down poses, rendered in the current twin: these front views go to Nemotron VL
 to decide between the places the LiDAR cannot tell apart.*
 
 What the farmer sees: "relocalised at tunnel-10, metre 14 (camera: the tree through the door)" or "ambiguous:
