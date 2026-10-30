@@ -28,7 +28,7 @@ Raw logs and outputs from the real runs, copied as they were (only the server IP
 
 The drive itself:
 
-- Route the robot drove in run 3 (from its own recording):— 117 m, 12.5 min, 161 plant stops.
+- Route the robot drove in run 3 (from its own recording): 117 m, 12.5 min, 161 plant stops.
 - The film (chase camera, nothing scripted): `docs/demo/robofarm_demo.mp4` (gitignored, 260 MB — supplied with the submission).
 - Per-camera raw renders, detection videos, 3-D maps and the full run-3 recording (5.8 GB) are kept off-git; see
   [../SYSTEM_OVERVIEW.md](../SYSTEM_OVERVIEW.md) §"Figures and videos" for the file list, available on request.
