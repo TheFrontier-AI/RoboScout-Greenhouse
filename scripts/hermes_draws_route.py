@@ -46,10 +46,18 @@ def ask_hermes(farm: FreeFarm, start_xy, img: str):
            "Draw the complete survey route as a list of waypoints the robot will follow in order.\n" + json.dumps(structure) +
            "\nReply with JSON only: {\"waypoints\": [[x, y], ...], \"aisle_order\": [ids], \"reason\": \"one sentence\"}.")
     t0 = time.time()
-    r = client.chat.completions.create(model=os.environ.get("EYES2_MODEL", "nvidia/Nemotron-3.5-Super-VL"), temperature=0.1, max_tokens=8000,
+    r = client.chat.completions.create(model=os.environ.get("EYES2_MODEL", "nvidia/Nemotron-3.5-Super-VL"), temperature=0.1, max_tokens=12000,
                                        messages=[{"role": "user", "content": [{"type": "text", "text": msg}, {"type": "image_url", "image_url": {"url": img}}]}])
     m = r.choices[0].message; txt = (m.content or getattr(m, "reasoning_content", None) or "").split("</think>")[-1].replace("```json", "").replace("```", "")
-    j = _last_json(txt); return j, round(time.time() - t0, 1)
+    try:
+        j = _last_json(txt)
+    except Exception:
+        # the reply ran out of tokens while reasoning: ask once more for the JSON alone
+        r = client.chat.completions.create(model=os.environ.get("EYES2_MODEL", "nvidia/Nemotron-3.5-Super-VL"), temperature=0.1, max_tokens=12000,
+                                           messages=[{"role": "user", "content": [{"type": "text", "text": msg + "\nAnswer with the JSON object only, no explanation before it."}, {"type": "image_url", "image_url": {"url": img}}]}])
+        m = r.choices[0].message; txt = (m.content or getattr(m, "reasoning_content", None) or "").split("</think>")[-1].replace("```json", "").replace("```", "")
+        j = _last_json(txt)
+    return j, round(time.time() - t0, 1)
 
 
 def check_route(farm: FreeFarm, wps):

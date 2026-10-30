@@ -59,6 +59,13 @@ class FreeSpace:
         self.dist = self.tree.query(np.stack([cx.ravel(), cy.ravel()], -1))[0].reshape(self.ny, self.nx)
         return self
 
+    def free_segment(self, a, b, clearance=0.30):
+        """True when the straight line a->b stays in drivable cells with at least `clearance` from the map."""
+        n = max(2, int(np.linalg.norm(np.subtract(b, a)) / 0.2)); pts = np.linspace(np.asarray(a, float), np.asarray(b, float), n)
+        if (self.tree.query(pts)[0] < clearance).any():
+            return False
+        return all(self.is_free(p) for p in pts)
+
     def cell_of(self, xy):
         return int((xy[1] - self.y0) / self.cell), int((xy[0] - self.x0) / self.cell)
 

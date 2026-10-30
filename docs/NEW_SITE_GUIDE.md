@@ -192,7 +192,17 @@ its belief; at every doorway, when the LiDAR still keeps the twin place alive, t
 situation (both places with their LiDAR fit, the metres driven, the doors passed, the verdicts so far, the plan, and the
 live view against both reference views) and a move is accepted only after two doorways agree and the LiDAR fits the
 other candidate place at least as well. Measured the other ways for the record: pictures every 10 m inside the rows gave 36 of 50 with
-88 belief changes, single doorway verdicts without the two-doorway rule 39 of 50, the camera at the dock alone 43 of 50. A check that the side cameras see plants while the robot believes it is in a row was measured as well (41 of 50): in twin houses the wrong row has plants beside it too, so it cannot catch the swap, and its false alarms at the row ends cost surveys; it stays an option for farms with empty corridors. The order came from the Rural Postman solver on the robot
+88 belief changes, single doorway verdicts without the two-doorway rule 39 of 50, the camera at the dock alone 43 of 50. A check that the side cameras see plants while the robot believes it is in a row was measured as well (41 of 50): in twin houses the wrong row has plants beside it too, so it cannot catch the swap, and its false alarms at the row ends cost surveys; it stays an option for farms with empty corridors.
+
+**Can the agent draw the route itself?** Measured (`docs/evidence/18_hermes_draws_route.json`, figure
+`media/gallery/33_hermes_draws_route.png`): given the map picture with metre axes and the structure, Nemotron 3.5 Super VL
+drew the whole survey route as waypoints for 8 of 12 start poses (4 replies carried no usable JSON). Every drawn route
+had the right rows, the right order and the dock at the end, and its length was within about 5 % of the Rural Postman +
+A* plan; 251 of 318 drawn segments were drivable as drawn, 60 crossed something the map says is not drivable and were
+repaired by the grid planner, 7 could not be repaired; after the robot snaps the row legs to the row centre line, as its
+aisle centring does, 6 of 8 routes were complete. So the agent draws the route the way a person would, with about a
+metre of wobble, and the robot's planner is what makes it drivable to the centimetre: sketch by the agent, geometry by
+the robot. The order came from the Rural Postman solver on the robot
 (every chosen aisle a required edge, A* distances between aisle ends and the dock, about 0.1 s), so the model decides
 which aisles and whether the plan is sound, never the geometry. Evidence: `docs/evidence/17_freenav_mission_survey.json`;
 figures `media/gallery/31_freenav_survey_each_case.png`, `32_freenav_survey_overview.png`.
