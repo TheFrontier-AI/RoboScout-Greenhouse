@@ -425,6 +425,7 @@ Clean-clone verification at the time of writing: the **robot side** was installe
 7. **Learned driving.** The aisle driver is engineered (LiDAR centring + stops). A learned world-model controller such as TD-MPC2 (implicit latent world model with MPPI planning; one hyper-parameter set across 104 continuous-control tasks) is a candidate for the yard crossing and door passages, trained in the same twin; the engineered driver would remain the safety envelope.
 8. **Watering and intervention**: pump, tank and nozzles are designed and the API drafted; not built.
 9. **Real-farm trials** are the next milestone: measure the side aisles on site, run the physical R1, fine-tune the eyes on our own frames.
+10. **Live ground check before field trials.** A 2-D LiDAR sees neither a drop-off nor still water; before the robot drives on its own in the field, a layer on the Jetson (ZED 2i depth drop-off / no-depth test, plus a small real-time segmentation model at about 2 frames per second, ~5 % of the GPU) must be able to veto every forward command: stop, mark the place, plan again.
 
 ---
 

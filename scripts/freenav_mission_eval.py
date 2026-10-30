@@ -357,6 +357,22 @@ def run_case(case):
         elif not recover("believed place no longer fits the scans"):
             break
         belief = state["belief"]; e = err(belief, true); record(e); hist.append(odom)
+        # EYES WHILE DRIVING: every G["eyes_every"] metres, if the LiDAR still keeps a far-away rival place alive, the
+        # camera compares the live view with "here" and with that rival; two rival verdicts in a row move the belief
+        if G.get("eyes_every") and G.get("refs") and metres - state.get("last_eyes_m", -1e9) >= G["eyes_every"]:
+            state["last_eyes_m"] = metres
+            farr = sorted([h for h in tr.hyps if err(h, belief) >= AWAY_M and h[4] >= 4], key=lambda h: -h[3] / h[4])
+            if farr:
+                rv = farr[0]; live = nearest_ref(true); ra = nearest_ref(belief, away_from_xy=live[2] if live else None); rb = nearest_ref(rv, away_from_xy=live[2] if live else None)
+                if live and ra and rb:
+                    pick = camera_pick(live[1], ra[1], rb[1]); votes = state.setdefault("eye_votes", [])
+                    votes.append(pick == "B"); log["events"].append({"m": round(metres, 1), "what": f"eyes on the way: live view vs here vs rival ({rv[0]:.1f}, {rv[1]:.1f}) -> {pick or 'no answer'}"})
+                    if len(votes) >= 2 and votes[-1] and votes[-2]:
+                        state["eye_votes"] = []
+                        if not re_anchor((rv[0], rv[1], rv[2]), "the camera says twice that this is the rival place"):
+                            if goals and not recover("cannot plan after the camera check"):
+                                break
+                        continue
         if state["wp"] is not None and state["k"] < len(state["wp"]) and math.dist(belief[:2], state["wp"][state["k"]]) > 1.0:
             log["events"].append({"m": round(metres, 1), "what": "off the planned path by more than 1 m: planned again from here"}); replan()
         if e < 1.0 and corrected_at is None:
@@ -429,11 +445,11 @@ def main():
     ap.add_argument("--scans", type=Path, required=True); ap.add_argument("--rec", type=Path, required=True)
     ap.add_argument("--cases", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--only", type=str, default=None); ap.add_argument("--far", type=int, default=0); ap.add_argument("--surprise", action="store_true")
-    ap.add_argument("--decider", default="rpp", choices=["rpp", "nearest", "nemotron"]); ap.add_argument("--review", action="store_true", help="HERMES reviews the plan on the map picture before the robot moves"); ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
+    ap.add_argument("--decider", default="rpp", choices=["rpp", "nearest", "nemotron"]); ap.add_argument("--review", action="store_true", help="HERMES reviews the plan on the map picture before the robot moves"); ap.add_argument("--eyes-every", type=float, default=0.0, help="metres between camera checks while driving (0 = only at the first aisle and the dock)"); ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
     a = ap.parse_args(); teach = a.rec / "teach"
     fs, m, theta, aisles, dock = build_structure(a.scans, a.rec)
     G["world"] = World(m); G["reloc"] = Relocalizer(m, None, grid_m=0.5, grid_headings=24, refine_top=24); G["farm"] = FreeFarm(fs, aisles, dock)
-    G["decider"] = a.decider; G["surprise"] = a.surprise; G["review"] = a.review; G["free0"] = fs.free.copy()
+    G["decider"] = a.decider; G["surprise"] = a.surprise; G["review"] = a.review; G["eyes_every"] = a.eyes_every; G["free0"] = fs.free.copy()
     ys, xs = np.nonzero(fs.free & (fs.dist >= 1.2)); G["yard_cells"] = [fs.xy_of((i, j)) for i, j in zip(ys, xs) if G["farm"].where(fs.xy_of((i, j)) + (0,))[0] is None]
     ap_refs = teach / "offpath_images_map"; poses_f = teach / "offpath_scans" / "scan_poses.json"; G["refs"] = []
     if ap_refs.is_dir() and poses_f.exists():
@@ -460,7 +476,7 @@ def main():
                 "started_wrong": sum(r["start_belief_err_m"] >= 1.0 for r in rs), "wrong_corrected_by_end": sum(r["start_belief_err_m"] >= 1.0 and r["final_belief_err_m"] < 1.0 for r in rs),
                 "unexpected_obstacle_handled": sum(r.get("unexpected_obstacle") is not None and r["outcome"] == "mission_done" for r in rs),
                 "at_dock_at_end": sum(r["at_dock"] for r in rs), "stays_put": sum(r["outcome"] == "stays_put" for r in rs)}
-    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "hermes_review": a.review, "surprise_obstacles": a.surprise,
+    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "hermes_review": a.review, "eyes_every_m": a.eyes_every, "surprise_obstacles": a.surprise,
             "structure": {"plant_aisles": [x["id"] for x in G["farm"].aisles], "aisle_lengths_m": [x["length_m"] for x in G["farm"].aisles], "dock": list(dock)}, "seconds": round(time.time() - t0, 1),
             "scans": "synthetic, ray-cast on the self-built map (taught + look-around), own-body returns removed; no stored route anywhere"}
     print(json.dumps(summ, indent=1))

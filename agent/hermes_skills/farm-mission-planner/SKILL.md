@@ -58,6 +58,8 @@ run on the robot's map (`R1_STRUCTURE` points the hub at its output).
 | "battery low" | return to the dock now; the records so far are kept |
 
 ## Rules
+- The robot's live ground check (ZED depth drop-off / water, segmentation at ~2 FPS) vetoes every forward command; when it
+  reports "not drivable ahead" the robot has already stopped and marked the place - you re-plan, you never override it.
 - Approve only a plan whose picture you have looked at and whose `aisles_missing_from_order` is empty (or the farmer
   said to skip them).
 - Never invent an aisle id; use the ids from `/structure`.

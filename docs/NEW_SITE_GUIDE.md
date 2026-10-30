@@ -201,6 +201,16 @@ the map together with every leg's length and the alternatives, and approves or c
 robot's reports during the mission (an aisle blocked, a place that does not look like the map) for the next decision.
 A farm with ponds, an orchard and a road is run in (1) until its map has been seen widely enough for (2).
 
+**Before the robot drives on its own in the field: a live ground check.** A 2-D LiDAR at 0.55 m returns nothing from
+a drop-off and nothing from still water, so a map alone can send the robot into a pond or a ditch that the map never
+held. A layer on the Jetson therefore gets the right to veto every forward command: the ZED 2i depth image flags a
+ground plane that drops away or returns no depth within 2–3 m ahead, and a small real-time segmentation model
+(SegFormer-B0 or PIDNet class, TensorRT) labels the ground ahead as drivable, water, ditch, vegetation or person. Two
+frames per second are enough: at 0.3 m/s that is a check every 15 cm, about 5 % of the Orin Nano's GPU, trained on
+the twin's render passes and real farm photographs. The vision-language models are too slow to be this brake; they
+reason, the ground layer stops. On "not drivable ahead" the robot stops, marks the place on its map and plans again,
+whatever the planner or HERMES asked for.
+
 What the farmer sees: on the dashboard the robot reports "relocalised at tunnel-10, metre 14 (camera: the tree
 through the door)" or "ambiguous: tunnel-09 or tunnel-10 — moving to the door to check". It never silently guesses.
 
