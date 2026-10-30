@@ -209,12 +209,13 @@ figure `media/gallery/34_hermes_plans_on_scene_graph.png`). Meaning first, then 
 
 Two short animations show the order of travel, which a still picture of a tangle of lines cannot:
 `media/gallery/35_plan_on_scene_graph.gif` (HERMES's plan on the scene graph, the robot moving place to place with each
-place named as it is reached) and `media/gallery/36_survey_from_wrong_guess.gif` (a real put-down survey that started
-with a guess 45 m off, the moment it worked out its true position marked).
+place named as it is reached) and `media/gallery/36_survey_from_wrong_guess.gif` (three surveys as they were really
+driven: one that knew where it was from the start, two that started with a wrong guess, 2 m and 45 m off, and worked
+out their true position within 2 m of driving).
 
 ![HERMES's plan on the scene graph, animated](media/gallery/35_plan_on_scene_graph.gif)
 
-![A survey from a wrong first guess, animated](media/gallery/36_survey_from_wrong_guess.gif)
+![Three surveys as really driven, animated](media/gallery/36_survey_from_wrong_guess.gif)
 
 ## In plain words
 
