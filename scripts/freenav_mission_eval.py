@@ -374,6 +374,20 @@ def run_case(case):
                                 break
                         continue
         inside_now = farm.where(belief)[0]
+        # PURPOSE CHECK: every 2 m the side cameras must agree with the mission - plants beside the robot while it
+        # believes it is in a plant row, no plants while it believes it is in the open. Three disagreements in a row
+        # mean "this is not the row I think it is": stop and find out where it really is. (In this simulation the
+        # plants seen = the true pose lies beside a plant row of the twin; on the robot it is the detector's answer.)
+        if G.get("purpose_check", True) and metres - state.get("last_purpose_m", -1e9) >= 2.0:
+            state["last_purpose_m"] = metres; plants_seen = farm.where(true)[0] is not None
+            agree = (plants_seen == (inside_now is not None)); state["purpose_miss"] = 0 if agree else state.get("purpose_miss", 0) + 1
+            if state["purpose_miss"] >= 3:
+                state["purpose_miss"] = 0
+                what = "no plants beside me where the plan says a plant row" if inside_now else "plants beside me where the plan says open ground"
+                log["events"].append({"m": round(metres, 1), "what": f"purpose check: {what} - this is not where I think I am"})
+                if not recover("the cameras contradict the mission"):
+                    break
+                record(err(state["belief"], true)); continue
         if "inside_prev" not in state:
             state["inside_prev"] = inside_now
         inside_prev = state["inside_prev"]
@@ -501,11 +515,11 @@ def main():
     ap.add_argument("--scans", type=Path, required=True); ap.add_argument("--rec", type=Path, required=True)
     ap.add_argument("--cases", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--only", type=str, default=None); ap.add_argument("--far", type=int, default=0); ap.add_argument("--surprise", action="store_true")
-    ap.add_argument("--decider", default="rpp", choices=["rpp", "nearest", "nemotron"]); ap.add_argument("--review", action="store_true", help="HERMES reviews the plan on the map picture before the robot moves"); ap.add_argument("--eyes-every", type=float, default=0.0, help="metres between camera checks while driving (0 = off; the doorway decision and the dock check stay)"); ap.add_argument("--no-context", action="store_true", help="switch off the agent's doorway decision"); ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
+    ap.add_argument("--decider", default="rpp", choices=["rpp", "nearest", "nemotron"]); ap.add_argument("--review", action="store_true", help="HERMES reviews the plan on the map picture before the robot moves"); ap.add_argument("--eyes-every", type=float, default=0.0, help="metres between camera checks while driving (0 = off; the doorway decision and the dock check stay)"); ap.add_argument("--no-context", action="store_true", help="switch off the agent's doorway decision"); ap.add_argument("--purpose", action="store_true", help="switch on the plants-beside-me check (measured: it cannot tell twin rows apart, both have plants, and its false alarms cost 4 of 50 surveys)"); ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
     a = ap.parse_args(); teach = a.rec / "teach"
     fs, m, theta, aisles, dock = build_structure(a.scans, a.rec)
     G["world"] = World(m); G["reloc"] = Relocalizer(m, None, grid_m=0.5, grid_headings=24, refine_top=24); G["farm"] = FreeFarm(fs, aisles, dock)
-    G["decider"] = a.decider; G["surprise"] = a.surprise; G["review"] = a.review; G["eyes_every"] = a.eyes_every; G["context_decide"] = not a.no_context; G["free0"] = fs.free.copy()
+    G["decider"] = a.decider; G["surprise"] = a.surprise; G["review"] = a.review; G["eyes_every"] = a.eyes_every; G["context_decide"] = not a.no_context; G["purpose_check"] = a.purpose; G["free0"] = fs.free.copy()
     ys, xs = np.nonzero(fs.free & (fs.dist >= 1.2)); G["yard_cells"] = [fs.xy_of((i, j)) for i, j in zip(ys, xs) if G["farm"].where(fs.xy_of((i, j)) + (0,))[0] is None]
     ap_refs = teach / "offpath_images_map"; poses_f = teach / "offpath_scans" / "scan_poses.json"; G["refs"] = []
     if ap_refs.is_dir() and poses_f.exists():
@@ -532,7 +546,7 @@ def main():
                 "started_wrong": sum(r["start_belief_err_m"] >= 1.0 for r in rs), "wrong_corrected_by_end": sum(r["start_belief_err_m"] >= 1.0 and r["final_belief_err_m"] < 1.0 for r in rs),
                 "unexpected_obstacle_handled": sum(r.get("unexpected_obstacle") is not None and r["outcome"] == "mission_done" for r in rs),
                 "at_dock_at_end": sum(r["at_dock"] for r in rs), "stays_put": sum(r["outcome"] == "stays_put" for r in rs)}
-    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "hermes_review": a.review, "eyes_every_m": a.eyes_every, "agent_doorway_decision": not a.no_context, "surprise_obstacles": a.surprise,
+    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "hermes_review": a.review, "eyes_every_m": a.eyes_every, "agent_doorway_decision": not a.no_context, "purpose_check": a.purpose, "surprise_obstacles": a.surprise,
             "structure": {"plant_aisles": [x["id"] for x in G["farm"].aisles], "aisle_lengths_m": [x["length_m"] for x in G["farm"].aisles], "dock": list(dock)}, "seconds": round(time.time() - t0, 1),
             "scans": "synthetic, ray-cast on the self-built map (taught + look-around), own-body returns removed; no stored route anywhere"}
     print(json.dumps(summ, indent=1))

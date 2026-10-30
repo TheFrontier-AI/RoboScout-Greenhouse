@@ -192,7 +192,7 @@ its belief; at every doorway, when the LiDAR still keeps the twin place alive, t
 situation (both places with their LiDAR fit, the metres driven, the doors passed, the verdicts so far, the plan, and the
 live view against both reference views) and a move is accepted only after two doorways agree and the LiDAR fits the
 other candidate place at least as well. Measured the other ways for the record: pictures every 10 m inside the rows gave 36 of 50 with
-88 belief changes, single doorway verdicts without the two-doorway rule 39 of 50, the camera at the dock alone 43 of 50. The order came from the Rural Postman solver on the robot
+88 belief changes, single doorway verdicts without the two-doorway rule 39 of 50, the camera at the dock alone 43 of 50. A check that the side cameras see plants while the robot believes it is in a row was measured as well (41 of 50): in twin houses the wrong row has plants beside it too, so it cannot catch the swap, and its false alarms at the row ends cost surveys; it stays an option for farms with empty corridors. The order came from the Rural Postman solver on the robot
 (every chosen aisle a required edge, A* distances between aisle ends and the dock, about 0.1 s), so the model decides
 which aisles and whether the plan is sound, never the geometry. Evidence: `docs/evidence/17_freenav_mission_survey.json`;
 figures `media/gallery/31_freenav_survey_each_case.png`, `32_freenav_survey_overview.png`.

@@ -60,7 +60,8 @@
   "camera only at the dock (v9)": "43/50",
   "camera every 10 m inside the rows (v8)": "36/50 - pictures inside identical rows are noise, 88 belief changes",
   "agent at every doorway without the two-doorway gate (v10)": "39/50 - single verdicts flip the belief wrongly",
-  "this run (v11)": "45/50"
+  "this run (v11)": "45/50",
+  "plants-beside-me purpose check every 2 m (v12)": "41/50 - in twin houses the wrong row also has plants beside it, so the check cannot catch the swap, and its false alarms at row/yard transitions cost surveys; kept as an option (--purpose) for farms with empty corridors"
  },
  "how_it_works": [
   "free space = cells a LiDAR ray crossed, farther than the robot's half-width from any map point; nothing unseen is drivable",
