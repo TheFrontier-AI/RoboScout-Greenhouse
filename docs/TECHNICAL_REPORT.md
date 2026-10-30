@@ -215,17 +215,17 @@ drive entered or left a house, edges along the taught path with their measured l
 length. The farmer names the houses and confirms the graph; from then on the robot is commanded by name
 (`survey_house`, `go_to_house`, `survey_farm`) and plans its route on the graph it built.
 
-On run 3 as the led drive (7 500 steps, 123 m) the script produced a 32 967-point map of both greenhouses and the yard
+On run 3 as the led drive (7 500 steps, 123 m) the script produced a 29 615-point map of both greenhouses and the yard
 and a five-node graph — dock → tunnel-09 front door → tunnel-09 back door (42.2 m) → 12.8 m behind the houses →
 tunnel-10 back door → tunnel-10 front door (42.1 m) → 14.0 m home — with both aisles measured at 41.5–41.6 m; the
 graph loads, validates and routes. Re-localising the same 1 500 scans on the self-built map accepted every scan with
-a fix error of 0.23 m RMSE, equal to the plan-derived map (0.23 m). The self-built map carries the pose error of the
+a fix error of 0.23 m RMSE, equal to the plan-derived map (0.23 m). Returns from the robot's own mast and electronics box (about 9 beams per scan, 0.3–0.6 m behind the LiDAR) are removed before mapping; left in, they draw a trace of the robot along the taught path and the map starts to behave like a painted line. The self-built map carries the pose error of the
 drive that taught it (median fix 0.14 m against 0.03 m on the drawn plan); building it from cuVSLAM poses is the next
 refinement (`docs/NEW_SITE_GUIDE.md`, `docs/evidence/10_teach_map_run3.json`).
 
-![The farm as the robot recorded it on one led drive: 32 967 LiDAR points, no distances typed](media/gallery/24_teach_map_self_built.png)
+![The farm as the robot recorded it on one led drive: 29 615 LiDAR points, no distances typed](media/gallery/24_teach_map_self_built.png)
 
-*Figure — The farm as the robot recorded it on one led drive: 32 967 LiDAR points, no distances typed*
+*Figure — The farm as the robot recorded it on one led drive: 29 615 LiDAR points, no distances typed*
 
 ![The site graph the robot built from that drive: dock, doors and measured path lengths; anything off the graph is 'do not go'](media/gallery/25_teach_site_graph.png)
 
@@ -248,10 +248,16 @@ that follows is LiDAR for candidates, the camera for the decision, driving for c
 start-up of the robot is the next step.
 
 Beside the path the map is thinner, so the led drive records look-around scans every 0.5 m (eight headings, 984 poses on
-our farm) and the search covers every free cell (0.5 m grid × 24 headings, 95 172 hypotheses, 0.6 s). On 40 put-down
+our farm) and the search covers every free cell (0.5 m grid × 24 headings, 101 148 hypotheses, 0.6 s). On 40 put-down
 poses 1–3 m beside the path, with scans and front images rendered in the twin, the LiDAR candidates plus the Nemotron VL
 tie-break against look-around reference images of matching heading give a correct pose and a planned route home
-(rejoin the nearest graph node, then the normal route) in 29 of 40 (`docs/evidence/15_offpath_full_loop_summary.json`).
+(rejoin the nearest graph node, then the normal route) in 25 of 40 (`docs/evidence/15_offpath_full_loop_summary.json`).
+
+The test then continues through the whole mission from the believed pose, right or wrong: rejoin the taught path, aisle of tunnel-09, yard, aisle of tunnel-10, dock (`scripts/offpath_mission_eval.py`, synthetic scans on the self-built map). The believed place is checked against every scan, a whole-map search every 10 m keeps rivals alive, and a belief that stops fitting, an obstacle where the map says free, or a rival that fits clearly better over 2 m becomes a new anchor: the odometry history is re-placed, the plant records relabelled, the mission goals re-derived; before docking Nemotron VL compares the view with the dock and with the strongest rival. Near put-downs: survey complete with every stop covered 40 of 40, records right 39 of 40 (13 wrong starts, 12 corrected: 4 by the scans within 2 m, 8 by the camera at the dock). Ten further put-downs 4–8 m from the path, LiDAR guess alone to start: complete 10 of 10, right 9 of 10 (`docs/evidence/16_offpath_mission_survey.json`).
+
+![Put down, then do the whole survey: the path really driven in each of the 50 cases](media/gallery/28_offpath_survey_each_case.png)
+
+*Figure — Put down, then do the whole survey: the path really driven in each of the 50 cases (green = knew where it was, orange = wrong belief, ○ = where the belief was corrected)*
 
 ## 4. Perception
 

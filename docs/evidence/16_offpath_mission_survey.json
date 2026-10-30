@@ -1,0 +1,1603 @@
+{
+ "what": "Put down, then do the whole survey (tunnel-09 aisle, yard, tunnel-10 aisle, dock) - scripts/offpath_mission_eval.py",
+ "near_40_poses_1_3_m_beside_path": {
+  "survey_complete_full_coverage": 40,
+  "records_labelled_right_too": 39,
+  "started_with_wrong_belief": 13,
+  "wrong_belief_corrected_by_scans_while_driving": 4,
+  "wrong_belief_corrected_by_camera_at_dock": 8,
+  "still_wrong_at_end": 1
+ },
+ "far_10_poses_4_8_m_from_path": {
+  "survey_complete_full_coverage": 10,
+  "records_labelled_right_too": 9,
+  "started_with_wrong_belief": 4,
+  "still_wrong_at_end": 1
+ },
+ "camera_checks_at_dock": {
+  "asked": 50,
+  "said_rival": 12,
+  "said_dock": 37,
+  "no_answer": 1
+ },
+ "how_it_works": [
+  "belief = the camera's pick (near) or the LiDAR's best guess (far)",
+  "plan: rejoin the taught path at the nearest reachable point, then tunnel-09 aisle, yard, tunnel-10 aisle, dock",
+  "every 0.25 m: scan vs map at the believed place (HypothesisTracker); every 10 m a fresh whole-map search adds rivals",
+  "a belief that stops fitting, an obstacle where the map says free, or a rival that fits clearly better for >= 2 m => new anchor; the whole odometry history is re-placed, plant records relabelled, mission goals re-derived",
+  "no candidate can plan => step 2 m into open space and search again",
+  "at the dock: Nemotron VL compares the view with the dock and with the strongest far rival before docking"
+ ],
+ "caveats": [
+  "LiDAR scans are synthetic (ray-cast on the self-built map); no sensor noise",
+  "the live camera view at the dock check stands in from the look-around image set, taken >= 1.5 m from the reference image",
+  "two identical houses + two yards make the farm nearly symmetric for a 2-D LiDAR: 12 of 17 wrong starts were resolved by the camera at the dock, after a complete but wrongly labelled survey that was then relabelled"
+ ],
+ "seconds_total": 339.0,
+ "cases": [
+  {
+   "case": 1,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.0,
+    -36.0,
+    -18.5
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.04,
+   "outcome": "mission_done",
+   "metres_driven": 155.3,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "53.5 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "95.4 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "105.3 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "147.4 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "155.3 m: believes it reached dock (true error 0.0 m)",
+    "155.3 m: camera check at the dock: live view vs dock vs rival (5.8, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 2,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.0,
+    -39.0,
+    107.6
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "start_belief_error_m": 47.52,
+   "outcome": "mission_done",
+   "metres_driven": 177.6,
+   "knew_where_it_was_after_m": 125.5,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "11.2 m: believes it reached tunnel-09/door-1 (true error 41.2 m)",
+    "65.6 m: believes it reached tunnel-09/door-2 (true error 41.2 m)",
+    "75.6 m: believes it reached tunnel-10/door-1 (true error 40.8 m)",
+    "117.6 m: believes it reached tunnel-10/door-2 (true error 40.1 m)",
+    "125.5 m: believes it reached dock (true error 39.8 m)",
+    "125.5 m: camera check at the dock: live view vs dock vs rival (5.8, -35.6) -> B",
+    "125.5 m: this is not the dock: now believes (5.8, -35.6), error 0.0 m; relabelled 383 plant records; mission goals left 1 -> 3",
+    "127.7 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "169.7 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "177.6 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 3,
+   "tag": "near",
+   "put_down_xy_heading": [
+    10.5,
+    -37.5,
+    -95.2
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.04,
+   "outcome": "mission_done",
+   "metres_driven": 154.2,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "52.5 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "94.4 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "104.3 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "146.3 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "154.2 m: believes it reached dock (true error 0.0 m)",
+    "154.2 m: camera check at the dock: live view vs dock vs rival (5.8, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 4,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -0.5,
+    7.0,
+    -64.9
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.37,
+   "outcome": "mission_done",
+   "metres_driven": 163.4,
+   "knew_where_it_was_after_m": null,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.01,
+   "ended_at_dock": false,
+   "survey_complete_and_right": true,
+   "events": [
+    "1.1 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "51.5 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "61.4 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "103.4 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "111.3 m: believes it reached dock (true error 0.0 m)",
+    "111.3 m: camera check at the dock: live view vs dock vs rival (-5.7, 4.3) -> B",
+    "111.3 m: this is not the dock: now believes (-5.7, 4.3), error 8.8 m; relabelled 332 plant records; mission goals left 1 -> 4",
+    "163.4 m: obstacle where the map said the way was free: stop: searched the whole map again, now believes (8.9, 10.5), error 0.0 m; relabelled 487 plant records; mission goals left 4 -> 0"
+   ]
+  },
+  {
+   "case": 5,
+   "tag": "near",
+   "put_down_xy_heading": [
+    8.0,
+    -39.0,
+    108.0
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 46.67,
+   "outcome": "mission_done",
+   "metres_driven": 157.6,
+   "knew_where_it_was_after_m": 105.6,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "3.6 m: believes it reached tunnel-09/door-1 (true error 41.3 m)",
+    "45.5 m: believes it reached tunnel-09/door-2 (true error 40.9 m)",
+    "55.8 m: believes it reached tunnel-10/door-1 (true error 40.9 m)",
+    "97.7 m: believes it reached tunnel-10/door-2 (true error 40.3 m)",
+    "105.6 m: believes it reached dock (true error 39.9 m)",
+    "105.6 m: camera check at the dock: live view vs dock vs rival (5.9, -35.6) -> B",
+    "105.6 m: this is not the dock: now believes (5.9, -35.6), error 0.0 m; relabelled 335 plant records; mission goals left 1 -> 3",
+    "107.6 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "149.7 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "157.6 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 6,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.0,
+    5.0,
+    2.5
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.3,
+   "outcome": "mission_done",
+   "metres_driven": 124.3,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.997,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "10.4 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "64.6 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "74.5 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "116.5 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "124.3 m: believes it reached dock (true error 0.0 m)",
+    "124.3 m: camera check at the dock: live view vs dock vs rival (5.8, -28.3) -> A"
+   ]
+  },
+  {
+   "case": 7,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.0,
+    5.5,
+    2.3
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.19,
+   "outcome": "mission_done",
+   "metres_driven": 124.6,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.997,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "10.5 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "64.5 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "74.7 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "116.7 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "124.6 m: believes it reached dock (true error 0.0 m)",
+    "124.6 m: camera check at the dock: live view vs dock vs rival (5.9, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 8,
+   "tag": "near",
+   "put_down_xy_heading": [
+    10.5,
+    -36.5,
+    -95.0
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.36,
+   "outcome": "mission_done",
+   "metres_driven": 154.5,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "52.7 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "94.5 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "104.5 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "146.6 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "154.5 m: believes it reached dock (true error 0.0 m)",
+    "154.5 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 9,
+   "tag": "near",
+   "put_down_xy_heading": [
+    7.0,
+    7.0,
+    -174.8
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.11,
+   "outcome": "mission_done",
+   "metres_driven": 125.3,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.994,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "11.3 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "65.2 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "75.5 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "117.5 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "125.3 m: believes it reached dock (true error 0.0 m)",
+    "125.3 m: camera check at the dock: live view vs dock vs rival (5.8, -27.1) -> A"
+   ]
+  },
+  {
+   "case": 10,
+   "tag": "near",
+   "put_down_xy_heading": [
+    4.5,
+    6.5,
+    156.0
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "start_belief_error_m": 6.8,
+   "outcome": "mission_done",
+   "metres_driven": 108.7,
+   "knew_where_it_was_after_m": 1.8,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "1.8 m: a rival place fits the scans clearly better (margin 0.57): now believes (4.3, 8.2), error 0.0 m; relabelled 0 plant records",
+    "6.4 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "48.7 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "58.6 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "101.0 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "108.7 m: believes it reached dock (true error 0.0 m)",
+    "108.7 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 11,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.5,
+    -39.5,
+    -149.1
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.09,
+   "outcome": "mission_done",
+   "metres_driven": 145.4,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "43.4 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "85.3 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "95.5 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "137.5 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "145.4 m: believes it reached dock (true error 0.0 m)",
+    "145.4 m: camera check at the dock: live view vs dock vs rival (5.9, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 12,
+   "tag": "near",
+   "put_down_xy_heading": [
+    10.0,
+    -38.5,
+    124.2
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.31,
+   "outcome": "mission_done",
+   "metres_driven": 154.7,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.996,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "52.9 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "94.7 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "104.7 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "146.8 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "154.7 m: believes it reached dock (true error 0.0 m)",
+    "154.7 m: camera check at the dock: live view vs dock vs rival (5.8, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 13,
+   "tag": "near",
+   "put_down_xy_heading": [
+    3.5,
+    6.0,
+    -47.6
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.34,
+   "outcome": "mission_done",
+   "metres_driven": 104.7,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "2.5 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "44.7 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "54.6 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "96.8 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "104.7 m: believes it reached dock (true error 0.0 m)",
+    "104.7 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 14,
+   "tag": "near",
+   "put_down_xy_heading": [
+    3.0,
+    -37.5,
+    162.4
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.46,
+   "outcome": "mission_done",
+   "metres_driven": 147.4,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "45.7 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "87.5 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "97.4 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "139.7 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "147.4 m: believes it reached dock (true error 0.0 m)",
+    "147.4 m: camera check at the dock: live view vs dock vs rival (3.3, -3.5) -> A"
+   ]
+  },
+  {
+   "case": 15,
+   "tag": "near",
+   "put_down_xy_heading": [
+    0.0,
+    7.5,
+    -36.2
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 46.33,
+   "outcome": "mission_done",
+   "metres_driven": 112.0,
+   "knew_where_it_was_after_m": 1.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "1.3 m: a rival place fits the scans clearly better (margin 0.59): now believes (0.3, 6.3), error 0.0 m; relabelled 0 plant records; mission goals left 5 -> 4",
+    "52.0 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "62.2 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "104.2 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "112.0 m: believes it reached dock (true error 0.0 m)",
+    "112.0 m: camera check at the dock: live view vs dock vs rival (5.9, -28.3) -> A"
+   ]
+  },
+  {
+   "case": 16,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -3.0,
+    -37.5,
+    157.1
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 40.0,
+   "outcome": "mission_done",
+   "metres_driven": 148.9,
+   "knew_where_it_was_after_m": 1.7,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.996,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "1.2 m: believes it reached tunnel-09/door-1 (true error 40.9 m)",
+    "1.7 m: a rival place fits the scans clearly better (margin 0.53): now believes (-4.6, -37.3), error 0.0 m; relabelled 0 plant records; mission goals left 4 -> 5",
+    "47.2 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "89.1 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "99.1 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "141.1 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "148.9 m: believes it reached dock (true error 0.0 m)",
+    "148.9 m: camera check at the dock: live view vs dock vs rival (5.9, -21.1) -> A"
+   ]
+  },
+  {
+   "case": 17,
+   "tag": "near",
+   "put_down_xy_heading": [
+    0.5,
+    -38.5,
+    20.2
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.48,
+   "outcome": "mission_done",
+   "metres_driven": 143.8,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "42.0 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "83.8 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "93.7 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "136.1 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "143.8 m: believes it reached dock (true error 0.0 m)",
+    "143.8 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 18,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.5,
+    -36.0,
+    -93.6
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 42.19,
+   "outcome": "mission_done",
+   "metres_driven": 177.3,
+   "knew_where_it_was_after_m": 125.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.993,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "11.0 m: believes it reached tunnel-09/door-1 (true error 41.2 m)",
+    "65.4 m: believes it reached tunnel-09/door-2 (true error 41.3 m)",
+    "75.4 m: believes it reached tunnel-10/door-1 (true error 40.9 m)",
+    "117.4 m: believes it reached tunnel-10/door-2 (true error 40.2 m)",
+    "125.2 m: believes it reached dock (true error 39.8 m)",
+    "125.2 m: camera check at the dock: live view vs dock vs rival (5.9, -35.6) -> B",
+    "125.2 m: this is not the dock: now believes (5.9, -35.6), error 0.0 m; relabelled 390 plant records; mission goals left 1 -> 3",
+    "127.2 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "169.6 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "177.3 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 19,
+   "tag": "near",
+   "put_down_xy_heading": [
+    4.0,
+    6.0,
+    86.9
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.34,
+   "outcome": "mission_done",
+   "metres_driven": 118.8,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "4.6 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "58.9 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "68.8 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "111.0 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "118.8 m: believes it reached dock (true error 0.0 m)",
+    "118.8 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 20,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -2.5,
+    -36.5,
+    62.8
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "start_belief_error_m": 0.47,
+   "outcome": "mission_done",
+   "metres_driven": 144.0,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "42.3 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "84.1 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "94.1 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "136.2 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "144.0 m: believes it reached dock (true error 0.0 m)",
+    "144.0 m: camera check at the dock: live view vs dock vs rival (3.3, -4.4) -> A"
+   ]
+  },
+  {
+   "case": 21,
+   "tag": "near",
+   "put_down_xy_heading": [
+    6.0,
+    -38.5,
+    66.3
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 45.42,
+   "outcome": "mission_done",
+   "metres_driven": 157.4,
+   "knew_where_it_was_after_m": 105.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.996,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "3.3 m: believes it reached tunnel-09/door-1 (true error 41.3 m)",
+    "45.3 m: believes it reached tunnel-09/door-2 (true error 41.1 m)",
+    "55.3 m: believes it reached tunnel-10/door-1 (true error 40.8 m)",
+    "97.6 m: believes it reached tunnel-10/door-2 (true error 40.4 m)",
+    "105.3 m: believes it reached dock (true error 39.8 m)",
+    "105.3 m: camera check at the dock: live view vs dock vs rival (5.7, -35.6) -> B",
+    "105.3 m: this is not the dock: now believes (5.7, -35.6), error 0.0 m; relabelled 336 plant records; mission goals left 1 -> 3",
+    "107.6 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "149.6 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "157.4 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 22,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.5,
+    -37.0,
+    -13.0
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "start_belief_error_m": 44.76,
+   "outcome": "mission_done",
+   "metres_driven": 163.8,
+   "knew_where_it_was_after_m": 111.8,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "1.3 m: believes it reached tunnel-09/door-1 (true error 43.3 m)",
+    "52.0 m: believes it reached tunnel-09/door-2 (true error 41.3 m)",
+    "62.0 m: believes it reached tunnel-10/door-1 (true error 40.9 m)",
+    "104.0 m: believes it reached tunnel-10/door-2 (true error 40.2 m)",
+    "111.8 m: believes it reached dock (true error 39.8 m)",
+    "111.8 m: camera check at the dock: live view vs dock vs rival (5.9, -35.6) -> B",
+    "111.8 m: this is not the dock: now believes (5.9, -35.6), error 0.0 m; relabelled 360 plant records; mission goals left 1 -> 3",
+    "113.7 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "156.1 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "163.8 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 23,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.0,
+    -38.0,
+    -100.1
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.42,
+   "outcome": "mission_done",
+   "metres_driven": 144.0,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "42.2 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "84.0 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "94.0 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "136.4 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "144.0 m: believes it reached dock (true error 0.0 m)",
+    "144.0 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 24,
+   "tag": "near",
+   "put_down_xy_heading": [
+    7.5,
+    -38.0,
+    50.7
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.25,
+   "outcome": "mission_done",
+   "metres_driven": 153.4,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.996,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "51.7 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "93.4 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "103.4 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "145.8 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "153.4 m: believes it reached dock (true error 0.0 m)",
+    "153.4 m: camera check at the dock: live view vs dock vs rival (3.3, -3.5) -> A"
+   ]
+  },
+  {
+   "case": 25,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.0,
+    6.5,
+    -141.4
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 45.89,
+   "outcome": "mission_done",
+   "metres_driven": 199.7,
+   "knew_where_it_was_after_m": 146.2,
+   "coverage": {
+    "tunnel-09": 0.989,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "43.0 m: believes it reached tunnel-09/door-1 (true error 39.3 m)",
+    "84.8 m: believes it reached tunnel-09/door-2 (true error 41.0 m)",
+    "94.8 m: believes it reached tunnel-10/door-1 (true error 40.7 m)",
+    "138.5 m: believes it reached tunnel-10/door-2 (true error 41.8 m)",
+    "146.2 m: believes it reached dock (true error 41.5 m)",
+    "146.2 m: camera check at the dock: live view vs dock vs rival (5.7, -37.1) -> B",
+    "146.2 m: this is not the dock: now believes (5.7, -37.1), error 0.0 m; relabelled 483 plant records; mission goals left 1 -> 3",
+    "149.8 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "191.8 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "199.7 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 26,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.5,
+    -38.5,
+    69.2
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 46.64,
+   "outcome": "mission_done",
+   "metres_driven": 177.5,
+   "knew_where_it_was_after_m": 125.5,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "11.2 m: believes it reached tunnel-09/door-1 (true error 41.2 m)",
+    "65.4 m: believes it reached tunnel-09/door-2 (true error 40.9 m)",
+    "75.7 m: believes it reached tunnel-10/door-1 (true error 40.9 m)",
+    "117.6 m: believes it reached tunnel-10/door-2 (true error 40.3 m)",
+    "125.5 m: believes it reached dock (true error 39.9 m)",
+    "125.5 m: camera check at the dock: live view vs dock vs rival (5.9, -35.6) -> B",
+    "125.5 m: this is not the dock: now believes (5.9, -35.6), error 0.0 m; relabelled 385 plant records; mission goals left 1 -> 3",
+    "127.4 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "169.9 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "177.5 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 27,
+   "tag": "near",
+   "put_down_xy_heading": [
+    2.5,
+    -37.5,
+    48.7
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.08,
+   "outcome": "mission_done",
+   "metres_driven": 146.6,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "44.5 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "86.5 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "96.7 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "138.8 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "146.6 m: believes it reached dock (true error 0.0 m)",
+    "146.6 m: camera check at the dock: live view vs dock vs rival (5.9, -20.0) -> A"
+   ]
+  },
+  {
+   "case": 28,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -2.5,
+    4.5,
+    -44.5
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.11,
+   "outcome": "mission_done",
+   "metres_driven": 111.9,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.994,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "1.1 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "51.8 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "62.1 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "104.1 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "111.9 m: believes it reached dock (true error 0.0 m)",
+    "111.9 m: camera check at the dock: live view vs dock vs rival (5.8, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 29,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.5,
+    -37.5,
+    107.5
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.28,
+   "outcome": "mission_done",
+   "metres_driven": 155.4,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "53.3 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "95.2 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "105.5 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "147.5 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "155.4 m: believes it reached dock (true error 0.0 m)",
+    "155.4 m: camera check at the dock: live view vs dock vs rival (5.9, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 30,
+   "tag": "near",
+   "put_down_xy_heading": [
+    8.0,
+    -38.0,
+    -110.2
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.46,
+   "outcome": "mission_done",
+   "metres_driven": 154.3,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "52.5 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "94.3 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "104.3 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "146.4 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "154.3 m: believes it reached dock (true error 0.0 m)",
+    "154.3 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 31,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -2.5,
+    6.5,
+    -39.4
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 1.89,
+   "outcome": "mission_done",
+   "metres_driven": 112.8,
+   "knew_where_it_was_after_m": 1.8,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.991,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.8 m: believes it reached tunnel-09/door-1 (true error 1.9 m)",
+    "1.8 m: a rival place fits the scans clearly better (margin 0.43): now believes (5.5, -14.5), error 21.8 m; relabelled 0 plant records; mission goals left 4 -> 5",
+    "1.8 m: cannot plan after switching place: searched the whole map again, now believes (-0.7, 6.5), error 0.0 m",
+    "2.2 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "52.8 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "62.7 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "105.1 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "112.8 m: believes it reached dock (true error 0.0 m)",
+    "112.8 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 32,
+   "tag": "near",
+   "put_down_xy_heading": [
+    2.0,
+    -39.0,
+    107.3
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "start_belief_error_m": 0.1,
+   "outcome": "mission_done",
+   "metres_driven": 145.1,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "43.4 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "85.2 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "95.1 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "137.3 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "145.1 m: believes it reached dock (true error 0.0 m)",
+    "145.1 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 33,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -3.0,
+    5.5,
+    -43.0
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.39,
+   "outcome": "mission_done",
+   "metres_driven": 112.7,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "2.0 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "52.7 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "62.6 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "105.0 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "112.7 m: believes it reached dock (true error 0.0 m)",
+    "112.7 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 34,
+   "tag": "near",
+   "put_down_xy_heading": [
+    5.5,
+    -37.5,
+    76.8
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.29,
+   "outcome": "mission_done",
+   "metres_driven": 150.2,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "48.2 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "90.1 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "100.3 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "142.3 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "150.2 m: believes it reached dock (true error 0.0 m)",
+    "150.2 m: camera check at the dock: live view vs dock vs rival (5.9, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 35,
+   "tag": "near",
+   "put_down_xy_heading": [
+    9.0,
+    6.5,
+    40.5
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.47,
+   "outcome": "mission_done",
+   "metres_driven": 124.0,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "9.9 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "64.2 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "74.1 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "116.2 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "124.0 m: believes it reached dock (true error 0.0 m)",
+    "124.0 m: camera check at the dock: live view vs dock vs rival (5.8, -28.0) -> A"
+   ]
+  },
+  {
+   "case": 36,
+   "tag": "near",
+   "put_down_xy_heading": [
+    2.0,
+    7.5,
+    158.8
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.49,
+   "outcome": "mission_done",
+   "metres_driven": 105.6,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "3.7 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "45.7 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "55.6 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "97.9 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "105.6 m: believes it reached dock (true error 0.0 m)",
+    "105.6 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 37,
+   "tag": "near",
+   "put_down_xy_heading": [
+    0.0,
+    7.0,
+    177.0
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.39,
+   "outcome": "mission_done",
+   "metres_driven": 111.5,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.997,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.9 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "51.4 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "61.6 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "103.6 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "111.5 m: believes it reached dock (true error 0.0 m)",
+    "111.5 m: camera check at the dock: live view vs dock vs rival (5.9, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 38,
+   "tag": "near",
+   "put_down_xy_heading": [
+    6.5,
+    -37.0,
+    80.5
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 42.23,
+   "outcome": "mission_done",
+   "metres_driven": 168.2,
+   "knew_where_it_was_after_m": 116.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "1.2 m: believes it reached tunnel-09/door-1 (true error 41.6 m)",
+    "56.3 m: believes it reached tunnel-09/door-2 (true error 41.3 m)",
+    "66.4 m: believes it reached tunnel-10/door-1 (true error 40.8 m)",
+    "108.3 m: believes it reached tunnel-10/door-2 (true error 40.2 m)",
+    "116.2 m: believes it reached dock (true error 39.8 m)",
+    "116.2 m: camera check at the dock: live view vs dock vs rival (5.9, -35.6) -> B",
+    "116.2 m: this is not the dock: now believes (5.9, -35.6), error 0.0 m; relabelled 358 plant records; mission goals left 1 -> 3",
+    "118.1 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "160.5 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "168.2 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 39,
+   "tag": "near",
+   "put_down_xy_heading": [
+    6.5,
+    -38.0,
+    111.2
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 44.52,
+   "outcome": "mission_done",
+   "metres_driven": 104.7,
+   "knew_where_it_was_after_m": null,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.0,
+   "final_belief_error_m": 39.86,
+   "ended_at_dock": false,
+   "survey_complete_and_right": false,
+   "events": [
+    "2.5 m: believes it reached tunnel-09/door-1 (true error 41.4 m)",
+    "44.5 m: believes it reached tunnel-09/door-2 (true error 40.9 m)",
+    "54.8 m: believes it reached tunnel-10/door-1 (true error 40.9 m)",
+    "96.9 m: believes it reached tunnel-10/door-2 (true error 40.3 m)",
+    "104.7 m: believes it reached dock (true error 39.9 m)",
+    "104.7 m: camera check at the dock: live view vs dock vs rival (3.2, -3.6) -> A"
+   ]
+  },
+  {
+   "case": 40,
+   "tag": "near",
+   "put_down_xy_heading": [
+    12.0,
+    5.0,
+    -125.0
+   ],
+   "first_belief": "camera pick",
+   "start_belief_error_m": 0.07,
+   "outcome": "mission_done",
+   "metres_driven": 125.4,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "11.1 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "65.4 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "75.3 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "117.7 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "125.4 m: believes it reached dock (true error 0.0 m)",
+    "125.4 m: camera check at the dock: live view vs dock vs rival (5.8, -23.1) -> A"
+   ]
+  },
+  {
+   "case": 41,
+   "tag": "far",
+   "put_down_xy_heading": [
+    6.28,
+    -40.83,
+    -167.2
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "start_belief_error_m": 0.0,
+   "outcome": "mission_done",
+   "metres_driven": 157.6,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "55.8 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "97.6 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "107.6 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "149.7 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "157.6 m: believes it reached dock (true error 0.0 m)",
+    "157.6 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 42,
+   "tag": "far",
+   "put_down_xy_heading": [
+    12.22,
+    10.3,
+    145.4
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "start_belief_error_m": 24.8,
+   "outcome": "mission_done",
+   "metres_driven": 239.1,
+   "knew_where_it_was_after_m": null,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.0,
+   "final_belief_error_m": 8.99,
+   "ended_at_dock": false,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: no reachable taught path within 8 m of the believed pose: tries a search from here",
+    "0.0 m: cannot plan from the believed pose: searched the whole map again, now believes (7.4, -6.0), error 17.0 m (ambiguous)",
+    "0.0 m: no reachable taught path within 8 m of the new belief: stops and asks for help",
+    "2.0 m: probe: moved 2.0 m into open space, searching again",
+    "2.0 m: after the probe: searched the whole map again, now believes (10.7, 9.1), error 0.0 m",
+    "14.9 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "69.0 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "79.2 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "121.1 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "129.1 m: believes it reached dock (true error 0.0 m)",
+    "129.1 m: camera check at the dock: live view vs dock vs rival (-5.7, 4.4) -> B",
+    "129.1 m: this is not the dock: now believes (-5.7, 4.4), error 8.8 m; relabelled 335 plant records; mission goals left 1 -> 3",
+    "189.0 m: believes it reached tunnel-10/door-1 (true error 9.0 m)",
+    "231.1 m: believes it reached tunnel-10/door-2 (true error 9.1 m)",
+    "239.1 m: believes it reached dock (true error 9.0 m)"
+   ]
+  },
+  {
+   "case": 43,
+   "tag": "far",
+   "put_down_xy_heading": [
+    -4.46,
+    9.33,
+    18.8
+   ],
+   "first_belief": "LiDAR best",
+   "start_belief_error_m": 0.49,
+   "outcome": "mission_done",
+   "metres_driven": 115.6,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "5.1 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "55.5 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "65.5 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "107.9 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "115.6 m: believes it reached dock (true error 0.0 m)",
+    "115.6 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 44,
+   "tag": "far",
+   "put_down_xy_heading": [
+    -3.26,
+    -41.17,
+    135.4
+   ],
+   "first_belief": "LiDAR best",
+   "start_belief_error_m": 0.06,
+   "outcome": "mission_done",
+   "metres_driven": 147.5,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "45.8 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "87.7 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "97.6 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "139.9 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "147.5 m: believes it reached dock (true error 0.0 m)",
+    "147.5 m: camera check at the dock: live view vs dock vs rival (5.7, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 45,
+   "tag": "far",
+   "put_down_xy_heading": [
+    1.14,
+    9.04,
+    -155.3
+   ],
+   "first_belief": "LiDAR best",
+   "start_belief_error_m": 0.16,
+   "outcome": "mission_done",
+   "metres_driven": 107.0,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "5.0 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "47.1 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "57.1 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "99.2 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "107.0 m: believes it reached dock (true error 0.0 m)",
+    "107.0 m: camera check at the dock: live view vs dock vs rival (5.8, -26.7) -> A"
+   ]
+  },
+  {
+   "case": 46,
+   "tag": "far",
+   "put_down_xy_heading": [
+    14.02,
+    4.35,
+    -139.5
+   ],
+   "first_belief": "LiDAR best",
+   "start_belief_error_m": 0.03,
+   "outcome": "mission_done",
+   "metres_driven": 128.7,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "14.6 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "68.6 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "78.8 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "120.8 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "128.7 m: believes it reached dock (true error 0.0 m)",
+    "128.7 m: camera check at the dock: live view vs dock vs rival (-5.8, 4.4) -> A"
+   ]
+  },
+  {
+   "case": 47,
+   "tag": "far",
+   "put_down_xy_heading": [
+    14.02,
+    -40.68,
+    -169.1
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "start_belief_error_m": 53.18,
+   "outcome": "mission_done",
+   "metres_driven": 168.0,
+   "knew_where_it_was_after_m": 116.0,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 0.998,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "5.2 m: believes it reached tunnel-09/door-1 (true error 44.3 m)",
+    "56.0 m: believes it reached tunnel-09/door-2 (true error 41.3 m)",
+    "66.1 m: believes it reached tunnel-10/door-1 (true error 40.9 m)",
+    "108.1 m: believes it reached tunnel-10/door-2 (true error 40.2 m)",
+    "116.0 m: believes it reached dock (true error 39.8 m)",
+    "116.0 m: camera check at the dock: live view vs dock vs rival (5.9, -35.6) -> B",
+    "116.0 m: this is not the dock: now believes (5.9, -35.6), error 0.0 m; relabelled 358 plant records; mission goals left 1 -> 3",
+    "117.9 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "160.3 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "168.0 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 48,
+   "tag": "far",
+   "put_down_xy_heading": [
+    4.41,
+    -31.12,
+    -90.9
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "start_belief_error_m": 30.79,
+   "outcome": "mission_done",
+   "metres_driven": 174.3,
+   "knew_where_it_was_after_m": 122.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "7.8 m: believes it reached tunnel-09/door-1 (true error 41.2 m)",
+    "62.2 m: believes it reached tunnel-09/door-2 (true error 41.2 m)",
+    "72.2 m: believes it reached tunnel-10/door-1 (true error 40.8 m)",
+    "114.3 m: believes it reached tunnel-10/door-2 (true error 40.1 m)",
+    "122.2 m: believes it reached dock (true error 39.8 m)",
+    "122.2 m: camera check at the dock: live view vs dock vs rival (5.8, -35.6) -> B",
+    "122.2 m: this is not the dock: now believes (5.8, -35.6), error 0.0 m; relabelled 380 plant records; mission goals left 1 -> 3",
+    "124.4 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "166.4 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "174.3 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 49,
+   "tag": "far",
+   "put_down_xy_heading": [
+    -6.03,
+    -35.77,
+    -133.0
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "start_belief_error_m": 5.19,
+   "outcome": "mission_done",
+   "metres_driven": 246.2,
+   "knew_where_it_was_after_m": 144.0,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "39.8 m: believes it reached tunnel-09/door-1 (true error 5.4 m)",
+    "81.7 m: believes it reached tunnel-09/door-2 (true error 5.2 m)",
+    "93.3 m: believes it reached tunnel-10/door-1 (true error 5.0 m)",
+    "135.7 m: believes it reached tunnel-10/door-2 (true error 5.0 m)",
+    "141.7 m: obstacle where the map said the way was free: stop: searched the whole map again, now believes (-0.3, 4.0), error 0.0 m; relabelled 9 plant records; mission goals left 1 -> 4",
+    "141.7 m: no reachable taught path within 8 m of the new belief: stops and asks for help",
+    "143.7 m: probe: moved 2.0 m into open space, searching again",
+    "143.7 m: after the probe: searched the whole map again, now believes (1.3, 5.2), error 0.0 m; relabelled 9 plant records",
+    "186.3 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "196.3 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "238.4 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "246.2 m: believes it reached dock (true error 0.0 m)",
+    "246.2 m: camera check at the dock: live view vs dock vs rival (5.8, -35.7) -> A"
+   ]
+  },
+  {
+   "case": 50,
+   "tag": "far",
+   "put_down_xy_heading": [
+    -7.3,
+    8.11,
+    -83.1
+   ],
+   "first_belief": "LiDAR best",
+   "start_belief_error_m": 0.89,
+   "outcome": "mission_done",
+   "metres_driven": 117.4,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "tunnel-09": 1.0,
+    "tunnel-10": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "survey_complete_and_right": true,
+   "events": [
+    "6.7 m: believes it reached tunnel-09/door-1 (true error 0.0 m)",
+    "57.3 m: believes it reached tunnel-09/door-2 (true error 0.0 m)",
+    "67.5 m: believes it reached tunnel-10/door-1 (true error 0.0 m)",
+    "109.5 m: believes it reached tunnel-10/door-2 (true error 0.0 m)",
+    "117.4 m: believes it reached dock (true error 0.0 m)",
+    "117.4 m: camera check at the dock: live view vs dock vs rival (-5.7, 4.4) -> no answer"
+   ]
+  }
+ ]
+}

@@ -2,7 +2,7 @@
  "rec": "/home/passin/Documents/Blender/TheFarm/r1_runs/farm_2026-10-29/vm_runs/farm_full3/rec",
  "steps": 7500,
  "taught_path_m": 123.0,
- "map_points": 32967,
+ "map_points": 29615,
  "cell_m": 0.05,
  "nodes": [
   "dock",
@@ -34,12 +34,12 @@
  },
  "localisation": {
   "self_built": {
-   "points": 32967,
+   "points": 29615,
    "scans": 1500,
    "accepted": 1500,
    "accepted_frac": 1.0,
    "fix_rmse_m": 0.234,
-   "fix_median_m": 0.144,
+   "fix_median_m": 0.145,
    "guess_rmse_m": 0.234
   },
   "plan_derived": {
@@ -47,8 +47,8 @@
    "scans": 1500,
    "accepted": 1500,
    "accepted_frac": 1.0,
-   "fix_rmse_m": 0.227,
-   "fix_median_m": 0.032,
+   "fix_rmse_m": 0.226,
+   "fix_median_m": 0.031,
    "guess_rmse_m": 0.234
   }
  }

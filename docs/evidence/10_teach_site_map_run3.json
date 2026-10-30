@@ -3,14 +3,14 @@
  "frame": "site_world_z_up_metres",
  "metadata": {
   "source": "robot",
-  "created": "2026-10-29T21:48:34+00:00",
+  "created": "2026-10-30T04:17:40+00:00",
   "confirmed_by": null,
   "confirmed_at": null,
   "scale_known": true,
   "anchors_used": [],
   "revision": 1,
   "taught": true,
-  "taught_from": "recording",
+  "taught_from": "steps.jsonl",
   "note": "built by scripts/teach_map.py from a taught drive; rename houses and confirm before cross-house commands"
  },
  "nodes": [

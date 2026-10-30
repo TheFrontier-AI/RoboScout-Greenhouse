@@ -9,6 +9,9 @@ import math
 import numpy as np
 from scipy.spatial import cKDTree
 from sim.executor import INTO_AISLE_HEADING_DEG, R180_LIDAR_FORWARD_RAD, WheelImuOdometry, scan_from_obs
+from sim.scan_localizer import LIDAR_AHEAD_M
+
+BODY_SELF_M = 0.6      # LiDAR returns closer than this to the body origin are the robot itself (mast, electronics box)
 
 
 def scan_points(obs, max_range_m: float = 8.0, self_m: float = 0.25) -> np.ndarray:
@@ -16,7 +19,9 @@ def scan_points(obs, max_range_m: float = 8.0, self_m: float = 0.25) -> np.ndarr
     r, a = scan_from_obs(obs, R180_LIDAR_FORWARD_RAD)
     r, a = np.asarray(r), np.asarray(a)
     keep = (r > self_m) & (r < max_range_m)
-    return np.stack([r[keep] * np.cos(a[keep]), r[keep] * np.sin(a[keep])], -1)
+    pts = np.stack([r[keep] * np.cos(a[keep]), r[keep] * np.sin(a[keep])], -1)
+    body = pts + (LIDAR_AHEAD_M, 0.0)                     # returns from the robot's own mast / box sit 0.3-0.6 m behind the LiDAR
+    return pts[np.hypot(body[:, 0], body[:, 1]) >= BODY_SELF_M]
 
 
 def icp(src: np.ndarray, dst: np.ndarray, init=(0.0, 0.0, 0.0), iters: int = 20, max_pair_m: float = 0.25):

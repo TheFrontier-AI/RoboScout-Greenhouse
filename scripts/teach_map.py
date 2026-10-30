@@ -32,10 +32,16 @@ def beam_angles(n: int = N_BEAMS) -> np.ndarray:
     return (raw - FORWARD_RAD + math.pi) % (2 * math.pi) - math.pi
 
 
-def scan_xy(ranges, angles: np.ndarray, max_range: float = 11.0, self_m: float = 0.25) -> np.ndarray:
+def scan_xy(ranges, angles: np.ndarray, max_range: float = 11.0, self_m: float = 0.25, body_m: float = 0.6) -> np.ndarray:
+    """Scan ranges -> points in the LiDAR frame (0 = forward). Beams that hit the robot itself are dropped: anything
+    closer than `self_m` to the LiDAR, and anything within `body_m` of the body origin (the C1 sits 0.34 m ahead of it,
+    so the mast and the electronics box behind the LiDAR return at 0.3-0.6 m; left in, those returns build a trace of
+    the robot's own body along the taught path and the map starts to behave like a painted line)."""
     r = np.array([v if v is not None else np.inf for v in ranges], float)
     keep = (r > self_m) & (r < max_range)
-    return np.stack([r[keep] * np.cos(angles[keep]), r[keep] * np.sin(angles[keep])], -1)
+    pts = np.stack([r[keep] * np.cos(angles[keep]), r[keep] * np.sin(angles[keep])], -1)
+    body = pts + (LIDAR_AHEAD_M, 0.0)
+    return pts[np.hypot(body[:, 0], body[:, 1]) >= body_m]
 
 
 def to_scene(pts_lidar: np.ndarray, x: float, y: float, heading_deg: float) -> np.ndarray:

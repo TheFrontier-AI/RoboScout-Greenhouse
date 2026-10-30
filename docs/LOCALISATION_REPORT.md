@@ -40,7 +40,7 @@ use — dock, door, aisle, the yard to the next house, home — with the recorde
 robot's own pose estimate at 10 Hz). `scripts/teach_map.py` turns that drive into:
 
 - **`prior_map_xy.npy`** — the farm as the LiDAR saw it: every scan placed with the robot's own pose, 5 cm cells, cells
-  hit twice or more. Run 3 as the led drive: 32 967 points covering both greenhouses, the yard and the road.
+  hit twice or more. Run 3 as the led drive: 29 615 points covering both greenhouses, the yard and the road.
 - **`site_map.json`** — the site graph: the dock, a door node wherever the drive entered or left a house, edges along
   the taught path with their measured lengths (3.6 m dock → tunnel-09 front; 42.2 m through tunnel-09; 12.8 m behind
   the houses; 42.1 m through tunnel-10; 14.0 m home), each aisle's measured length (41.5–41.6 m). The farmer renames
@@ -58,7 +58,7 @@ that a robot must not learn by driving into them: the led drive defines where it
 *Figure 4 — The site graph on the same map: dock, doors, measured path lengths.*
 
 **Does the robot localise as well on its own map as on a drawn plan?** Re-localising the same 1 500 scans on the
-self-built map accepted every scan (1 500 / 1 500) at 0.23 m RMSE, equal to the plan-derived map (0.23 m). The
+self-built map accepted every scan (1 500 / 1 500) at 0.23 m RMSE, equal to the plan-derived map (0.23 m). Returns from the robot's own mast and electronics box (about 9 beams per scan, 0.3–0.6 m behind the LiDAR) are removed before mapping; left in, they draw a trace of the robot along the taught path and the map starts to behave like a painted line. The
 self-built map carries the pose error of the drive that taught it (median fix 0.14 m against 0.03 m on the plan);
 building it from cuVSLAM poses is the next refinement.
 
@@ -143,17 +143,37 @@ place that is not symmetric — a door, the dock, the road.
 
 **Off the taught path.** A robot put down beside a path sees surfaces the led drive never recorded, so the led drive
 records more: every 0.5 m along the path the robot also scans at eight headings, and those look-around scans are
-merged with the taught map (984 look-around poses, 32 967 → 37 436 map points on our farm). The search then covers
-every free cell of the map as well as the path (0.5 m grid × 24 headings, 95 172 hypotheses, 0.6 s per scan), and the
+merged with the taught map (984 look-around poses, 29 615 → 34 084 map points on our farm). The search then covers
+every free cell of the map as well as the path (0.5 m grid × 24 headings, 101 148 hypotheses, 0.6 s per scan), and the
 chosen pose gets its way home by rejoining the nearest graph node and following the normal route
 (`SiteMap.route_from_xy`, refused beyond 6 m from the graph). Measured with LiDAR scans and front images rendered in
-the current twin at 40 poses 1–3 m beside the path, in the front and back yards: the LiDAR settles 3 outright and
-flags 35 as ambiguous (the right place leads in 24 of them); Nemotron 3.5 Super VL compares the front image with the
-look-around reference image of matching heading at each candidate place, decided 32 and was right in 26; the final
-pose is correct and a route to the dock is planned in **29 of 40 (72 %)**. The reference image must share the
+the current twin at 40 poses 1–3 m beside the path, in the front and back yards: the LiDAR settles 5 outright and
+flags 33 as ambiguous (the right place leads in 14 of them); Nemotron 3.5 Super VL compares the front image with the
+look-around reference image of matching heading at each candidate place, decided 28 and was right in 20; the final
+pose is correct and a route to the dock is planned in **25 of 40 (62 %)**. The reference image must share the
 viewpoint: with frames from the led drive as references the camera was right in 13 of 40. Evidence:
 `docs/evidence/14_offpath_relocalisation_lidar.json` (LiDAR stage), `15_offpath_full_loop_summary.json` and
 `15_offpath_full_loop.jsonl` (the full loop, per case).
+
+**Then do the mission.** A put-down is only worth something if the survey that follows is complete and its records
+carry the right house and metre, so the test continues from the believed pose (right or wrong) through the whole
+mission: rejoin the taught path, the aisle of tunnel-09, the yard, the aisle of tunnel-10, the dock
+(`scripts/offpath_mission_eval.py`, LiDAR scans synthesised on the self-built map). While driving, the believed place
+is checked against every scan, a fresh whole-map search every 10 m keeps rival places alive, and a belief that stops
+fitting, an obstacle where the map says the way is free, or a rival that fits clearly better over 2 m of driving
+becomes a new anchor: the whole odometry history is re-placed, the plant records made so far are relabelled, and the
+mission goals are re-derived from the corrected history. Before docking, Nemotron VL compares the view with the dock and
+with the strongest rival place. On the 40 near put-downs the survey was completed with every plant stop covered in 40
+of 40 and the records labelled right in 39 of 40; 13 had started with a wrong belief and 12 were corrected, 4 by the
+scans within 2 m and 8 by the camera at the dock after a complete, then relabelled, survey. On 10 further put-downs
+4–8 m from the path (LiDAR guess alone to start) the survey was complete in 10 of 10 and right in 9 of 10. Evidence:
+`docs/evidence/16_offpath_mission_survey.json` (per case: every decision and the path driven).
+
+![Put down, then do the whole survey: the path really driven in each of the 50 cases](media/gallery/28_offpath_survey_each_case.png)
+
+*Figure 10 — Put down, then do the whole survey: for each of the 50 put-down poses the path really driven (green while
+the robot knew where it was, orange while it believed a wrong place), the point where it worked out where it really was,
+and whether the plant records carried the right house and metre.*
 
 ![What the robot sees when put down beside a path: six of the 40 off-path test poses](media/gallery/27_offpath_front_views.jpg)
 
@@ -172,11 +192,11 @@ start-up of the robot is the next step; everything above is measured offline on 
 | cuVSLAM stereo, full route | 6.4 cm RMSE / 111 m, scale 1.003 | `render_v2_astra_scene/cuvslam/cuvslam_stereo_q.json` |
 | cuVSLAM on Jetson Orin Nano | 188 FPS stereo, 82 FPS inertial, 600/600 tracked | `docs/evidence/09_cuvslam_on_jetson.json` |
 | Two-observer fusion | 0.30 → 0.26 m in the aisles | `docs/evidence/08_two_observer_fusion_run3.json` |
-| Map by demonstration | 32 967 points, 5-node graph, 1 500/1 500 scans at 0.23 m | `docs/evidence/10_teach_map_run3.json`, `10_teach_site_map_run3.json` |
+| Map by demonstration | 29 615 points, 5-node graph, 1 500/1 500 scans at 0.23 m | `docs/evidence/10_teach_map_run3.json`, `10_teach_site_map_run3.json` |
 | Relocalisation, single scan | 8 found / 30 ambiguous / 2 wrong of 40; 74 ms | `docs/evidence/13_relocalize_eval_run3.json` |
 | Camera tie-break (Nemotron VL) | 10 of 12 decided correct (83 %) | `docs/evidence/12_vlm_place_check.jsonl` |
 | Motion-only decision in twin houses | wrong 9 of 10 → not used to decide | `docs/evidence/13_relocalize_eval_run3.json` |
-| Off the path: look-around map + camera, route home | 29 of 40 put-downs 1–3 m beside the path | `docs/evidence/15_offpath_full_loop_summary.json`, `14_offpath_relocalisation_lidar.json` |
+| Off the path: look-around map + camera, route home | 25 of 40 put-downs 1–3 m beside the path | `docs/evidence/15_offpath_full_loop_summary.json`, `14_offpath_relocalisation_lidar.json` |
 | Camera-only mapping methods benchmarked | lingbot-map 1.06–1.22 m; others 7–16 m | `docs/SYSTEM_OVERVIEW.md` §7 |
 
 Code: `sim/scan_localizer.py`, `sim/lidar_odometry.py`, `sim/executor.py` (estimator 1); `scripts/cuvslam_r181.py`,
