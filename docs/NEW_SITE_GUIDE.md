@@ -183,7 +183,7 @@ dock is where it was switched on. The mission is decided from that structure - w
 agent's model (Nemotron 3 Super through Nebius Token Factory, with its reason kept) or by a nearest-first rule; every
 path is then planned on the free grid when it is needed (A* with a clearance cost, which is why the robot keeps to the
 middle of an aisle), from where the robot believes it is, and planned again whenever the belief changes or something
-unexpected appears. Figure: `media/gallery/30_free_nav_structure.png`. Measured the same way as above, 40 near put-downs and 10 in the open, with an
+unexpected appears. Figure: `media/gallery/30_free_nav_structure.png` (grey = the map points, yellow = plant aisles, blue = other corridors, green = the path the robot planned, star = dock). Measured the same way as above, 40 near put-downs and 10 in the open, with an
 obstacle that is not on the map dropped on the planned path in every case and HERMES reviewing the plan on the map
 picture first: the survey was completed in 39 of 40 near cases (every row fully covered in 39, records right in 38;
 13 of the 13 wrong starts corrected) and in 9 of 10 far cases (9 right); the unexpected obstacle was driven around in
@@ -273,13 +273,9 @@ because at the two twin places the LiDAR sees the same thing - which is why the 
 which aisles and whether the plan is sound, never the geometry. Evidence: `docs/evidence/17_freenav_mission_survey.json`;
 figures below.
 
-![Survey with no stored route, case by case: the path really driven in each of the 50 put-downs](media/gallery/31_freenav_survey_each_case.png)
+![Survey with no stored route: six of the 50 put-downs as really driven](media/gallery/31_freenav_survey_each_case.png)
 
-*Figure — Survey with no stored route, case by case: grey = the LiDAR map the robot built, ● = where it was really put down, blue = the path it really drove, ○ = where it worked out its real position (cases that started with a wrong guess), ★ = dock; the title of each panel is the verdict*
-
-![All 50 surveys with no stored route on one map](media/gallery/32_freenav_survey_overview.png)
-
-*Figure — All 50 surveys with no stored route on one map: what the robot really drove, green = knew where it was, orange = wrong belief, ○ = where the belief was corrected*
+*Figure — Six of the 50 surveys with no stored route, as really driven: three that knew where they were from the start, three that started with a wrong guess and worked it out. Grey = the LiDAR map the robot built, ● = where it was really put down, blue = the path it really drove, ○ = where it worked out its real position, ★ = dock*
 
 **Three ways to run a survey, from the same map.** (1) *Taught route*: the robot follows the corridors of the led
 drive, node to node, with the site graph deciding what is allowed; the simplest and the one every number above was

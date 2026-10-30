@@ -17,12 +17,12 @@ PATH, FIX, DOCK, MAP = "#4cc9f0", "#ff4d4d", "#ffd33d", "#6e7681"
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cases", type=Path, required=True); ap.add_argument("--rec", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--cases", type=Path, required=True); ap.add_argument("--rec", type=Path, required=True); ap.add_argument("--out", type=Path, required=True); ap.add_argument("--pick", type=str, default=None, help="comma list of case numbers: show these examples in a 3-column grid")
     a = ap.parse_args(); teach = a.rec / "teach"
-    cases = json.load(open(a.cases)); st = json.load(open(teach / "free_nav" / "structure.json")); dock = st["dock"]
+    cases = json.load(open(a.cases)); cases = [c for c in cases if str(c["case"]) in a.pick.split(",")] if a.pick else cases; st = json.load(open(teach / "free_nav" / "structure.json")); dock = st["dock"]
     look = np.load(teach / "offpath2" / "map_lookaround_xy.npy")
-    n = len(cases); cols = 10; rows = math.ceil(n / cols)
-    fig, axs = plt.subplots(rows, cols, figsize=(2.3 * cols, 5.6 * rows), facecolor="#ffffff")
+    n = len(cases); cols = 3 if n <= 6 else 10; rows = math.ceil(n / cols)
+    fig, axs = plt.subplots(rows, cols, figsize=((3.6 if a.pick else 2.3) * cols, 5.6 * rows), facecolor="#ffffff")
     for ax in axs.flat: ax.axis("off")
     ok_n = 0
     for ax, r in zip(axs.flat, cases):
@@ -51,11 +51,10 @@ def main():
            Line2D([], [], marker="o", ls="", mfc="none", mec=FIX, ms=9, mew=2, label="○  where it worked out its real position (cases that started with a wrong guess)"),
            Line2D([], [], marker="*", ls="", c=DOCK, ms=14, mec="#000", label="★  dock (end of the survey)"),
            Line2D([], [], marker=".", ls="", c=MAP, ms=9, label="grey = the LiDAR map the robot built (walls, plant rows)")]
-    fig.legend(handles=leg, loc="lower center", bbox_to_anchor=(0.5, 0.0), ncol=3, fontsize=9.5, frameon=True)
+    fig.legend(handles=leg, loc="lower center", bbox_to_anchor=(0.5, 0.0), ncol=1 if a.pick else 3, fontsize=8.5 if a.pick else 9.5, frameon=True)
     near = [r for r in cases if r["tag"] == "near"]; far = [r for r in cases if r["tag"] == "far"]
-    fig.suptitle(f"Put down anywhere, no stored route: the robot finds the rows in its own map, plans and drives the survey itself.  Result: {ok_n} of {n} surveys complete with correct records "
-                 f"({len(near)} 'near' starts beside the old path, {len(far)} 'far' starts in the open; nobody tells the robot where it is)", fontsize=12, y=0.995)
-    fig.tight_layout(rect=(0, 0.035, 1, 0.985)); a.out.parent.mkdir(parents=True, exist_ok=True); fig.savefig(a.out, dpi=110, facecolor="#fff"); print("wrote", a.out)
+    fig.suptitle((f"Six of the 50 put-down surveys, as really driven:\nthree that knew where they were, three that started with a wrong guess and worked it out" if a.pick else f"Put down anywhere, no stored route: the robot finds the rows in its own map, plans and drives the survey itself.  Result: {ok_n} of {n} surveys complete with correct records ({len(near)} 'near' starts beside the old path, {len(far)} 'far' starts in the open; nobody tells the robot where it is)"), fontsize=12, y=0.995)
+    fig.tight_layout(rect=(0, 0.09 if a.pick else 0.035, 1, 0.96 if a.pick else 0.985)); a.out.parent.mkdir(parents=True, exist_ok=True); fig.savefig(a.out, dpi=110, facecolor="#fff"); print("wrote", a.out)
 
 
 if __name__ == "__main__":
