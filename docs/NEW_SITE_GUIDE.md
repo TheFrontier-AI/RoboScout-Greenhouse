@@ -202,7 +202,43 @@ A* plan; 251 of 318 drawn segments were drivable as drawn, 60 crossed something 
 repaired by the grid planner, 7 could not be repaired; after the robot snaps the row legs to the row centre line, as its
 aisle centring does, 6 of 8 routes were complete. So the agent draws the route the way a person would, with about a
 metre of wobble, and the robot's planner is what makes it drivable to the centimetre: sketch by the agent, geometry by
-the robot. The order came from the Rural Postman solver on the robot
+the robot. Given instead the farm as a person understands it (the scene graph the robot builds: houses, rows, doors,
+yards, dock, each with its meaning) and asked for the route as named places, Nemotron 3 Super planned 12 of 12 surveys
+complete and drivable, 7 % longer than the Rural Postman + A* plan, in 8 s each (`docs/evidence/19_hermes_plans_on_scene_graph.json`,
+figure `media/gallery/34_hermes_plans_on_scene_graph.png`). Meaning first, then geometry.
+
+## In plain words
+
+**Who draws the line the robot follows?** Nobody, in the map-only mode. The robot builds a map from its own LiDAR,
+reads from that map where the houses, the rows, the doors, the yards and the dock are, and makes every path itself when
+it needs it. In the taught-route mode the line is the path a person led it along once; that mode is kept for farms whose
+map has not been seen widely enough yet.
+
+**Why does it drive down the middle of a row?** A rule we set in the planner: a cell costs more the closer it is to a
+wall or a plant, so the cheapest path keeps equal distance from both rows, which also puts both side cameras at the same
+distance from the plants. It is not a decision the robot makes on its own.
+
+**Which sensor tells it where it is?** The LiDAR, ten times a second, by fitting each scan to the map (0.23 m on our
+farm). Wheels and gyro carry the position between scans and tie the whole drive together; the stereo camera is an
+independent second witness; the front camera and the vision-language model are used only for the one thing a LiDAR
+cannot see: which of two identical houses it is in, and only at doorways and in the yards, never inside a row, because
+inside a row every picture looks the same and asking there made things worse (measured).
+
+**Who decides what?** HERMES decides the mission: which rows, in what order, whether a plan is sound, what to do when
+the robot reports a blocked row or a place that does not look like the map. The robot does the geometry: paths to the
+centimetre, stopping for obstacles, keeping its position, correcting its belief. Given the farm as a person understands
+it (the scene graph), HERMES planned every survey correctly (12 of 12); given only a picture of dots, it drew the right
+idea with a metre of wobble that the planner had to repair (8 of 12). Meaning first, then geometry.
+
+**What is guaranteed?** No module guarantees success in a changed world. What is guaranteed is behaviour: the robot
+never plans through ground it has not seen empty, stops for anything in its way, plans again when the world does not
+match its map, and asks before committing to a place that matters. Before field trials a live ground check (depth and a
+small segmentation model at two frames per second) will be able to veto every forward command, because a 2-D LiDAR sees
+neither a drop-off nor still water.
+
+**Does it know what the areas are?** Yes, and it tells HERMES: house-A, house-A/row-1, house-A/door-high, yard-low,
+gap-1, dock, each with its meaning (`/scene_graph` on the hub, legend in the `farm-mission-planner` skill). Anything it
+has never seen empty is not in the description and is never driven on. The order came from the Rural Postman solver on the robot
 (every chosen aisle a required edge, A* distances between aisle ends and the dock, about 0.1 s), so the model decides
 which aisles and whether the plan is sound, never the geometry. Evidence: `docs/evidence/17_freenav_mission_survey.json`;
 figures `media/gallery/31_freenav_survey_each_case.png`, `32_freenav_survey_overview.png`.
