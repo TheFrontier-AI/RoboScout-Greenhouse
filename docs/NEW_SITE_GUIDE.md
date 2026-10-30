@@ -174,6 +174,26 @@ scans within 2 m and 8 by the camera at the dock after a complete, then relabell
 4–8 m from the path (LiDAR guess alone to start) the survey was complete in 10 of 10 and right in 9 of 10. Evidence:
 `docs/evidence/16_offpath_mission_survey.json` (per case: every decision and the path driven).
 
+**Without a stored route.** The led drive is a way to collect scans safely; the robot does not need its path afterwards.
+From its own map alone (`scripts/free_nav.py`) it marks every 0.25 m cell that a LiDAR ray has crossed and that lies
+farther than its half-width from any map point - space it has seen empty and can fit through; ponds, orchard and road
+are never marked because it never saw them empty. It finds the dominant wall direction from the points, and the long
+narrow free corridors between parallel rows with layered sides (stems, bed edge, next row) are the plant aisles; the
+dock is where it was switched on. The mission is decided from that structure - which aisles, in what order - by the
+agent's model (Nemotron 3 Super through Nebius Token Factory, with its reason kept) or by a nearest-first rule; every
+path is then planned on the free grid when it is needed (A* with a clearance cost, which is why the robot keeps to the
+middle of an aisle), from where the robot believes it is, and planned again whenever the belief changes or something
+unexpected appears. Figure: `media/gallery/30_free_nav_structure.png`.
+
+**Three ways to run a survey, from the same map.** (1) *Taught route*: the robot follows the corridors of the led
+drive, node to node, with the site graph deciding what is allowed; the simplest and the one every number above was
+measured on. (2) *Map only*: no route is kept; the robot finds the aisles and the drivable space in its own map, the
+agent's model decides the order from that structure, the robot plans every path itself and plans again when something
+unexpected appears. (3) *Map only with HERMES review*: as (2), and before the robot moves HERMES sees the plan drawn on
+the map together with every leg's length and the alternatives, and approves or changes it; the same channel takes the
+robot's reports during the mission (an aisle blocked, a place that does not look like the map) for the next decision.
+A farm with ponds, an orchard and a road is run in (1) until its map has been seen widely enough for (2).
+
 What the farmer sees: on the dashboard the robot reports "relocalised at tunnel-10, metre 14 (camera: the tree
 through the door)" or "ambiguous: tunnel-09 or tunnel-10 — moving to the door to check". It never silently guesses.
 

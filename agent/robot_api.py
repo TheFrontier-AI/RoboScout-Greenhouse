@@ -25,6 +25,8 @@ from r1_nav.cameras import SIDE_CAMERAS           # noqa: E402
 
 
 class Hub:
+    mission_plan: dict | None = None
+
     def __init__(self, data: Path, map_path: Path | None):
         self.data, self.lock = data, threading.Lock()
         (data / "frames").mkdir(parents=True, exist_ok=True)
@@ -75,6 +77,22 @@ class Hub:
                                          "command": {k: v for k, v in cmd.items() if k != "reasoning"},
                                          "reply": reply["status"], "reason": reply["reason"]})
         return reply
+
+    def planner(self):
+        """The mission planner on the robot's own map (env R1_STRUCTURE = a scripts/free_nav.py output dir), lazily."""
+        if not hasattr(self, "_planner"):
+            try:
+                from agent.mission_planner import load
+                self._planner = load()
+            except Exception:
+                self._planner = None
+        return self._planner
+
+    def set_mission_plan(self, plan: dict) -> None:
+        """An approved map-only mission: stored, logged, and queued for the robot as `survey_aisles`."""
+        plan = dict(plan, t=time.time()); self.mission_plan = plan
+        (self.data / "mission_plan.json").write_text(json.dumps(plan, indent=1)); self._append("commands.jsonl", {"cmd": "survey_aisles", **plan})
+        self.commands.put({"cmd": "survey_aisles", "order": plan["order"], "approved_by": plan.get("approved_by"), "t": plan["t"]})
 
     def set_status(self, st: dict) -> None:
         st = {**st, "ts": st.get("ts", time.time())}
@@ -234,6 +252,21 @@ def make_handler(hub: Hub):
                 return self._json(200, {"next": since + len(rows), "situations": rows})
             if u.path == "/run_status":
                 return self._json(200, hub.run_status(parse_qs(u.query).get("run", [""])[0]))
+            if u.path == "/structure":
+                mp = hub.planner()
+                if mp is None:
+                    return self._json(200, {"available": False, "why": "no structure built from the robot's map yet (scripts/free_nav.py; env R1_STRUCTURE)"})
+                return self._json(200, {"available": True} | mp.structure())
+            if u.path == "/structure/picture":
+                mp = hub.planner()
+                if mp is None:
+                    return self._json(404, {"error": "no structure"})
+                q = parse_qs(u.query); order = q.get("order", [""])[0].split(",") if q.get("order", [""])[0] else None
+                start = [float(v) for v in q["from"][0].split(",")] if q.get("from") else None
+                body = mp.picture(order, start); self.send_response(200); self.send_header("Content-Type", "image/jpeg")
+                self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body); return
+            if u.path == "/mission_plan":
+                return self._json(200, hub.mission_plan or {"approved": False})
             if u.path == "/next_command":
                 try:
                     return self._json(200, hub.commands.get_nowait())
@@ -256,6 +289,26 @@ def make_handler(hub: Hub):
                     return self._json(200, hub.frame(json.loads(parts["meta"]), parts["image"]))
                 if path == "/run_complete":
                     return self._json(200, hub.run_complete(json.loads(self._body() or b"{}")))
+                if path == "/plan":
+                    mp = hub.planner(); b = json.loads(self._body() or b"{}")
+                    if mp is None:
+                        return self._json(400, {"error": "no structure"})
+                    start = b.get("from") or hub.status.get("xy") or list(mp.dock[:2])
+                    order = b.get("order") or [a["id"] for a in mp.aisles]
+                    out = mp.plan(order, start); out["alternatives"] = mp.alternatives(start)[:6]
+                    if b.get("picture", True):
+                        out["picture"] = mp.picture_b64(order, start)
+                    return self._json(200, out)
+                if path == "/mission_plan":
+                    mp = hub.planner(); b = json.loads(self._body() or b"{}")
+                    if mp is None:
+                        return self._json(400, {"error": "no structure"})
+                    start = b.get("from") or hub.status.get("xy") or list(mp.dock[:2]); p = mp.plan(b.get("order", []), start)
+                    if not p["ok"]:
+                        return self._json(400, {"error": "plan not acceptable", "plan": {k: v for k, v in p.items() if k != "polyline_xy"}})
+                    hub.set_mission_plan({"approved": True, "approved_by": b.get("approved_by", "HERMES"), "reason": b.get("reason", ""), "order": p["order"],
+                                          "legs": p["legs"], "total_m": p["total_m"], "mode": "map_only"})
+                    return self._json(200, hub.mission_plan)
             except (KeyError, ValueError, TypeError) as e:
                 return self._json(400, {"error": str(e)})
             self._json(404, {"error": "not found"})

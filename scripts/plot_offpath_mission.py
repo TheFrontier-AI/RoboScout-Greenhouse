@@ -19,14 +19,26 @@ OK, BAD, DOCK, MAP, PATH = "#3fb950", "#f0883e", "#ffd33d", "#8b949e", "#58a6ff"
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cases", type=Path, required=True); ap.add_argument("--rec", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--map", type=Path, default=None, help="map_lookaround_xy.npy (default: <rec>/teach/offpath/map_lookaround_xy.npy)")
+    ap.add_argument("--map", type=Path, default=None, help="map_lookaround_xy.npy (default: <rec>/teach/offpath2/map_lookaround_xy.npy)")
+    ap.add_argument("--freenav", type=Path, default=None, help="free_nav output dir (free_grid.npy + structure.json): draw the robot's own drivable space and aisles, no taught drive")
     a = ap.parse_args(); teach = a.rec / "teach"; a.out.mkdir(parents=True, exist_ok=True)
     cases = json.load(open(a.cases)); path = np.load(teach / "path_xyh.npy")
-    look = np.load(a.map or (teach / "offpath" / "map_lookaround_xy.npy"))
+    look = np.load(a.map or (teach / "offpath2" / "map_lookaround_xy.npy"))
     nodes = {n["id"]: np.array(n["xy"]) for n in json.load(open(teach / "site_map.json"))["nodes"]}
+    fn = None
+    if a.freenav:
+        st = json.load(open(a.freenav / "structure.json")); fn = {"grid": np.load(a.freenav / "free_grid.npy"), "st": st}
+        nodes = {"dock": np.array(st["dock"][:2])}
 
     def base(ax, s, dock_ms=12, fs=7):
-        ax.scatter(look[:, 0], look[:, 1], s=s, c=MAP, lw=0, rasterized=True); ax.plot(path[:, 0], path[:, 1], c=PATH, lw=0.6, alpha=0.6)
+        ax.scatter(look[:, 0], look[:, 1], s=s, c=MAP, lw=0, rasterized=True)
+        if fn is None:
+            ax.plot(path[:, 0], path[:, 1], c=PATH, lw=0.6, alpha=0.6)
+        else:
+            g = fn["grid"]; st = fn["st"]
+            ax.imshow(g, origin="lower", extent=(st["x0"], st["x0"] + g.shape[1] * st["cell"], st["y0"], st["y0"] + g.shape[0] * st["cell"]), cmap="Greens", alpha=0.28, vmin=0, vmax=1.3, zorder=0)
+            for x in st["aisles"]:
+                if x["kind"] == "plant aisle": ax.plot([x["a"][0], x["b"][0]], [x["a"][1], x["b"][1]], c=DOCK, lw=1.2, alpha=0.6, zorder=1)
         for k, xy in nodes.items():
             if k == "dock":
                 ax.plot(*xy, marker="*", ms=dock_ms * 1.6, c=DOCK, mec="#000", mew=0.6, zorder=10)
@@ -46,6 +58,8 @@ def main():
         ax.plot(t[0], t[1], "o", c=c0, ms=ms, mec="#000", mew=0.6, zorder=8)
         ax.annotate("", xy=(t[0] + 2.0 * math.cos(math.radians(t[2])), t[1] + 2.0 * math.sin(math.radians(t[2]))), xytext=(t[0], t[1]), arrowprops=dict(arrowstyle="->", color=c0, lw=1.4), zorder=9)
         ax.annotate("START", (t[0], t[1]), color=c0, fontsize=fs, fontweight="bold", xytext=(-16, 8), textcoords="offset points", zorder=9)
+        if r.get("surprise_xy"):
+            sx, sy = r["surprise_xy"]; ax.plot(sx, sy, marker="s", ms=ms * 0.9, c="#f0463c", mec="#000", mew=0.5, zorder=8)
         if r.get("corrected_at_m") is not None and be[0] >= 1.0:
             cum = np.concatenate([[0.0], np.cumsum(np.hypot(np.diff(tp[:n, 0]), np.diff(tp[:n, 1])))])
             i = int(np.searchsorted(cum, r["corrected_at_m"])); i = min(i, n - 1)
@@ -73,13 +87,13 @@ def main():
            Line2D([], [], c=OK, lw=3, label="━  the path it really drove while it knew where it was (belief within 1 m)"),
            Line2D([], [], c=BAD, lw=3, label="━  the path it really drove while believing a wrong place"),
            Line2D([], [], marker="o", ls="", mfc="none", mec="#fff", ms=10, mew=1.6, label="○  the point where it worked out where it really was"),
-           Line2D([], [], marker="*", ls="", c=DOCK, ms=14, label="★  END = the dock"), Line2D([], [], marker="D", ls="", c="#fff", ms=7, label="◆  greenhouse door"),
-           Line2D([], [], c=PATH, lw=2, label="━  the taught drive (what the mission follows)"), Line2D([], [], marker=".", ls="", c=MAP, ms=9, label="grey dots = LiDAR map")]
+           Line2D([], [], marker="*", ls="", c=DOCK, ms=14, label="★  END = the dock"), (Line2D([], [], marker="s", ls="", c="#f0463c", ms=8, label="■  an obstacle that was not on the map, dropped on the planned path") if fn else Line2D([], [], marker="D", ls="", c="#fff", ms=7, label="◆  greenhouse door")),
+           (Line2D([], [], c=DOCK, lw=2, alpha=0.6, label="━  plant aisles the robot found in its own map; green area = space it has seen empty") if fn else Line2D([], [], c=PATH, lw=2, label="━  the taught drive (what the mission follows)")), Line2D([], [], marker=".", ls="", c=MAP, ms=9, label="grey dots = LiDAR map")]
     fig.legend(handles=leg, loc="lower center", bbox_to_anchor=(0.5, 0.0), ncol=2, fontsize=9.5, facecolor="#161b22", edgecolor="#30363d", labelcolor="#c9d1d9", title="how to read each panel", title_fontsize=10)
     fig.legends[0].get_title().set_color("#fff")
     near = [r for r in cases if r["tag"] == "near"]; far = [r for r in cases if r["tag"] == "far"]
     def ok_n(rs): return sum(r["outcome"] == "mission_done" and all(v >= 0.98 for v in r["coverage"].values()) and (r.get("aisle_steps_logged_right") or 0) >= 0.95 for r in rs)
-    fig.suptitle(f"Put down, then do the whole survey (both houses, back to the dock): full coverage with correct records in {ok_n(near)} / {len(near)} near cases and {ok_n(far)} / {len(far)} far cases   (synthetic LiDAR on the self-built map)",
+    fig.suptitle((f"Put down, then survey with no stored route: the robot found the aisles in its own map, a decision-maker chose the order, every path was planned on the spot" if fn else "Put down, then do the whole survey (both houses, back to the dock)") + f": full coverage with correct records in {ok_n(near)} / {len(near)} near cases and {ok_n(far)} / {len(far)} far cases   (synthetic LiDAR on the self-built map)",
                  color="#fff", fontsize=13, y=0.995)
     fig.tight_layout(rect=(0, 0.05, 1, 0.985)); fig.savefig(a.out / "02_mission_each_case.png", dpi=110, facecolor=fig.get_facecolor()); plt.close(fig)
     # overview: all true paths on one map
