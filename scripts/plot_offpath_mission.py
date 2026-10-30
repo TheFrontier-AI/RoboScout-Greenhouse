@@ -58,6 +58,8 @@ def main():
         ax.plot(t[0], t[1], "o", c=c0, ms=ms, mec="#000", mew=0.6, zorder=8)
         ax.annotate("", xy=(t[0] + 2.0 * math.cos(math.radians(t[2])), t[1] + 2.0 * math.sin(math.radians(t[2]))), xytext=(t[0], t[1]), arrowprops=dict(arrowstyle="->", color=c0, lw=1.4), zorder=9)
         ax.annotate("START", (t[0], t[1]), color=c0, fontsize=fs, fontweight="bold", xytext=(-16, 8), textcoords="offset points", zorder=9)
+        if fn is not None and r.get("initial_plan_xy"):
+            P = np.array(r["initial_plan_xy"]); ax.plot(P[:, 0], P[:, 1], c="#ffffff", lw=0.9, ls=(0, (2, 2)), alpha=0.8, zorder=3)
         if r.get("surprise_xy"):
             sx, sy = r["surprise_xy"]; ax.plot(sx, sy, marker="s", ms=ms * 0.9, c="#f0463c", mec="#000", mew=0.5, zorder=8)
         if r.get("corrected_at_m") is not None and be[0] >= 1.0:
@@ -67,25 +69,27 @@ def main():
             ax.annotate(f"fixed @ {r['corrected_at_m']:.0f} m", (tp[i, 0], tp[i, 1]), color="#fff", fontsize=fs, xytext=(8, -4), textcoords="offset points", zorder=9)
 
     def title(r):
-        cov = r["coverage"]; lab = r.get("aisle_steps_logged_right")
-        head = {"mission_done": "complete", "stays_put": "stays put", "ran_out": "unfinished", "gave_up": "gave up"}[r["outcome"]]
+        cov = r["coverage"]; lab = r.get("aisle_steps_logged_right"); ks = list(cov)
+        head = {"mission_done": "survey done", "stays_put": "stays put", "ran_out": "unfinished", "gave_up": "gave up"}[r["outcome"]]
         s = f"#{r['case']} {r['tag']} · {head} · {r['metres']:.0f} m"
         if r["outcome"] != "stays_put":
-            s += f"\ncovered {cov['tunnel-09'] * 100:.0f}% / {cov['tunnel-10'] * 100:.0f}% · right {'-' if lab is None else f'{lab * 100:.0f}%'}"
+            s += f"\nrows covered {' / '.join(f'{cov[k] * 100:.0f}%' for k in ks)} · records right {'-' if lab is None else f'{lab * 100:.0f}%'}"
+        if r.get("mission_order"):
+            s += f"\norder: {' → '.join(x.replace('aisle-', 'row ') for x in r['mission_order'])}" + ("  ✓ HERMES" if "approved" in str(r.get("plan_review", "")) else ("  ✎ HERMES changed" if "changed" in str(r.get("plan_review", "")) else ""))
         s += "\n" + ("knew from the start" if r["start_belief_err_m"] < 1.0 else f"wrong by {r['start_belief_err_m']:.0f} m" + (f", fixed @ {r['corrected_at_m']:.0f} m" if r["corrected_at_m"] is not None else ", never fixed"))
         return s
 
     # grid: one panel per case
     n = len(cases); cols = 10; rows = math.ceil(n / cols)
-    fig, axs = plt.subplots(rows, cols, figsize=(2.4 * cols, 6.4 * rows), facecolor="#0d1117")
+    fig, axs = plt.subplots(rows, cols, figsize=(2.4 * cols, 6.8 * rows), facecolor="#0d1117")
     for ax in axs.flat: ax.axis("off")
     for ax, r in zip(axs.flat, cases):
         ax.axis("on"); base(ax, 0.3, 6, 6); ax.set_xlim(-8, 17); ax.set_ylim(-44, 13); draw(ax, r, 1.6, 7, 6)
         ok = r["outcome"] == "mission_done" and all(v >= 0.98 for v in r["coverage"].values()) and (r.get("aisle_steps_logged_right") or 0) >= 0.95
         ax.set_title(title(r), color=OK if ok else (BAD if r["outcome"] != "stays_put" else "#e3b341"), fontsize=6.6, pad=3)
-    leg = [Line2D([], [], marker="o", ls="", c="#fff", ms=9, label="●  START = where the robot was put down; arrow = the way it faces"),
-           Line2D([], [], c=OK, lw=3, label="━  the path it really drove while it knew where it was (belief within 1 m)"),
-           Line2D([], [], c=BAD, lw=3, label="━  the path it really drove while believing a wrong place"),
+    leg = [Line2D([], [], marker="o", ls="", c="#fff", ms=9, label="●  START = where the robot was really put down; arrow = the way it faces"),
+           Line2D([], [], c=OK, lw=3, label="━  what it really drove while it knew where it was (its belief within 1 m of the truth)"),
+           Line2D([], [], c=BAD, lw=3, label="━  what it really drove while it believed it was somewhere else"),] + ([Line2D([], [], c="#fff", lw=1.2, ls=(0, (2, 2)), label="┄  the plan it made before moving, drawn where it BELIEVED it was")] if fn else []) + [
            Line2D([], [], marker="o", ls="", mfc="none", mec="#fff", ms=10, mew=1.6, label="○  the point where it worked out where it really was"),
            Line2D([], [], marker="*", ls="", c=DOCK, ms=14, label="★  END = the dock"), (Line2D([], [], marker="s", ls="", c="#f0463c", ms=8, label="■  an obstacle that was not on the map, dropped on the planned path") if fn else Line2D([], [], marker="D", ls="", c="#fff", ms=7, label="◆  greenhouse door")),
            (Line2D([], [], c=DOCK, lw=2, alpha=0.6, label="━  plant aisles the robot found in its own map; green area = space it has seen empty") if fn else Line2D([], [], c=PATH, lw=2, label="━  the taught drive (what the mission follows)")), Line2D([], [], marker=".", ls="", c=MAP, ms=9, label="grey dots = LiDAR map")]

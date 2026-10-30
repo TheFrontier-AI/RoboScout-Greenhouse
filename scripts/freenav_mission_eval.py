@@ -288,13 +288,25 @@ def run_case(case):
             T = compose(true, inv(state["belief"])); sx, sy, _ = compose(T, (sx, sy, 0.0))
             blk = np.array([(sx + dx, sy + dy) for dx in np.arange(-0.4, 0.41, 0.1) for dy in np.arange(-0.4, 0.41, 0.1)])
             world = World(np.vstack([world.m, blk])); surprise_xy = (round(sx, 2), round(sy, 2)); log["surprise_xy"] = surprise_xy
+    log["first_belief_pose"] = [round(v, 3) for v in belief]
+    _p0 = farm.plan(belief, goals); log["initial_plan_xy"] = [[round(x, 2), round(y, 2)] for x, y in (_p0[:: max(1, len(_p0) // 300)] if _p0 is not None else [])]
     if not replan():
         log["events"].append({"m": 0.0, "what": "cannot plan from the believed pose"})
         if not recover("cannot plan from the believed pose"):
             return log | {"outcome": "stays_put", "metres": 0.0, "corrected_at_m": None, "replans": replans, "coverage": {a["id"]: 0.0 for a in farm.aisles}, "aisle_steps_logged_right": None,
                           "final_belief_err_m": round(err(state["belief"], true), 2), "at_dock": False, "unexpected_obstacle": None}
-    unexpected = None
-    while metres < 360.0 and replans <= 14:
+    unexpected = None; iters = 0; last_m = -1.0; stalls = 0
+    while metres < 360.0 and replans <= 14 and iters < 6000:
+        iters += 1
+        if metres == last_m:
+            stalls += 1
+            if stalls > 40:                                   # not moving for 40 rounds: something is wrong with this place
+                log["events"].append({"m": round(metres, 1), "what": "stuck: no progress for 40 rounds, searching again"})
+                stalls = 0
+                if not recover("stuck in place"):
+                    break
+        else:
+            stalls = 0; last_m = metres
         if not goals:
             outcome = "mission_done"; break
         belief = state["belief"]; wp = state["wp"]; k = state["k"]
@@ -306,7 +318,8 @@ def run_case(case):
             scan = world.scan(*true); fit = reloc._score(np.asarray(scan) + (LIDAR_AHEAD_M, 0.0), *belief)
             if fit >= 0.7:
                 # the place fits the map well: this is a new obstacle, not a wrong belief -> mark it and plan around it
-                i, j = fs.cell_of(nxt_b[:2]); fs.free[max(0, i - 2):i + 3, max(0, j - 2):j + 3] = False; local_blocks.append(nxt_b[:2])
+                i, j = fs.cell_of(nxt_b[:2]); bi, bj = fs.cell_of(belief[:2]); keep = fs.free[bi, bj]
+                fs.free[max(0, i - 1):i + 2, max(0, j - 1):j + 2] = False; fs.free[bi, bj] = keep; local_blocks.append(nxt_b[:2])
                 log["events"].append({"m": round(metres, 1), "what": f"unexpected obstacle at ({nxt_b[0]:.1f}, {nxt_b[1]:.1f}), not on the map: marked it and planned around"})
                 unexpected = unexpected or round(metres, 1)
                 if not replan() and not recover("no way round the obstacle from the believed place"):
@@ -436,7 +449,7 @@ def main():
     a.out.mkdir(parents=True, exist_ok=True); out = []; t0 = time.time()
     with ProcessPoolExecutor(max_workers=a.jobs) as ex:
         for r in ex.map(_run, [(i, cases[i]) for i in sel]):
-            out.append(r)
+            out.append(r); (a.out / "mission_cases.json").write_text(json.dumps(out))
             print(json.dumps({k: r.get(k) for k in ("case", "tag", "first_belief", "start_belief_err_m", "outcome", "metres", "corrected_at_m", "coverage", "aisle_steps_logged_right", "final_belief_err_m", "at_dock", "unexpected_obstacle", "seconds")}
                              | {"events": [e["what"][:90] for e in r["events"]]}), flush=True)
     def summ_of(rs):

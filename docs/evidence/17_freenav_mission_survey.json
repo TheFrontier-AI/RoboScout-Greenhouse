@@ -1,0 +1,2853 @@
+{
+ "what": "Put down anywhere, then survey with NO stored route - scripts/freenav_mission_eval.py on the structure scripts/free_nav.py reads from the robot's own map; order from the Rural Postman solver (agent/mission_planner.py); HERMES reviews the plan on the map picture before the robot moves",
+ "near_40_poses_1_3_m_beside_the_old_path": {
+  "cases": 40,
+  "survey_complete": 37,
+  "every_aisle_fully_covered": 36,
+  "records_labelled_right": 33,
+  "started_wrong": 13,
+  "wrong_corrected_by_end": 12,
+  "unexpected_obstacle_handled": 31,
+  "at_dock_at_end": 36,
+  "stays_put": 0
+ },
+ "far_10_poses_in_the_open": {
+  "cases": 10,
+  "survey_complete": 9,
+  "every_aisle_fully_covered": 9,
+  "records_labelled_right": 8,
+  "started_wrong": 4,
+  "wrong_corrected_by_end": 3,
+  "unexpected_obstacle_handled": 8,
+  "at_dock_at_end": 9,
+  "stays_put": 0
+ },
+ "structure_the_robot_found": {
+  "plant_aisles": [
+   "aisle-03",
+   "aisle-07"
+  ],
+  "aisle_lengths_m": [
+   41.2,
+   39.6
+  ],
+  "dock": [
+   2.014787228943449,
+   4.896983222443686,
+   -90.19
+  ]
+ },
+ "hermes_plan_review": {
+  "approved": 29,
+  "changed": 12,
+  "unavailable": 9,
+  "model": "nvidia/Nemotron-3.5-Super-VL with the map picture, via Nebius Token Factory"
+ },
+ "camera_checks": {
+  "asked": 175,
+  "said_rival": 22,
+  "said_here": 141
+ },
+ "how_it_works": [
+  "free space = cells a LiDAR ray crossed, farther than the robot's half-width from any map point; nothing unseen is drivable",
+  "plant aisles = long narrow free corridors in the map's wall direction with layered sides (stems, bed edge, next row); dock = where the robot was switched on",
+  "mission order = Rural Postman Problem on the graph of aisle ends + dock (every chosen aisle a required edge driven end to end, A* distances between ends), exact up to 7 aisles, ~0.1 s on the robot",
+  "HERMES (the agent's vision model) sees the plan drawn on the map with every leg's metres and the alternatives, and approves or changes the order before the robot moves",
+  "every leg planned by A* on the free grid from the believed pose (clearance cost -> middle of the aisle); survey legs planned inside the aisle",
+  "while driving: belief checked against every scan; whole-map search every 10 m keeps rivals; a belief that stops fitting, a rival clearly better over 2 m, or an obstacle where the map says free while the scans do not fit -> new anchor, odometry history re-placed, records relabelled, mission re-derived from the full goal list",
+  "an obstacle where the map says free while the scans DO fit = something new: marked on the grid, path planned around it",
+  "off the planned path by > 1 m -> planned again; no candidate can plan -> step 2 m into open space and search again; no progress for 40 rounds -> search again",
+  "camera (Nemotron VL) asked at the first aisle and at the dock: live view vs here vs up to two far rivals; a verdict that moves the robot is asked twice"
+ ],
+ "caveats": [
+  "LiDAR scans are synthetic (ray-cast on the self-built map); no sensor noise",
+  "the live camera view stands in from the look-around image set, >= 1.5 m from the reference image",
+  "only the aisles the robot drove during the led drive are seen empty; the two side aisles are known from their ends and left out of the mission",
+  "two identical houses and two yards make the farm nearly symmetric for a 2-D LiDAR: the camera is what breaks the symmetry, and when it answers 'unsure' the survey finishes under the wrong house name",
+  "an aisle counts as covered when the robot's true path passed within 0.6 m of >= 98 % of its 0.45 m stops; the records are 'right' when house and metre agree with the truth within 1 m"
+ ],
+ "seconds_total": 780.7,
+ "cases": [
+  {
+   "case": 1,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.0,
+    -36.0,
+    -18.5
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    11.041,
+    -35.989,
+    -18.13
+   ],
+   "start_belief_error_m": 0.04,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 138.9 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order totals 166.4 metres, which is shorter than the 176.1 metre alternative while covering all aisles and ending at the dock.",
+   "surprise_obstacle_xy": [
+    6.41,
+    5.07
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 347.1,
+   "knew_where_it_was_after_m": 204.4,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 147.4,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 138.9 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order totals 166.4 metres, which is shorter than the 176.1 metre alternative while covering all aisles and ending at the dock.",
+    "0.7 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "0.7 m: camera check at aisle-03/start: live view vs here vs rival (-1.4, 4.6) -> B",
+    "0.7 m: this is not aisle-03/start: now believes (-1.4, 4.6), error 42.5 m; relabelled 0 plant records",
+    "50.3 m: believes it reached aisle-03/start (true error 41.9 m)",
+    "91.4 m: believes it reached aisle-03/end (true error 39.2 m)",
+    "104.0 m: believes it reached aisle-07/start (true error 38.4 m)",
+    "143.7 m: believes it reached aisle-07/end (true error 43.0 m)",
+    "147.4 m: unexpected obstacle at (1.9, -36.5), not on the map: marked it and planned around",
+    "148.3 m: unexpected obstacle at (2.0, -37.0), not on the map: marked it and planned around",
+    "149.9 m: unexpected obstacle at (2.2, -36.0), not on the map: marked it and planned around",
+    "204.4 m: believes it reached dock (true error 41.2 m)",
+    "204.4 m: camera check at dock: live view vs here vs rival (5.7, -36.3) -> B",
+    "204.4 m: this is not dock: now believes (5.7, -36.3), error 0.0 m; relabelled 340 plant records; mission goals left 1 -> 3",
+    "252.6 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "292.3 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "347.1 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 2,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.0,
+    -39.0,
+    107.6
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "first_belief_pose": [
+    10.294,
+    7.156,
+    -75.56
+   ],
+   "start_belief_error_m": 47.52,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 99.2 m)",
+   "hermes_review": "review unavailable (no JSON object in the reply)",
+   "surprise_obstacle_xy": [
+    8.1,
+    -36.39
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 285.4,
+   "knew_where_it_was_after_m": 285.4,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": false,
+   "unexpected_obstacle_first_m": 97.2,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 99.2 m))",
+    "0.0 m: plan checked before moving: review unavailable (no JSON object in the reply)",
+    "50.6 m: believes it reached aisle-03/start (true error 41.9 m)",
+    "50.6 m: camera check at aisle-03/start: live view vs here vs rival (1.1, 4.9) -> B",
+    "50.6 m: this is not aisle-03/start: now believes (1.1, 4.9), error 0.0 m; relabelled 12 plant records",
+    "97.2 m: unexpected obstacle at (7.6, -36.5), not on the map: marked it and planned around",
+    "98.4 m: unexpected obstacle at (7.7, -37.0), not on the map: marked it and planned around",
+    "99.8 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "141.2 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "153.9 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "193.6 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "241.5 m: believes it reached dock (true error 0.0 m)",
+    "241.5 m: camera check at dock: live view vs here vs rival (5.5, -36.4) -> A",
+    "241.5 m: camera check at dock: live view vs here vs rival (7.5, 4.8) -> B",
+    "241.5 m: this is not dock: now believes (7.5, 4.8), error 4.0 m; relabelled 356 plant records; mission goals left 1 -> 3",
+    "251.8 m: believes it reached aisle-07/start (true error 4.2 m)",
+    "266.0 m: off the planned path by more than 1 m: planned again from here",
+    "285.4 m: a rival place fits the scans clearly better (margin 0.30): now believes (-3.9, 7.7), error 0.0 m; relabelled 356 plant records; mission goals left 2 -> 0",
+    "285.4 m: off the planned path by more than 1 m: planned again from here"
+   ]
+  },
+  {
+   "case": 3,
+   "tag": "near",
+   "put_down_xy_heading": [
+    10.5,
+    -37.5,
+    -95.2
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    10.459,
+    -37.487,
+    -94.97
+   ],
+   "start_belief_error_m": 0.04,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 138.5 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shorter of the two valid options at 166.0 metres.",
+   "surprise_obstacle_xy": [
+    4.66,
+    -7.45
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 252.7,
+   "knew_where_it_was_after_m": 25.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 0.984,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 175.2,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 138.5 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shorter of the two valid options at 166.0 metres.",
+    "0.2 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "0.2 m: camera check at aisle-03/start: live view vs here vs rival (-1.1, 5.8) -> B",
+    "0.2 m: this is not aisle-03/start: now believes (-1.1, 5.8), error 44.5 m; relabelled 0 plant records",
+    "25.3 m: off the planned path by more than 1 m: planned again from here",
+    "47.7 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "88.8 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "101.4 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "141.1 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "175.2 m: unexpected obstacle at (4.5, -8.1), not on the map: marked it and planned around",
+    "176.3 m: unexpected obstacle at (5.0, -8.1), not on the map: marked it and planned around",
+    "178.4 m: unexpected obstacle at (4.1, -7.6), not on the map: marked it and planned around",
+    "252.7 m: believes it reached dock (true error 0.0 m)",
+    "252.7 m: camera check at dock: live view vs here vs rival (8.4, -36.6) -> A",
+    "252.7 m: camera check at dock: live view vs here vs rival (-0.5, -36.5) -> A"
+   ]
+  },
+  {
+   "case": 4,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -0.5,
+    7.0,
+    -64.9
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    -0.699,
+    6.69,
+    -62.44
+   ],
+   "start_belief_error_m": 0.37,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 103.9 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 215.3m compared to the proposed 215.4m.",
+   "surprise_obstacle_xy": [
+    4.1,
+    -7.07
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 232.8,
+   "knew_where_it_was_after_m": 36.9,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 16.9,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 103.9 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 215.3m compared to the proposed 215.4m.",
+    "16.9 m: unexpected obstacle at (4.5, -6.7), not on the map: marked it and planned around",
+    "18.9 m: unexpected obstacle at (4.6, -7.6), not on the map: marked it and planned around",
+    "18.9 m: no way round the obstacle from the believed place: searched the whole map again (ambiguous): now believes (0.3, -5.3), error 5.0 m; relabelled 0 plant records",
+    "36.9 m: obstacle where the map said free and the scans do not fit the believed place: searched the whole map again: now believes (5.2, 10.5), error 0.0 m; relabelled 0 plant records",
+    "56.2 m: unexpected obstacle at (4.0, -6.6), not on the map: marked it and planned around",
+    "90.5 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "90.5 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> A",
+    "90.5 m: camera check at aisle-03/start: live view vs here vs rival (7.7, -28.8) -> A",
+    "132.0 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "144.6 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "184.3 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "232.8 m: believes it reached dock (true error 0.0 m)",
+    "232.8 m: camera check at dock: live view vs here vs rival (5.6, -36.4) -> A",
+    "232.8 m: camera check at dock: live view vs here vs rival (5.6, -28.7) -> A"
+   ]
+  },
+  {
+   "case": 5,
+   "tag": "near",
+   "put_down_xy_heading": [
+    8.0,
+    -39.0,
+    108.0
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    1.24,
+    7.18,
+    -74.2
+   ],
+   "start_belief_error_m": 46.67,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 104.6 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 214.2m compared to the proposed 214.4m.",
+   "surprise_obstacle_xy": [
+    4.18,
+    -24.56
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 191.2,
+   "knew_where_it_was_after_m": 170.6,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 0.966
+   },
+   "aisle_records_labelled_right": 0.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 15.7,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 104.6 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 214.2m compared to the proposed 214.4m.",
+    "15.7 m: unexpected obstacle at (4.5, -6.5), not on the map: marked it and planned around",
+    "16.6 m: unexpected obstacle at (5.0, -6.4), not on the map: marked it and planned around",
+    "18.8 m: unexpected obstacle at (4.2, -7.2), not on the map: marked it and planned around",
+    "51.7 m: believes it reached aisle-03/start (true error 41.9 m)",
+    "51.7 m: camera check at aisle-03/start: live view vs here vs rival (1.1, 4.9) -> unsure",
+    "51.7 m: camera check at aisle-03/start: live view vs here vs rival (7.9, -28.8) -> A",
+    "92.8 m: believes it reached aisle-03/end (true error 39.4 m)",
+    "105.4 m: believes it reached aisle-07/start (true error 38.2 m)",
+    "145.1 m: believes it reached aisle-07/end (true error 43.2 m)",
+    "170.6 m: off the planned path by more than 1 m: planned again from here",
+    "191.2 m: believes it reached dock (true error 0.0 m)",
+    "191.2 m: camera check at dock: live view vs here vs rival (5.5, -36.4) -> A",
+    "191.2 m: camera check at dock: live view vs here vs rival (5.6, -22.6) -> A"
+   ]
+  },
+  {
+   "case": 6,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.0,
+    5.0,
+    2.5
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    11.085,
+    4.709,
+    0.47
+   ],
+   "start_belief_error_m": 0.3,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 98.5 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, and is the shortest option at 216.2 metres.",
+   "surprise_obstacle_xy": [
+    2.36,
+    5.04
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 212.4,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 99.3,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 98.5 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, and is the shortest option at 216.2 metres.",
+    "50.5 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "50.5 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> A",
+    "50.5 m: camera check at aisle-03/start: live view vs here vs rival (-3.3, -2.7) -> A",
+    "91.6 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "99.3 m: unexpected obstacle at (3.0, 5.0), not on the map: marked it and planned around",
+    "100.5 m: unexpected obstacle at (2.8, 4.5), not on the map: marked it and planned around",
+    "116.4 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "155.8 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "212.4 m: believes it reached dock (true error 0.0 m)",
+    "212.4 m: camera check at dock: live view vs here vs rival (2.3, -2.3) -> A",
+    "212.4 m: camera check at dock: live view vs here vs rival (6.6, -37.7) -> A"
+   ]
+  },
+  {
+   "case": 7,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.0,
+    5.5,
+    2.3
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    10.997,
+    5.311,
+    1.63
+   ],
+   "start_belief_error_m": 0.19,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 98.6 m)",
+   "hermes_review": "review unavailable (no JSON object in the reply)",
+   "surprise_obstacle_xy": [
+    4.52,
+    -36.05
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 271.9,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 46.4,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 98.6 m))",
+    "0.0 m: plan checked before moving: review unavailable (no JSON object in the reply)",
+    "46.4 m: unexpected obstacle at (4.5, -35.5), not on the map: marked it and planned around",
+    "47.5 m: unexpected obstacle at (5.0, -35.6), not on the map: marked it and planned around",
+    "49.2 m: unexpected obstacle at (4.0, -35.5), not on the map: marked it and planned around",
+    "133.3 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "133.3 m: camera check at aisle-03/start: live view vs here vs rival (0.0, 3.5) -> A",
+    "133.3 m: camera check at aisle-03/start: live view vs here vs rival (0.0, -1.4) -> A",
+    "174.8 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "187.4 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "227.1 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "271.9 m: believes it reached dock (true error 0.0 m)",
+    "271.9 m: camera check at dock: live view vs here vs rival (8.4, -36.6) -> A",
+    "271.9 m: camera check at dock: live view vs here vs rival (-0.5, -36.5) -> A"
+   ]
+  },
+  {
+   "case": 8,
+   "tag": "near",
+   "put_down_xy_heading": [
+    10.5,
+    -36.5,
+    -95.0
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    10.15,
+    -36.413,
+    -100.9
+   ],
+   "start_belief_error_m": 0.36,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 137.8 m)",
+   "hermes_review": "review unavailable (no JSON object in the reply)",
+   "surprise_obstacle_xy": [
+    1.96,
+    -8.84
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 327.0,
+   "knew_where_it_was_after_m": 191.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": null,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 137.8 m))",
+    "0.0 m: plan checked before moving: review unavailable (no JSON object in the reply)",
+    "0.2 m: believes it reached aisle-03/start (true error 0.2 m)",
+    "0.2 m: camera check at aisle-03/start: live view vs here vs rival (-1.4, 5.0) -> B",
+    "0.2 m: this is not aisle-03/start: now believes (-1.4, 5.0), error 43.2 m; relabelled 0 plant records",
+    "49.6 m: believes it reached aisle-03/start (true error 41.8 m)",
+    "91.0 m: believes it reached aisle-03/end (true error 39.5 m)",
+    "103.7 m: believes it reached aisle-07/start (true error 38.1 m)",
+    "143.4 m: believes it reached aisle-07/end (true error 43.3 m)",
+    "191.3 m: believes it reached dock (true error 41.2 m)",
+    "191.3 m: camera check at dock: live view vs here vs rival (5.5, -36.3) -> B",
+    "191.3 m: this is not dock: now believes (5.5, -36.3), error 0.0 m; relabelled 340 plant records; mission goals left 1 -> 3",
+    "239.1 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "278.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "327.0 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 9,
+   "tag": "near",
+   "put_down_xy_heading": [
+    7.0,
+    7.0,
+    -174.8
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    7.107,
+    7.035,
+    -175.56
+   ],
+   "start_belief_error_m": 0.11,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 99.5 m)",
+   "hermes_review": "HERMES approved the plan: The proposed route is 0.1 metres shorter than the alternative while covering all aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    1.16,
+    4.94
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 204.1,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 98.0,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 99.5 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed route is 0.1 metres shorter than the alternative while covering all aisles once and ending at the dock.",
+    "47.9 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "47.9 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> no answer",
+    "47.9 m: camera check at aisle-03/start: live view vs here vs rival (-3.6, -5.4) -> A",
+    "89.3 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "98.0 m: unexpected obstacle at (1.7, 5.0), not on the map: marked it and planned around",
+    "99.0 m: unexpected obstacle at (1.8, 4.5), not on the map: marked it and planned around",
+    "111.9 m: unexpected obstacle at (1.5, 5.6), not on the map: marked it and planned around",
+    "116.5 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "156.2 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "204.1 m: believes it reached dock (true error 0.0 m)",
+    "204.1 m: camera check at dock: live view vs here vs rival (3.5, -2.6) -> A",
+    "204.1 m: camera check at dock: live view vs here vs rival (3.5, -8.3) -> A"
+   ]
+  },
+  {
+   "case": 10,
+   "tag": "near",
+   "put_down_xy_heading": [
+    4.5,
+    6.5,
+    156.0
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "first_belief_pose": [
+    4.738,
+    -0.297,
+    153.75
+   ],
+   "start_belief_error_m": 6.8,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 106.0 m)",
+   "hermes_review": "HERMES approved the plan: The proposed plan is the shortest option at 204.8 meters, visits both aisles exactly once, and ends at the dock.",
+   "surprise_obstacle_xy": [
+    4.6,
+    -2.17
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 208.7,
+   "knew_where_it_was_after_m": 23.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 8.6,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 106.0 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed plan is the shortest option at 204.8 meters, visits both aisles exactly once, and ends at the dock.",
+    "8.6 m: unexpected obstacle at (4.5, -8.9), not on the map: marked it and planned around",
+    "9.5 m: unexpected obstacle at (5.0, -9.0), not on the map: marked it and planned around",
+    "11.2 m: unexpected obstacle at (4.0, -9.2), not on the map: marked it and planned around",
+    "23.3 m: obstacle where the map said free and the scans do not fit the believed place: searched the whole map again: now believes (4.8, 10.3), error 0.0 m; relabelled 0 plant records",
+    "70.6 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "70.6 m: camera check at aisle-03/start: live view vs here vs rival (-0.1, -7.4) -> A",
+    "70.6 m: camera check at aisle-03/start: live view vs here vs rival (9.1, -25.0) -> A",
+    "111.6 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "124.2 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "163.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "208.7 m: believes it reached dock (true error 0.0 m)",
+    "208.7 m: camera check at dock: live view vs here vs rival (0.6, 1.4) -> A",
+    "208.7 m: camera check at dock: live view vs here vs rival (8.4, -33.4) -> A"
+   ]
+  },
+  {
+   "case": 11,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.5,
+    -39.5,
+    -149.1
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    -1.41,
+    -39.49,
+    -149.1
+   ],
+   "start_belief_error_m": 0.09,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 143.4 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shortest valid route at 166.1 metres, covering all aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    4.16,
+    4.79
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 158.2,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 48.6,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 143.4 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shortest valid route at 166.1 metres, covering all aisles once and ending at the dock.",
+    "0.7 m: believes it reached aisle-07/start (true error 0.1 m)",
+    "0.7 m: camera check at aisle-07/start: live view vs here vs rival (4.7, -9.7) -> A",
+    "0.7 m: camera check at aisle-07/start: live view vs here vs rival (4.7, -6.3) -> no answer",
+    "40.5 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "48.6 m: unexpected obstacle at (3.7, 4.8), not on the map: marked it and planned around",
+    "49.6 m: unexpected obstacle at (3.8, 4.3), not on the map: marked it and planned around",
+    "60.0 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "101.4 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "147.3 m: unexpected obstacle at (4.7, 4.2), not on the map: marked it and planned around",
+    "147.6 m: unexpected obstacle at (4.2, 4.3), not on the map: marked it and planned around",
+    "158.2 m: believes it reached dock (true error 0.0 m)",
+    "158.2 m: camera check at dock: live view vs here vs rival (-1.2, 6.4) -> A",
+    "158.2 m: camera check at dock: live view vs here vs rival (3.4, -7.3) -> A"
+   ]
+  },
+  {
+   "case": 12,
+   "tag": "near",
+   "put_down_xy_heading": [
+    10.0,
+    -38.5,
+    124.2
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    9.691,
+    -38.514,
+    121.6
+   ],
+   "start_belief_error_m": 0.31,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 139.0 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, and is the shortest option at 166.6m versus 175.0m.",
+   "surprise_obstacle_xy": [
+    4.16,
+    -24.22
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 193.6,
+   "knew_where_it_was_after_m": 172.7,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 0.966
+   },
+   "aisle_records_labelled_right": 0.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 17.5,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 139.0 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, and is the shortest option at 166.6m versus 175.0m.",
+    "0.8 m: believes it reached aisle-03/start (true error 0.1 m)",
+    "0.8 m: camera check at aisle-03/start: live view vs here vs rival (-0.8, 6.2) -> B",
+    "0.8 m: this is not aisle-03/start: now believes (-0.8, 6.2), error 45.3 m; relabelled 0 plant records",
+    "17.5 m: unexpected obstacle at (4.5, -6.7), not on the map: marked it and planned around",
+    "18.7 m: unexpected obstacle at (5.0, -6.9), not on the map: marked it and planned around",
+    "21.1 m: unexpected obstacle at (4.2, -7.4), not on the map: marked it and planned around",
+    "53.8 m: believes it reached aisle-03/start (true error 41.9 m)",
+    "94.9 m: believes it reached aisle-03/end (true error 39.4 m)",
+    "107.5 m: believes it reached aisle-07/start (true error 38.2 m)",
+    "147.2 m: believes it reached aisle-07/end (true error 43.2 m)",
+    "172.7 m: off the planned path by more than 1 m: planned again from here",
+    "193.6 m: believes it reached dock (true error 0.0 m)",
+    "193.6 m: camera check at dock: live view vs here vs rival (5.7, -36.4) -> A",
+    "193.6 m: camera check at dock: live view vs here vs rival (-1.7, -3.7) -> A"
+   ]
+  },
+  {
+   "case": 13,
+   "tag": "near",
+   "put_down_xy_heading": [
+    3.5,
+    6.0,
+    -47.6
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    3.32,
+    5.71,
+    -45.4
+   ],
+   "start_belief_error_m": 0.34,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 103.1 m)",
+   "hermes_review": "HERMES approved the plan: The proposed plan is the shortest valid option at 211.2m, covering both aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    4.17,
+    -7.21
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 229.4,
+   "knew_where_it_was_after_m": 32.9,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 13.0,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 103.1 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed plan is the shortest valid option at 211.2m, covering both aisles once and ending at the dock.",
+    "13.0 m: unexpected obstacle at (4.5, -6.7), not on the map: marked it and planned around",
+    "15.0 m: unexpected obstacle at (4.7, -7.5), not on the map: marked it and planned around",
+    "15.0 m: no way round the obstacle from the believed place: searched the whole map again (ambiguous): now believes (0.2, -15.3), error 9.1 m; relabelled 0 plant records",
+    "32.9 m: obstacle where the map said free and the scans do not fit the believed place: searched the whole map again: now believes (5.2, 10.5), error 0.0 m; relabelled 0 plant records",
+    "52.5 m: unexpected obstacle at (4.0, -6.8), not on the map: marked it and planned around",
+    "87.1 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "87.1 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> A",
+    "87.1 m: camera check at aisle-03/start: live view vs here vs rival (7.7, -26.0) -> A",
+    "128.2 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "141.1 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "180.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "229.4 m: believes it reached dock (true error 0.0 m)",
+    "229.4 m: camera check at dock: live view vs here vs rival (3.3, -2.6) -> A",
+    "229.4 m: camera check at dock: live view vs here vs rival (5.6, -36.4) -> A"
+   ]
+  },
+  {
+   "case": 14,
+   "tag": "near",
+   "put_down_xy_heading": [
+    3.0,
+    -37.5,
+    162.4
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    3.03,
+    -37.04,
+    162.4
+   ],
+   "start_belief_error_m": 0.46,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 143.9 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order aisle-07 -> aisle-03 is shorter (167.4m) than the proposed plan (171.4m).",
+   "surprise_obstacle_xy": [
+    6.02,
+    4.59
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 153.6,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 51.8,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 143.9 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order aisle-07 -> aisle-03 is shorter (167.4m) than the proposed plan (171.4m).",
+    "2.3 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "2.3 m: camera check at aisle-07/start: live view vs here vs rival (7.5, 6.1) -> A",
+    "2.3 m: camera check at aisle-07/start: live view vs here vs rival (3.6, 6.1) -> A",
+    "41.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "51.8 m: unexpected obstacle at (5.4, 4.8), not on the map: marked it and planned around",
+    "52.7 m: unexpected obstacle at (5.6, 4.3), not on the map: marked it and planned around",
+    "64.8 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "106.1 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "153.6 m: believes it reached dock (true error 0.0 m)",
+    "153.6 m: camera check at dock: live view vs here vs rival (-1.4, 4.8) -> unsure",
+    "153.6 m: camera check at dock: live view vs here vs rival (3.3, 1.5) -> no answer"
+   ]
+  },
+  {
+   "case": 15,
+   "tag": "near",
+   "put_down_xy_heading": [
+    0.0,
+    7.5,
+    -36.2
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    9.36,
+    -37.879,
+    147.59
+   ],
+   "start_belief_error_m": 46.33,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 138.2 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shortest valid route that surveys both aisles exactly once and ends at the dock.",
+   "surprise_obstacle_xy": [
+    7.81,
+    5.84
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 191.5,
+   "knew_where_it_was_after_m": 1.7,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": null,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 138.2 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shortest valid route that surveys both aisles exactly once and ends at the dock.",
+    "0.2 m: believes it reached aisle-03/start (true error 45.9 m)",
+    "0.2 m: camera check at aisle-03/start: live view vs here vs rival (4.7, -16.3) -> A",
+    "0.2 m: camera check at aisle-03/start: live view vs here vs rival (4.7, -23.9) -> A",
+    "1.7 m: a rival place fits the scans clearly better (margin 0.57): now believes (0.2, 5.8), error 0.0 m; relabelled 0 plant records; mission goals left 4 -> 5",
+    "49.8 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "91.0 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "103.9 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "143.4 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "191.5 m: believes it reached dock (true error 0.0 m)",
+    "191.5 m: camera check at dock: live view vs here vs rival (3.5, -2.5) -> A",
+    "191.5 m: camera check at dock: live view vs here vs rival (3.3, -5.7) -> A"
+   ]
+  },
+  {
+   "case": 16,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -3.0,
+    -37.5,
+    157.1
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    -0.244,
+    2.405,
+    67.07
+   ],
+   "start_belief_error_m": 40.0,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 99.4 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 216.4m compared to the proposed 216.6m.",
+   "surprise_obstacle_xy": [
+    21.99,
+    -32.74
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 288.3,
+   "knew_where_it_was_after_m": 137.4,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": null,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 99.4 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 216.4m compared to the proposed 216.6m.",
+    "1.7 m: a rival place fits the scans clearly better (margin 0.48): now believes (4.7, 5.8), error 44.0 m; relabelled 0 plant records",
+    "47.0 m: believes it reached aisle-03/start (true error 44.3 m)",
+    "47.0 m: camera check at aisle-03/start: live view vs here vs rival (-7.5, 5.2) -> A",
+    "47.0 m: camera check at aisle-03/start: live view vs here vs rival (-7.6, -2.2) -> A",
+    "88.3 m: believes it reached aisle-03/end (true error 42.4 m)",
+    "100.9 m: believes it reached aisle-07/start (true error 37.1 m)",
+    "116.3 m: off the planned path by more than 1 m: planned again from here",
+    "137.4 m: believed place no longer fits the scans: searched the whole map again: now believes (0.1, -39.9), error 0.2 m; relabelled 155 plant records; mission goals left 2 -> 5",
+    "146.5 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "187.8 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "200.7 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "240.1 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "288.3 m: believes it reached dock (true error 0.0 m)",
+    "288.3 m: camera check at dock: live view vs here vs rival (5.5, -36.4) -> A",
+    "288.3 m: camera check at dock: live view vs here vs rival (3.3, -3.1) -> A"
+   ]
+  },
+  {
+   "case": 17,
+   "tag": "near",
+   "put_down_xy_heading": [
+    0.5,
+    -38.5,
+    20.2
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    0.26,
+    -38.08,
+    17.9
+   ],
+   "start_belief_error_m": 0.48,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 141.5 m)",
+   "hermes_review": "review unavailable (no JSON object in the reply)",
+   "surprise_obstacle_xy": [
+    -0.98,
+    4.61
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 140.4,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": null,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 141.5 m))",
+    "0.0 m: plan checked before moving: review unavailable (no JSON object in the reply)",
+    "0.2 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "0.2 m: camera check at aisle-07/start: live view vs here vs rival (4.2, -6.5) -> A",
+    "0.2 m: camera check at aisle-07/start: live view vs here vs rival (4.2, -12.5) -> A",
+    "38.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "51.5 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "92.7 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "140.4 m: believes it reached dock (true error 0.0 m)",
+    "140.4 m: camera check at dock: live view vs here vs rival (3.4, -5.6) -> A",
+    "140.4 m: camera check at dock: live view vs here vs rival (3.4, -0.2) -> A"
+   ]
+  },
+  {
+   "case": 18,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.5,
+    -36.0,
+    -93.6
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    10.303,
+    4.51,
+    88.62
+   ],
+   "start_belief_error_m": 42.19,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 97.7 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order visits both aisles exactly once, ends at the dock, and is the shorter of the two computed options at 215.4 metres.",
+   "surprise_obstacle_xy": [
+    8.9,
+    4.84
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 317.8,
+   "knew_where_it_was_after_m": 49.8,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 138.6,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 97.7 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order visits both aisles exactly once, ends at the dock, and is the shorter of the two computed options at 215.4 metres.",
+    "49.8 m: believes it reached aisle-03/start (true error 41.9 m)",
+    "49.8 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> B",
+    "49.8 m: this is not aisle-03/start: now believes (1.2, 4.9), error 0.0 m; relabelled 8 plant records",
+    "96.7 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "138.1 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "138.6 m: unexpected obstacle at (9.0, 4.2), not on the map: marked it and planned around",
+    "230.3 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "270.0 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "317.8 m: believes it reached dock (true error 0.0 m)",
+    "317.8 m: camera check at dock: live view vs here vs rival (5.5, -36.4) -> A",
+    "317.8 m: camera check at dock: live view vs here vs rival (5.5, -28.7) -> A"
+   ]
+  },
+  {
+   "case": 19,
+   "tag": "near",
+   "put_down_xy_heading": [
+    4.0,
+    6.0,
+    86.9
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    3.81,
+    5.72,
+    89.4
+   ],
+   "start_belief_error_m": 0.34,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 103.2 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shortest valid option at 211.3 meters, covering both aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    4.13,
+    -6.95
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 189.0,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 12.8,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 103.2 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shortest valid option at 211.3 meters, covering both aisles once and ending at the dock.",
+    "12.8 m: unexpected obstacle at (4.5, -6.4), not on the map: marked it and planned around",
+    "14.7 m: unexpected obstacle at (4.6, -7.3), not on the map: marked it and planned around",
+    "47.1 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "47.1 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> A",
+    "47.1 m: camera check at aisle-03/start: live view vs here vs rival (1.2, -2.7) -> A",
+    "88.2 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "100.8 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "140.5 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "189.0 m: believes it reached dock (true error 0.0 m)",
+    "189.0 m: camera check at dock: live view vs here vs rival (-1.7, -7.1) -> A",
+    "189.0 m: camera check at dock: live view vs here vs rival (-1.7, -10.6) -> A"
+   ]
+  },
+  {
+   "case": 20,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -2.5,
+    -36.5,
+    62.8
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "first_belief_pose": [
+    -2.415,
+    -36.038,
+    62.78
+   ],
+   "start_belief_error_m": 0.47,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 144.9 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shortest valid option at 167.6m compared to 176.3m for the alternative.",
+   "surprise_obstacle_xy": [
+    1.74,
+    4.59
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 147.5,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 47.7,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 144.9 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shortest valid option at 167.6m compared to 176.3m for the alternative.",
+    "2.5 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "2.5 m: camera check at aisle-07/start: live view vs here vs rival (0.8, 5.8) -> A",
+    "2.5 m: camera check at aisle-07/start: live view vs here vs rival (3.5, 9.0) -> A",
+    "42.1 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "47.7 m: unexpected obstacle at (1.3, 5.0), not on the map: marked it and planned around",
+    "49.8 m: unexpected obstacle at (2.2, 5.1), not on the map: marked it and planned around",
+    "50.1 m: unexpected obstacle at (1.8, 5.1), not on the map: marked it and planned around",
+    "58.7 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "99.9 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "147.5 m: believes it reached dock (true error 0.0 m)",
+    "147.5 m: camera check at dock: live view vs here vs rival (5.5, -36.4) -> A",
+    "147.5 m: camera check at dock: live view vs here vs rival (3.4, -0.6) -> A"
+   ]
+  },
+  {
+   "case": 21,
+   "tag": "near",
+   "put_down_xy_heading": [
+    6.0,
+    -38.5,
+    66.3
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    3.315,
+    6.839,
+    -116.2
+   ],
+   "start_belief_error_m": 45.42,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 104.7 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, and is the shortest available option at 214.4 metres.",
+   "surprise_obstacle_xy": [
+    7.63,
+    -36.64
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 160.3,
+   "knew_where_it_was_after_m": 5.3,
+   "coverage": {
+    "aisle-03": 0.033,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 1.6,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 104.7 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, and is the shortest available option at 214.4 metres.",
+    "1.6 m: unexpected obstacle at (2.0, 5.7), not on the map: marked it and planned around",
+    "1.6 m: no way round the obstacle from the believed place: searched the whole map again (ambiguous): now believes (7.0, -37.4), error 0.0 m; relabelled 0 plant records",
+    "1.8 m: unexpected obstacle at (7.4, -37.3), not on the map: marked it and planned around",
+    "3.1 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "3.1 m: camera check at aisle-03/start: live view vs here vs rival (0.7, 6.0) -> B",
+    "3.1 m: this is not aisle-03/start: now believes (0.7, 6.0), error 44.2 m; relabelled 0 plant records",
+    "3.3 m: unexpected obstacle at (1.1, 5.7), not on the map: marked it and planned around",
+    "5.3 m: probe: moved 2.0 m into open space, searching again",
+    "5.3 m: after the probe: searched the whole map again (ambiguous): now believes (6.2, -38.3), error 0.0 m; relabelled 0 plant records; mission goals left 5 -> 4",
+    "6.8 m: unexpected obstacle at (7.0, -36.9), not on the map: marked it and planned around",
+    "8.4 m: unexpected obstacle at (8.0, -37.1), not on the map: marked it and planned around",
+    "10.2 m: unexpected obstacle at (8.1, -36.7), not on the map: marked it and planned around",
+    "10.8 m: unexpected obstacle at (8.1, -36.2), not on the map: marked it and planned around",
+    "12.9 m: unexpected obstacle at (7.3, -36.2), not on the map: marked it and planned around",
+    "60.1 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "72.5 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "112.2 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "160.3 m: believes it reached dock (true error 0.0 m)",
+    "160.3 m: camera check at dock: live view vs here vs rival (5.7, -36.4) -> A",
+    "160.3 m: camera check at dock: live view vs here vs rival (3.3, 0.6) -> A"
+   ]
+  },
+  {
+   "case": 22,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.5,
+    -37.0,
+    -13.0
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "first_belief_pose": [
+    -2.428,
+    5.541,
+    166.39
+   ],
+   "start_belief_error_m": 44.76,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 104.3 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 216.6m compared to the proposed 216.7m.",
+   "surprise_obstacle_xy": [
+    4.27,
+    -8.78
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 195.9,
+   "knew_where_it_was_after_m": 91.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 0.552,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 179.2,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 104.3 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 216.6m compared to the proposed 216.7m.",
+    "24.2 m: off the planned path by more than 1 m: planned again from here",
+    "48.6 m: believes it reached aisle-03/start (true error 4.1 m)",
+    "48.6 m: camera check at aisle-03/start: live view vs here vs rival (7.8, -40.5) -> no answer",
+    "48.6 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 9.0) -> A",
+    "91.2 m: off the planned path by more than 1 m: planned again from here",
+    "93.7 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "106.6 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "146.3 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "179.2 m: unexpected obstacle at (4.5, -9.2), not on the map: marked it and planned around",
+    "181.0 m: unexpected obstacle at (4.8, -8.5), not on the map: marked it and planned around",
+    "195.9 m: believes it reached dock (true error 0.0 m)",
+    "195.9 m: camera check at dock: live view vs here vs rival (7.3, 4.8) -> unsure",
+    "195.9 m: camera check at dock: live view vs here vs rival (5.7, -36.4) -> A"
+   ]
+  },
+  {
+   "case": 23,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.0,
+    -38.0,
+    -100.1
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    -1.291,
+    -37.695,
+    -103.67
+   ],
+   "start_belief_error_m": 0.42,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 143.0 m)",
+   "hermes_review": "review unavailable (no JSON object in the reply)",
+   "surprise_obstacle_xy": [
+    2.87,
+    -7.1
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 141.1,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": null,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 143.0 m))",
+    "0.0 m: plan checked before moving: review unavailable (no JSON object in the reply)",
+    "0.3 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "0.3 m: camera check at aisle-07/start: live view vs here vs rival (9.8, 6.5) -> no answer",
+    "0.3 m: camera check at aisle-07/start: live view vs here vs rival (0.9, 6.5) -> A",
+    "39.8 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "52.4 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "93.5 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "141.1 m: believes it reached dock (true error 0.0 m)",
+    "141.1 m: camera check at dock: live view vs here vs rival (5.6, -36.3) -> A",
+    "141.1 m: camera check at dock: live view vs here vs rival (3.4, -0.2) -> A"
+   ]
+  },
+  {
+   "case": 24,
+   "tag": "near",
+   "put_down_xy_heading": [
+    7.5,
+    -38.0,
+    50.7
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    7.262,
+    -37.931,
+    48.05
+   ],
+   "start_belief_error_m": 0.25,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 139.2 m)",
+   "hermes_review": "review unavailable (no JSON object in the reply)",
+   "surprise_obstacle_xy": [
+    5.53,
+    4.94
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 344.0,
+   "knew_where_it_was_after_m": 201.5,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 146.5,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 139.2 m))",
+    "0.0 m: plan checked before moving: review unavailable (no JSON object in the reply)",
+    "1.0 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "1.0 m: camera check at aisle-03/start: live view vs here vs rival (1.1, 5.7) -> B",
+    "1.0 m: this is not aisle-03/start: now believes (1.1, 5.7), error 43.5 m; relabelled 0 plant records",
+    "48.4 m: believes it reached aisle-03/start (true error 41.9 m)",
+    "89.5 m: believes it reached aisle-03/end (true error 39.4 m)",
+    "102.2 m: believes it reached aisle-07/start (true error 38.2 m)",
+    "141.9 m: believes it reached aisle-07/end (true error 43.2 m)",
+    "146.5 m: unexpected obstacle at (3.0, -36.5), not on the map: marked it and planned around",
+    "147.5 m: unexpected obstacle at (3.0, -36.0), not on the map: marked it and planned around",
+    "201.5 m: believes it reached dock (true error 41.2 m)",
+    "201.5 m: camera check at dock: live view vs here vs rival (5.5, -36.3) -> B",
+    "201.5 m: this is not dock: now believes (5.5, -36.3), error 0.0 m; relabelled 332 plant records; mission goals left 1 -> 3",
+    "249.6 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "289.0 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "344.0 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 25,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.0,
+    6.5,
+    -141.4
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    -1.928,
+    -37.536,
+    39.29
+   ],
+   "start_belief_error_m": 45.89,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 143.7 m)",
+   "hermes_review": "HERMES approved the plan: The proposed plan matches the shortest computed alternative at 166.4m, covering all aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    7.0,
+    -36.04
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 210.2,
+   "knew_where_it_was_after_m": 50.9,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 46.8,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 143.7 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed plan matches the shortest computed alternative at 166.4m, covering all aisles once and ending at the dock.",
+    "1.2 m: believes it reached aisle-07/start (true error 45.3 m)",
+    "1.2 m: camera check at aisle-07/start: live view vs here vs rival (10.1, 6.2) -> A",
+    "1.2 m: camera check at aisle-07/start: live view vs here vs rival (5.6, -10.1) -> A",
+    "40.9 m: believes it reached aisle-07/end (true error 33.0 m)",
+    "46.8 m: unexpected obstacle at (1.6, 5.0), not on the map: marked it and planned around",
+    "48.9 m: unexpected obstacle at (2.3, 5.0), not on the map: marked it and planned around",
+    "48.9 m: no way round the obstacle from the believed place: searched the whole map again (ambiguous): now believes (6.8, -36.7), error 0.0 m; relabelled 172 plant records; mission goals left 3 -> 5",
+    "48.9 m: unexpected obstacle at (6.8, -36.5), not on the map: marked it and planned around",
+    "50.9 m: probe: moved 2.0 m into open space, searching again",
+    "50.9 m: after the probe: searched the whole map again: now believes (5.2, -37.8), error 0.0 m; relabelled 172 plant records",
+    "57.2 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "97.2 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "109.3 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "150.4 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "153.0 m: unexpected obstacle at (7.6, -36.3), not on the map: marked it and planned around",
+    "154.9 m: unexpected obstacle at (6.8, -35.9), not on the map: marked it and planned around",
+    "210.2 m: believes it reached dock (true error 0.0 m)",
+    "210.2 m: camera check at dock: live view vs here vs rival (3.3, -2.6) -> A",
+    "210.2 m: camera check at dock: live view vs here vs rival (5.6, -36.4) -> A"
+   ]
+  },
+  {
+   "case": 26,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -1.5,
+    -38.5,
+    69.2
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    10.44,
+    6.581,
+    -110.4
+   ],
+   "start_belief_error_m": 46.64,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 98.7 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order visits both aisles exactly once, ends at the dock, and is the shortest option at 216.0 metres.",
+   "surprise_obstacle_xy": [
+    1.92,
+    -36.99
+   ],
+   "outcome": "ran_out",
+   "metres_driven": 360.2,
+   "knew_where_it_was_after_m": 297.6,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 0.315,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": false,
+   "unexpected_obstacle_first_m": 3.6,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 98.7 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order visits both aisles exactly once, ends at the dock, and is the shortest option at 216.0 metres.",
+    "3.6 m: unexpected obstacle at (7.6, 5.0), not on the map: marked it and planned around",
+    "4.2 m: unexpected obstacle at (7.6, 5.5), not on the map: marked it and planned around",
+    "5.4 m: unexpected obstacle at (7.6, 6.0), not on the map: marked it and planned around",
+    "7.1 m: unexpected obstacle at (7.0, 5.9), not on the map: marked it and planned around",
+    "57.5 m: believes it reached aisle-03/start (true error 41.8 m)",
+    "57.5 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> no answer",
+    "57.5 m: camera check at aisle-03/start: live view vs here vs rival (-3.1, 5.0) -> B",
+    "57.5 m: this is not aisle-03/start: now believes (-3.1, 5.0), error 4.3 m; relabelled 31 plant records",
+    "65.3 m: obstacle where the map said free and the scans do not fit the believed place: searched the whole map again: now believes (8.5, 4.1), error 0.0 m; relabelled 33 plant records",
+    "113.5 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "154.6 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "167.2 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "206.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "209.8 m: unexpected obstacle at (1.4, -36.8), not on the map: marked it and planned around",
+    "211.8 m: probe: moved 2.0 m into open space, searching again",
+    "211.8 m: after the probe: searched the whole map again (ambiguous): now believes (5.2, -25.3), error 14.0 m; relabelled 379 plant records; mission goals left 1 -> 5",
+    "223.1 m: off the planned path by more than 1 m: planned again from here",
+    "230.3 m: believes it reached aisle-03/start (true error 7.1 m)",
+    "234.0 m: obstacle where the map said free and the scans do not fit the believed place: searched the whole map again: now believes (5.4, 2.6), error 38.0 m; relabelled 385 plant records; mission goals left 4 -> 5",
+    "276.8 m: believes it reached aisle-03/start (true error 41.3 m)",
+    "297.6 m: off the planned path by more than 1 m: planned again from here",
+    "315.9 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "328.5 m: believes it reached aisle-07/start (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 27,
+   "tag": "near",
+   "put_down_xy_heading": [
+    2.5,
+    -37.5,
+    48.7
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    2.42,
+    -37.497,
+    48.15
+   ],
+   "start_belief_error_m": 0.08,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 143.9 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shorter alternative at 166.6 metres compared to 173.0 metres, covering all aisles and ending at the dock.",
+   "surprise_obstacle_xy": [
+    2.02,
+    5.04
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 146.5,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 46.9,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 143.9 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shorter alternative at 166.6 metres compared to 173.0 metres, covering all aisles and ending at the dock.",
+    "1.1 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "1.1 m: camera check at aisle-07/start: live view vs here vs rival (7.5, 6.2) -> A",
+    "1.1 m: camera check at aisle-07/start: live view vs here vs rival (3.4, 6.2) -> A",
+    "41.0 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "46.9 m: unexpected obstacle at (1.6, 5.0), not on the map: marked it and planned around",
+    "47.8 m: unexpected obstacle at (1.4, 5.5), not on the map: marked it and planned around",
+    "49.6 m: unexpected obstacle at (2.0, 5.5), not on the map: marked it and planned around",
+    "57.8 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "98.9 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "146.5 m: believes it reached dock (true error 0.0 m)",
+    "146.5 m: camera check at dock: live view vs here vs rival (3.3, -4.7) -> A",
+    "146.5 m: camera check at dock: live view vs here vs rival (3.4, -0.7) -> A"
+   ]
+  },
+  {
+   "case": 28,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -2.5,
+    4.5,
+    -44.5
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    -2.41,
+    4.56,
+    -44.5
+   ],
+   "start_belief_error_m": 0.11,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 104.1 m)",
+   "hermes_review": "HERMES changed the plan: The proposed plan totals 216.8m, while the alternative aisle-03 -> aisle-07 is shorter at 216.7m.",
+   "surprise_obstacle_xy": [
+    4.41,
+    -22.58
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 245.6,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 33.5,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 104.1 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The proposed plan totals 216.8m, while the alternative aisle-03 -> aisle-07 is shorter at 216.7m.",
+    "33.5 m: unexpected obstacle at (4.5, -22.0), not on the map: marked it and planned around",
+    "34.6 m: unexpected obstacle at (5.0, -22.1), not on the map: marked it and planned around",
+    "36.3 m: unexpected obstacle at (4.0, -22.0), not on the map: marked it and planned around",
+    "106.9 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "106.9 m: camera check at aisle-03/start: live view vs here vs rival (-0.0, 3.5) -> A",
+    "106.9 m: camera check at aisle-03/start: live view vs here vs rival (-0.0, -4.3) -> A",
+    "148.4 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "161.0 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "200.7 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "245.6 m: believes it reached dock (true error 0.0 m)",
+    "245.6 m: camera check at dock: live view vs here vs rival (8.2, -29.1) -> A",
+    "245.6 m: camera check at dock: live view vs here vs rival (0.7, -0.4) -> A"
+   ]
+  },
+  {
+   "case": 29,
+   "tag": "near",
+   "put_down_xy_heading": [
+    11.5,
+    -37.5,
+    107.5
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    11.23,
+    -37.58,
+    105.0
+   ],
+   "start_belief_error_m": 0.28,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 139.6 m)",
+   "hermes_review": "HERMES approved the plan: The proposed route is the shorter of the two computed options at 167.2 meters, satisfying the requirement to drive each aisle once and end a",
+   "surprise_obstacle_xy": [
+    2.7,
+    4.28
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 339.4,
+   "knew_where_it_was_after_m": 203.8,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.01,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 49.1,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 139.6 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed route is the shorter of the two computed options at 167.2 meters, satisfying the requirement to drive each aisle once and end a",
+    "1.7 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "1.7 m: camera check at aisle-03/start: live view vs here vs rival (-1.3, 5.7) -> B",
+    "1.7 m: this is not aisle-03/start: now believes (-1.3, 5.7), error 44.4 m; relabelled 0 plant records",
+    "49.1 m: unexpected obstacle at (5.7, -36.4), not on the map: marked it and planned around",
+    "49.3 m: unexpected obstacle at (5.7, -36.0), not on the map: marked it and planned around",
+    "62.0 m: believes it reached aisle-03/start (true error 43.0 m)",
+    "103.1 m: believes it reached aisle-03/end (true error 39.1 m)",
+    "116.1 m: believes it reached aisle-07/start (true error 38.0 m)",
+    "155.6 m: believes it reached aisle-07/end (true error 42.9 m)",
+    "203.8 m: believes it reached dock (true error 41.2 m)",
+    "203.8 m: camera check at dock: live view vs here vs rival (5.6, -36.3) -> B",
+    "203.8 m: this is not dock: now believes (5.6, -36.3), error 0.0 m; relabelled 341 plant records; mission goals left 1 -> 3",
+    "251.7 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "291.4 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "339.4 m: believes it reached dock (true error 0.0 m)"
+   ]
+  },
+  {
+   "case": 30,
+   "tag": "near",
+   "put_down_xy_heading": [
+    8.0,
+    -38.0,
+    -110.2
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    8.18,
+    -37.58,
+    -107.7
+   ],
+   "start_belief_error_m": 0.46,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 138.3 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shortest valid route at 165.8 metres.",
+   "surprise_obstacle_xy": [
+    2.38,
+    -36.62
+   ],
+   "outcome": "ran_out",
+   "metres_driven": 360.2,
+   "knew_where_it_was_after_m": null,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 0.016,
+   "final_belief_error_m": 18.1,
+   "ended_at_dock": false,
+   "unexpected_obstacle_first_m": 92.9,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 138.3 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shortest valid route at 165.8 metres.",
+    "0.9 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "0.9 m: camera check at aisle-03/start: live view vs here vs rival (0.8, 5.7) -> B",
+    "0.9 m: this is not aisle-03/start: now believes (0.8, 5.7), error 43.7 m; relabelled 1 plant records",
+    "48.7 m: believes it reached aisle-03/start (true error 41.9 m)",
+    "89.8 m: believes it reached aisle-03/end (true error 39.2 m)",
+    "92.9 m: unexpected obstacle at (7.2, 5.0), not on the map: marked it and planned around",
+    "94.1 m: unexpected obstacle at (7.1, 4.5), not on the map: marked it and planned around",
+    "95.7 m: unexpected obstacle at (7.2, 5.6), not on the map: marked it and planned around",
+    "108.1 m: believes it reached aisle-07/start (true error 38.4 m)",
+    "147.8 m: believes it reached aisle-07/end (true error 43.0 m)",
+    "195.9 m: believes it reached dock (true error 41.2 m)",
+    "195.9 m: camera check at dock: live view vs here vs rival (5.6, -36.3) -> B",
+    "195.9 m: this is not dock: now believes (5.6, -36.3), error 0.0 m; relabelled 334 plant records; mission goals left 1 -> 3",
+    "244.0 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "283.5 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "287.2 m: unexpected obstacle at (1.8, -36.5), not on the map: marked it and planned around",
+    "289.2 m: probe: moved 2.0 m into open space, searching again",
+    "289.2 m: after the probe: searched the whole map again (ambiguous): now believes (0.2, 6.2), error 43.9 m; relabelled 503 plant records; mission goals left 1 -> 5",
+    "337.6 m: believes it reached aisle-03/start (true error 44.2 m)"
+   ]
+  },
+  {
+   "case": 31,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -2.5,
+    6.5,
+    -39.4
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    -2.25,
+    4.63,
+    -41.2
+   ],
+   "start_belief_error_m": 1.89,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 104.0 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 216.6m compared to the proposed 216.7m.",
+   "surprise_obstacle_xy": [
+    0.27,
+    7.01
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 192.8,
+   "knew_where_it_was_after_m": 1.0,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": null,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 104.0 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 216.6m compared to the proposed 216.7m.",
+    "1.0 m: believed place no longer fits the scans: searched the whole map again: now believes (-1.6, 6.3), error 0.0 m; relabelled 0 plant records",
+    "51.1 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "51.1 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> A",
+    "51.1 m: camera check at aisle-03/start: live view vs here vs rival (7.7, -33.1) -> A",
+    "92.6 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "105.2 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "144.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "192.8 m: believes it reached dock (true error 0.0 m)",
+    "192.8 m: camera check at dock: live view vs here vs rival (3.5, -12.1) -> A",
+    "192.8 m: camera check at dock: live view vs here vs rival (3.5, -8.1) -> A"
+   ]
+  },
+  {
+   "case": 32,
+   "tag": "near",
+   "put_down_xy_heading": [
+    2.0,
+    -39.0,
+    107.3
+   ],
+   "first_belief": "LiDAR best (camera undecided)",
+   "first_belief_pose": [
+    1.901,
+    -38.995,
+    106.78
+   ],
+   "start_belief_error_m": 0.1,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 143.4 m)",
+   "hermes_review": "HERMES approved the plan: The proposed plan matches the shorter 166.1m alternative and satisfies all survey and docking constraints.",
+   "surprise_obstacle_xy": [
+    1.3,
+    5.04
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 144.1,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 45.7,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 143.4 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed plan matches the shorter 166.1m alternative and satisfies all survey and docking constraints.",
+    "0.6 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "0.6 m: camera check at aisle-07/start: live view vs here vs rival (7.6, 7.4) -> A",
+    "0.6 m: camera check at aisle-07/start: live view vs here vs rival (4.5, -6.3) -> A",
+    "40.5 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "45.7 m: unexpected obstacle at (0.8, 5.0), not on the map: marked it and planned around",
+    "46.8 m: unexpected obstacle at (0.9, 5.5), not on the map: marked it and planned around",
+    "55.3 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "96.5 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "144.1 m: believes it reached dock (true error 0.0 m)",
+    "144.1 m: camera check at dock: live view vs here vs rival (5.6, -34.6) -> A",
+    "144.1 m: camera check at dock: live view vs here vs rival (5.5, -28.2) -> A"
+   ]
+  },
+  {
+   "case": 33,
+   "tag": "near",
+   "put_down_xy_heading": [
+    -3.0,
+    5.5,
+    -43.0
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    -3.006,
+    5.112,
+    -43.25
+   ],
+   "start_belief_error_m": 0.39,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 104.8 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 217.0m compared to the proposed 217.2m.",
+   "surprise_obstacle_xy": [
+    4.66,
+    5.22
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 194.6,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 97.9,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 104.8 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 217.0m compared to the proposed 217.2m.",
+    "51.3 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "51.3 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> no answer",
+    "51.3 m: camera check at aisle-03/start: live view vs here vs rival (1.3, -2.6) -> A",
+    "92.8 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "97.9 m: unexpected obstacle at (5.2, 4.8), not on the map: marked it and planned around",
+    "100.0 m: unexpected obstacle at (4.2, 4.6), not on the map: marked it and planned around",
+    "107.3 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "146.8 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "194.6 m: believes it reached dock (true error 0.0 m)",
+    "194.6 m: camera check at dock: live view vs here vs rival (5.6, -28.9) -> A",
+    "194.6 m: camera check at dock: live view vs here vs rival (5.6, -36.3) -> A"
+   ]
+  },
+  {
+   "case": 34,
+   "tag": "near",
+   "put_down_xy_heading": [
+    5.5,
+    -37.5,
+    76.8
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    5.258,
+    -37.333,
+    74.28
+   ],
+   "start_belief_error_m": 0.29,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 141.1 m)",
+   "hermes_review": "HERMES approved the plan: The proposed plan matches the shortest alternative at 168.7 metres, covering both aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    4.55,
+    -36.04
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 167.9,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 102.5,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 141.1 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed plan matches the shortest alternative at 168.7 metres, covering both aisles once and ending at the dock.",
+    "3.1 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "3.1 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> no answer",
+    "3.1 m: camera check at aisle-03/start: live view vs here vs rival (4.3, 9.8) -> A",
+    "44.2 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "56.8 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "96.6 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "102.5 m: unexpected obstacle at (4.0, -36.2), not on the map: marked it and planned around",
+    "103.8 m: unexpected obstacle at (4.0, -35.4), not on the map: marked it and planned around",
+    "116.6 m: unexpected obstacle at (5.0, -36.2), not on the map: marked it and planned around",
+    "117.5 m: unexpected obstacle at (5.0, -35.7), not on the map: marked it and planned around",
+    "167.9 m: believes it reached dock (true error 0.0 m)",
+    "167.9 m: camera check at dock: live view vs here vs rival (5.5, -36.4) -> A",
+    "167.9 m: camera check at dock: live view vs here vs rival (5.6, -23.1) -> A"
+   ]
+  },
+  {
+   "case": 35,
+   "tag": "near",
+   "put_down_xy_heading": [
+    9.0,
+    6.5,
+    40.5
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    8.86,
+    6.05,
+    41.9
+   ],
+   "start_belief_error_m": 0.47,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 97.9 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order matches the shortest computed route at 214.2 metres, covering both aisles exactly once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    4.32,
+    -6.54
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 238.8,
+   "knew_where_it_was_after_m": 29.7,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 15.3,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 97.9 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order matches the shortest computed route at 214.2 metres, covering both aisles exactly once and ending at the dock.",
+    "15.3 m: unexpected obstacle at (4.5, -6.0), not on the map: marked it and planned around",
+    "17.0 m: unexpected obstacle at (4.9, -6.6), not on the map: marked it and planned around",
+    "17.0 m: no way round the obstacle from the believed place: searched the whole map again (ambiguous): now believes (0.1, -18.3), error 12.9 m; relabelled 0 plant records",
+    "29.7 m: believed place no longer fits the scans: searched the whole map again: now believes (5.1, 6.4), error 0.0 m; relabelled 0 plant records",
+    "45.6 m: unexpected obstacle at (4.0, -6.0), not on the map: marked it and planned around",
+    "100.2 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "100.2 m: camera check at aisle-03/start: live view vs here vs rival (0.0, 3.5) -> A",
+    "100.2 m: camera check at aisle-03/start: live view vs here vs rival (-0.1, -10.5) -> A",
+    "141.7 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "154.3 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "194.0 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "238.8 m: believes it reached dock (true error 0.0 m)",
+    "238.8 m: camera check at dock: live view vs here vs rival (0.7, -0.4) -> A",
+    "238.8 m: camera check at dock: live view vs here vs rival (9.6, 5.0) -> A"
+   ]
+  },
+  {
+   "case": 36,
+   "tag": "near",
+   "put_down_xy_heading": [
+    2.0,
+    7.5,
+    158.8
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    2.49,
+    7.45,
+    154.9
+   ],
+   "start_belief_error_m": 0.49,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 104.6 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shortest valid plan at 214.4 meters, covering all aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    2.76,
+    5.15
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 211.6,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 2.7,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 104.6 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shortest valid plan at 214.4 meters, covering all aisles once and ending at the dock.",
+    "2.7 m: unexpected obstacle at (2.3, 5.0), not on the map: marked it and planned around",
+    "4.0 m: unexpected obstacle at (2.4, 4.5), not on the map: marked it and planned around",
+    "59.3 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "59.3 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> A",
+    "59.3 m: camera check at aisle-03/start: live view vs here vs rival (7.7, -28.8) -> A",
+    "100.5 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "115.6 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "155.4 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "211.6 m: believes it reached dock (true error 0.0 m)",
+    "211.6 m: camera check at dock: live view vs here vs rival (6.5, -37.8) -> A",
+    "211.6 m: camera check at dock: live view vs here vs rival (2.4, -6.7) -> A"
+   ]
+  },
+  {
+   "case": 37,
+   "tag": "near",
+   "put_down_xy_heading": [
+    0.0,
+    7.0,
+    177.0
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    -0.22,
+    6.676,
+    -180.55
+   ],
+   "start_belief_error_m": 0.39,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 103.7 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order is 0.1 metres shorter.",
+   "surprise_obstacle_xy": [
+    3.27,
+    5.23
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 222.5,
+   "knew_where_it_was_after_m": 28.0,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 3.7,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 103.7 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order is 0.1 metres shorter.",
+    "3.7 m: unexpected obstacle at (2.9, 5.0), not on the map: marked it and planned around",
+    "14.0 m: off the planned path by more than 1 m: planned again from here",
+    "28.0 m: obstacle where the map said free and the scans do not fit the believed place: searched the whole map again: now believes (4.6, 10.4), error 0.0 m; relabelled 0 plant records",
+    "80.3 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "80.3 m: camera check at aisle-03/start: live view vs here vs rival (1.1, 4.9) -> no answer",
+    "80.3 m: camera check at aisle-03/start: live view vs here vs rival (7.8, -31.9) -> A",
+    "121.4 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "128.1 m: unexpected obstacle at (3.7, 4.8), not on the map: marked it and planned around",
+    "135.2 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "174.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "222.5 m: believes it reached dock (true error 0.0 m)",
+    "222.5 m: camera check at dock: live view vs here vs rival (-1.9, -6.7) -> A",
+    "222.5 m: camera check at dock: live view vs here vs rival (5.6, -30.4) -> A"
+   ]
+  },
+  {
+   "case": 38,
+   "tag": "near",
+   "put_down_xy_heading": [
+    6.5,
+    -37.0,
+    80.5
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    2.54,
+    5.04,
+    -99.6
+   ],
+   "start_belief_error_m": 42.23,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 103.3 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shortest valid route at 211.4 metres, covering both aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    4.49,
+    -9.14
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 286.8,
+   "knew_where_it_was_after_m": 101.0,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 28.2,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 103.3 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shortest valid route at 211.4 metres, covering both aisles once and ending at the dock.",
+    "28.2 m: unexpected obstacle at (4.5, -21.8), not on the map: marked it and planned around",
+    "28.9 m: unexpected obstacle at (5.0, -21.9), not on the map: marked it and planned around",
+    "30.4 m: unexpected obstacle at (4.0, -22.0), not on the map: marked it and planned around",
+    "101.0 m: believes it reached aisle-03/start (true error 39.7 m)",
+    "101.0 m: camera check at aisle-03/start: live view vs here vs rival (-0.0, 3.5) -> B",
+    "101.0 m: this is not aisle-03/start: now believes (-0.0, 3.5), error 0.0 m; relabelled 159 plant records",
+    "148.7 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "189.8 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "202.4 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "242.1 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "286.8 m: believes it reached dock (true error 0.0 m)",
+    "286.8 m: camera check at dock: live view vs here vs rival (9.5, 5.0) -> A",
+    "286.8 m: camera check at dock: live view vs here vs rival (0.7, 1.0) -> A"
+   ]
+  },
+  {
+   "case": 39,
+   "tag": "near",
+   "put_down_xy_heading": [
+    6.5,
+    -38.0,
+    111.2
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    2.797,
+    6.367,
+    -71.31
+   ],
+   "start_belief_error_m": 44.52,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 105.0 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 213.5m compared to the proposed 213.7m.",
+   "surprise_obstacle_xy": [
+    5.87,
+    -36.6
+   ],
+   "outcome": "ran_out",
+   "metres_driven": 112.2,
+   "knew_where_it_was_after_m": null,
+   "coverage": {
+    "aisle-03": 0.0,
+    "aisle-07": 0.0
+   },
+   "aisle_records_labelled_right": null,
+   "final_belief_error_m": 40.29,
+   "ended_at_dock": false,
+   "unexpected_obstacle_first_m": 1.9,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 105.0 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 213.5m compared to the proposed 213.7m.",
+    "1.9 m: unexpected obstacle at (2.7, 5.0), not on the map: marked it and planned around",
+    "2.8 m: unexpected obstacle at (2.8, 4.5), not on the map: marked it and planned around",
+    "58.1 m: believes it reached aisle-03/start (true error 41.8 m)",
+    "58.1 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> B",
+    "58.1 m: this is not aisle-03/start: now believes (1.2, 4.9), error 0.0 m; relabelled 0 plant records",
+    "110.2 m: unexpected obstacle at (5.3, -36.2), not on the map: marked it and planned around",
+    "112.2 m: unexpected obstacle at (6.1, -36.0), not on the map: marked it and planned around",
+    "112.2 m: no way round the obstacle from the believed place: searched the whole map again (ambiguous): now believes (3.1, 4.3), error 40.3 m; relabelled 0 plant records; mission goals left 5 -> 4",
+    "112.2 m: unexpected obstacle at (3.3, 4.5), not on the map: marked it and planned around",
+    "112.2 m: probe: moved 0.0 m into open space, searching again"
+   ]
+  },
+  {
+   "case": 40,
+   "tag": "near",
+   "put_down_xy_heading": [
+    12.0,
+    5.0,
+    -125.0
+   ],
+   "first_belief": "camera pick",
+   "first_belief_pose": [
+    11.938,
+    4.971,
+    -124.88
+   ],
+   "start_belief_error_m": 0.07,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 99.7 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, and is the shortest option at 217.4 metres.",
+   "surprise_obstacle_xy": [
+    4.48,
+    -35.57
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 272.3,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 47.2,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 99.7 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, and is the shortest option at 217.4 metres.",
+    "47.2 m: unexpected obstacle at (4.5, -35.0), not on the map: marked it and planned around",
+    "48.4 m: unexpected obstacle at (5.0, -35.1), not on the map: marked it and planned around",
+    "50.0 m: unexpected obstacle at (4.0, -35.0), not on the map: marked it and planned around",
+    "133.6 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "133.6 m: camera check at aisle-03/start: live view vs here vs rival (-0.0, 3.5) -> A",
+    "133.6 m: camera check at aisle-03/start: live view vs here vs rival (9.0, -29.7) -> A",
+    "175.1 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "187.7 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "227.4 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "272.3 m: believes it reached dock (true error 0.0 m)",
+    "272.3 m: camera check at dock: live view vs here vs rival (8.2, -36.6) -> A",
+    "272.3 m: camera check at dock: live view vs here vs rival (0.7, -2.5) -> A"
+   ]
+  },
+  {
+   "case": 41,
+   "tag": "far",
+   "put_down_xy_heading": [
+    0.5,
+    9.55,
+    143.0
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "first_belief_pose": [
+    2.413,
+    -19.298,
+    -125.14
+   ],
+   "start_belief_error_m": 28.91,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "nearest first (RPP found no closed route)",
+   "hermes_review": "no review",
+   "surprise_obstacle_xy": null,
+   "outcome": "mission_done",
+   "metres_driven": 192.6,
+   "knew_where_it_was_after_m": 2.0,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": null,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (nearest first (RPP found no closed route))",
+    "0.0 m: plan checked before moving: no review",
+    "0.0 m: cannot plan from the believed pose",
+    "2.0 m: probe: moved 2.0 m into open space, searching again",
+    "2.0 m: after the probe: searched the whole map again: now believes (1.5, 7.8), error 0.0 m; relabelled 0 plant records",
+    "50.9 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "50.9 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> A",
+    "50.9 m: camera check at aisle-03/start: live view vs here vs rival (7.7, -32.3) -> A",
+    "92.0 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "105.0 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "144.4 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "192.6 m: believes it reached dock (true error 0.0 m)",
+    "192.6 m: camera check at dock: live view vs here vs rival (3.4, -3.1) -> A",
+    "192.6 m: camera check at dock: live view vs here vs rival (3.4, -7.3) -> A"
+   ]
+  },
+  {
+   "case": 42,
+   "tag": "far",
+   "put_down_xy_heading": [
+    7.25,
+    5.3,
+    -98.9
+   ],
+   "first_belief": "LiDAR best",
+   "first_belief_pose": [
+    7.345,
+    5.307,
+    -99.28
+   ],
+   "start_belief_error_m": 0.1,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 98.4 m)",
+   "hermes_review": "review unavailable (no JSON object in the reply)",
+   "surprise_obstacle_xy": [
+    1.57,
+    -36.86
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 305.4,
+   "knew_where_it_was_after_m": 297.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 0.992,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 142.3,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 98.4 m))",
+    "0.0 m: plan checked before moving: review unavailable (no JSON object in the reply)",
+    "46.5 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "46.5 m: camera check at aisle-03/start: live view vs here vs rival (1.1, 4.9) -> A",
+    "46.5 m: camera check at aisle-03/start: live view vs here vs rival (7.9, -30.9) -> A",
+    "87.7 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "100.3 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "140.0 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "142.3 m: unexpected obstacle at (1.0, -37.2), not on the map: marked it and planned around",
+    "143.4 m: unexpected obstacle at (1.6, -37.4), not on the map: marked it and planned around",
+    "145.4 m: probe: moved 2.0 m into open space, searching again",
+    "145.4 m: after the probe: searched the whole map again (ambiguous): now believes (4.2, -11.8), error 27.1 m; relabelled 343 plant records; mission goals left 1 -> 5",
+    "173.0 m: believes it reached aisle-03/start (true error 33.2 m)",
+    "214.3 m: believes it reached aisle-03/end (true error 47.7 m)",
+    "225.2 m: a rival place fits the scans clearly better (margin 0.47): now believes (-7.8, 3.1), error 45.2 m; relabelled 346 plant records",
+    "227.2 m: probe: moved 2.0 m into open space, searching again",
+    "229.2 m: probe: moved 2.0 m into open space, searching again",
+    "229.2 m: after the probe: searched the whole map again (ambiguous): now believes (4.7, -33.8), error 10.2 m; relabelled 346 plant records; mission goals left 3 -> 5",
+    "234.8 m: believes it reached aisle-03/start (true error 10.1 m)",
+    "276.7 m: believes it reached aisle-03/end (true error 10.2 m)",
+    "289.0 m: unexpected obstacle at (0.0, 3.2), not on the map: marked it and planned around",
+    "289.0 m: no way round the obstacle from the believed place: searched the whole map again (ambiguous): now believes (-1.3, -12.8), error 19.9 m; relabelled 346 plant records; mission goals left 3 -> 5",
+    "297.2 m: obstacle where the map said free and the scans do not fit the believed place: searched the whole map again: now believes (8.8, 10.6), error 0.0 m; relabelled 359 plant records; mission goals left 5 -> 1",
+    "305.4 m: believes it reached dock (true error 0.0 m)",
+    "305.4 m: camera check at dock: live view vs here vs rival (3.4, -12.9) -> A",
+    "305.4 m: camera check at dock: live view vs here vs rival (3.5, -5.4) -> A"
+   ]
+  },
+  {
+   "case": 43,
+   "tag": "far",
+   "put_down_xy_heading": [
+    12.75,
+    -41.2,
+    134.5
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "first_belief_pose": [
+    -3.815,
+    9.576,
+    -44.57
+   ],
+   "start_belief_error_m": 53.41,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 108.1 m)",
+   "hermes_review": "HERMES changed the plan: The proposed route is 0.2 metres longer than the alternative aisle-03 to aisle-07 route.",
+   "surprise_obstacle_xy": [
+    4.71,
+    -24.21
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 186.3,
+   "knew_where_it_was_after_m": 80.0,
+   "coverage": {
+    "aisle-03": 0.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 21.2,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 108.1 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The proposed route is 0.2 metres longer than the alternative aisle-03 to aisle-07 route.",
+    "21.2 m: unexpected obstacle at (4.5, -6.9), not on the map: marked it and planned around",
+    "22.5 m: unexpected obstacle at (4.9, -7.5), not on the map: marked it and planned around",
+    "24.4 m: unexpected obstacle at (4.0, -6.9), not on the map: marked it and planned around",
+    "80.0 m: believes it reached aisle-03/start (true error 39.9 m)",
+    "80.0 m: camera check at aisle-03/start: live view vs here vs rival (-0.0, 3.7) -> B",
+    "80.0 m: this is not aisle-03/start: now believes (-0.0, 3.7), error 0.0 m; relabelled 166 plant records; mission goals left 5 -> 4",
+    "88.9 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "101.7 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "141.4 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "186.3 m: believes it reached dock (true error 0.0 m)",
+    "186.3 m: camera check at dock: live view vs here vs rival (-0.5, -36.5) -> A",
+    "186.3 m: camera check at dock: live view vs here vs rival (8.2, -36.6) -> A"
+   ]
+  },
+  {
+   "case": 44,
+   "tag": "far",
+   "put_down_xy_heading": [
+    12.5,
+    8.8,
+    115.6
+   ],
+   "first_belief": "LiDAR best",
+   "first_belief_pose": [
+    12.43,
+    8.795,
+    115.51
+   ],
+   "start_belief_error_m": 0.07,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 101.8 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, stays within the green area, and is the shortest option at 218.9 metre",
+   "surprise_obstacle_xy": [
+    4.62,
+    -24.04
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 250.8,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 37.2,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 101.8 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order covers both aisles exactly once, ends at the dock, stays within the green area, and is the shortest option at 218.9 metre",
+    "37.2 m: unexpected obstacle at (4.5, -23.5), not on the map: marked it and planned around",
+    "38.4 m: unexpected obstacle at (5.0, -23.6), not on the map: marked it and planned around",
+    "40.0 m: unexpected obstacle at (4.0, -23.5), not on the map: marked it and planned around",
+    "112.1 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "112.1 m: camera check at aisle-03/start: live view vs here vs rival (0.0, 3.5) -> A",
+    "112.1 m: camera check at aisle-03/start: live view vs here vs rival (-0.1, -10.5) -> A",
+    "153.6 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "166.2 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "205.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "250.8 m: believes it reached dock (true error 0.0 m)",
+    "250.8 m: camera check at dock: live view vs here vs rival (9.6, 5.0) -> A",
+    "250.8 m: camera check at dock: live view vs here vs rival (0.7, -3.5) -> A"
+   ]
+  },
+  {
+   "case": 45,
+   "tag": "far",
+   "put_down_xy_heading": [
+    -1.5,
+    -39.2,
+    -11.5
+   ],
+   "first_belief": "LiDAR best",
+   "first_belief_pose": [
+    -1.498,
+    -39.198,
+    -11.47
+   ],
+   "start_belief_error_m": 0.0,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 143.3 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shorter valid route at 166.0m versus 176.3m, ensuring all aisles are surveyed once and the robot returns to the do",
+   "surprise_obstacle_xy": [
+    4.51,
+    -24.49
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 170.2,
+   "knew_where_it_was_after_m": 0.3,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 110.9,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 143.3 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shorter valid route at 166.0m versus 176.3m, ensuring all aisles are surveyed once and the robot returns to the do",
+    "0.5 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "0.5 m: camera check at aisle-07/start: live view vs here vs rival (4.4, -8.8) -> A",
+    "0.5 m: camera check at aisle-07/start: live view vs here vs rival (4.4, -5.2) -> A",
+    "40.2 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "52.8 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "94.3 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "110.9 m: unexpected obstacle at (4.5, -25.0), not on the map: marked it and planned around",
+    "111.8 m: unexpected obstacle at (4.0, -24.9), not on the map: marked it and planned around",
+    "113.3 m: unexpected obstacle at (5.0, -25.0), not on the map: marked it and planned around",
+    "170.2 m: believes it reached dock (true error 0.0 m)",
+    "170.2 m: camera check at dock: live view vs here vs rival (0.6, 1.4) -> A",
+    "170.2 m: camera check at dock: live view vs here vs rival (8.4, -24.6) -> A"
+   ]
+  },
+  {
+   "case": 46,
+   "tag": "far",
+   "put_down_xy_heading": [
+    -3.25,
+    6.3,
+    -70.9
+   ],
+   "first_belief": "LiDAR best",
+   "first_belief_pose": [
+    -3.054,
+    6.31,
+    -71.01
+   ],
+   "start_belief_error_m": 0.2,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 105.2 m)",
+   "hermes_review": "HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 217.5m compared to the proposed 217.6m.",
+   "surprise_obstacle_xy": [
+    1.24,
+    5.05
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 211.7,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 4.1,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 105.2 m))",
+    "0.0 m: plan checked before moving: HERMES changed the plan: The alternative order aisle-03 -> aisle-07 is shorter at 217.5m compared to the proposed 217.6m.",
+    "4.1 m: unexpected obstacle at (0.7, 5.0), not on the map: marked it and planned around",
+    "5.0 m: unexpected obstacle at (0.8, 5.5), not on the map: marked it and planned around",
+    "7.2 m: unexpected obstacle at (1.7, 5.6), not on the map: marked it and planned around",
+    "7.4 m: unexpected obstacle at (1.2, 5.6), not on the map: marked it and planned around",
+    "10.4 m: unexpected obstacle at (0.7, 4.5), not on the map: marked it and planned around",
+    "67.1 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "67.1 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> A",
+    "67.1 m: camera check at aisle-03/start: live view vs here vs rival (7.7, -28.8) -> A",
+    "108.3 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "124.1 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "163.8 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "211.7 m: believes it reached dock (true error 0.0 m)",
+    "211.7 m: camera check at dock: live view vs here vs rival (3.5, -3.8) -> A",
+    "211.7 m: camera check at dock: live view vs here vs rival (3.5, -11.3) -> A"
+   ]
+  },
+  {
+   "case": 47,
+   "tag": "far",
+   "put_down_xy_heading": [
+    4.75,
+    -31.95,
+    -88.2
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "first_belief_pose": [
+    4.295,
+    0.677,
+    91.13
+   ],
+   "start_belief_error_m": 32.63,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 105.0 m)",
+   "hermes_review": "review unavailable (no JSON object in the reply)",
+   "surprise_obstacle_xy": [
+    1.6,
+    -36.36
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 242.4,
+   "knew_where_it_was_after_m": 39.7,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 183.1,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 105.0 m))",
+    "0.0 m: plan checked before moving: review unavailable (no JSON object in the reply)",
+    "39.7 m: believes it reached aisle-03/start (true error 41.8 m)",
+    "39.7 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> B",
+    "39.7 m: this is not aisle-03/start: now believes (1.2, 4.9), error 0.0 m; relabelled 0 plant records",
+    "86.6 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "127.7 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "140.6 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "180.1 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "183.1 m: unexpected obstacle at (1.3, -36.9), not on the map: marked it and planned around",
+    "184.4 m: unexpected obstacle at (2.0, -36.9), not on the map: marked it and planned around",
+    "186.5 m: unexpected obstacle at (1.0, -36.5), not on the map: marked it and planned around",
+    "187.5 m: unexpected obstacle at (1.0, -36.0), not on the map: marked it and planned around",
+    "242.4 m: believes it reached dock (true error 0.0 m)",
+    "242.4 m: camera check at dock: live view vs here vs rival (3.2, -4.7) -> A",
+    "242.4 m: camera check at dock: live view vs here vs rival (3.3, -9.3) -> A"
+   ]
+  },
+  {
+   "case": 48,
+   "tag": "far",
+   "put_down_xy_heading": [
+    4.75,
+    0.05,
+    176.0
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "first_belief_pose": [
+    4.74,
+    0.626,
+    -183.43
+   ],
+   "start_belief_error_m": 0.58,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 105.1 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order matches the shortest computed alternative at 205.7 metres, covering all aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    4.43,
+    -7.62
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 203.9,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 7.0,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 105.1 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order matches the shortest computed alternative at 205.7 metres, covering all aisles once and ending at the dock.",
+    "7.0 m: unexpected obstacle at (4.5, -6.5), not on the map: marked it and planned around",
+    "8.1 m: unexpected obstacle at (5.0, -6.6), not on the map: marked it and planned around",
+    "9.7 m: unexpected obstacle at (4.0, -6.5), not on the map: marked it and planned around",
+    "65.4 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "65.4 m: camera check at aisle-03/start: live view vs here vs rival (0.0, 3.5) -> A",
+    "65.4 m: camera check at aisle-03/start: live view vs here vs rival (-0.1, -5.3) -> A",
+    "106.8 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "119.4 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "159.1 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "203.9 m: believes it reached dock (true error 0.0 m)",
+    "203.9 m: camera check at dock: live view vs here vs rival (8.3, -36.6) -> A",
+    "203.9 m: camera check at dock: live view vs here vs rival (9.6, 5.0) -> A"
+   ]
+  },
+  {
+   "case": 49,
+   "tag": "far",
+   "put_down_xy_heading": [
+    2.0,
+    -36.2,
+    -122.3
+   ],
+   "first_belief": "LiDAR best",
+   "first_belief_pose": [
+    2.034,
+    -36.201,
+    -122.45
+   ],
+   "start_belief_error_m": 0.03,
+   "order_from_rural_postman_solver": [
+    "aisle-07",
+    "aisle-03"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 144.1 m)",
+   "hermes_review": "HERMES approved the plan: The proposed order is the shortest valid route at 166.8m, covering all aisles once and ending at the dock.",
+   "surprise_obstacle_xy": [
+    4.36,
+    4.26
+   ],
+   "outcome": "mission_done",
+   "metres_driven": 234.8,
+   "knew_where_it_was_after_m": 0.2,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 1.0,
+   "final_belief_error_m": 0.0,
+   "ended_at_dock": true,
+   "unexpected_obstacle_first_m": 49.3,
+   "survey_complete_and_right": true,
+   "events": [
+    "0.0 m: mission decided: aisle-07 -> aisle-03 -> dock (Rural Postman solver on the robot (exact RPP, 144.1 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed order is the shortest valid route at 166.8m, covering all aisles once and ending at the dock.",
+    "1.5 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "1.5 m: camera check at aisle-07/start: live view vs here vs rival (7.9, 5.7) -> A",
+    "1.5 m: camera check at aisle-07/start: live view vs here vs rival (4.0, 5.7) -> A",
+    "40.9 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "49.3 m: unexpected obstacle at (3.8, 4.8), not on the map: marked it and planned around",
+    "50.5 m: unexpected obstacle at (3.9, 4.3), not on the map: marked it and planned around",
+    "61.1 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "102.2 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "147.6 m: unexpected obstacle at (4.5, 3.6), not on the map: marked it and planned around",
+    "149.0 m: unexpected obstacle at (5.0, 4.0), not on the map: marked it and planned around",
+    "234.8 m: believes it reached dock (true error 0.0 m)",
+    "234.8 m: camera check at dock: live view vs here vs rival (0.6, -2.5) -> A",
+    "234.8 m: camera check at dock: live view vs here vs rival (0.6, 1.0) -> A"
+   ]
+  },
+  {
+   "case": 50,
+   "tag": "far",
+   "put_down_xy_heading": [
+    4.5,
+    -6.95,
+    -164.2
+   ],
+   "first_belief": "LiDAR best (ambiguous)",
+   "first_belief_pose": [
+    4.536,
+    -14.851,
+    15.9
+   ],
+   "start_belief_error_m": 7.9,
+   "order_from_rural_postman_solver": [
+    "aisle-03",
+    "aisle-07"
+   ],
+   "order_reason": "Rural Postman solver on the robot (exact RPP, 120.4 m)",
+   "hermes_review": "HERMES approved the plan: The proposed plan covers all aisles once, ends at the dock, and is the shortest option at 190.1m.",
+   "surprise_obstacle_xy": [
+    4.55,
+    3.55
+   ],
+   "outcome": "ran_out",
+   "metres_driven": 360.1,
+   "knew_where_it_was_after_m": null,
+   "coverage": {
+    "aisle-03": 1.0,
+    "aisle-07": 1.0
+   },
+   "aisle_records_labelled_right": 0.0,
+   "final_belief_error_m": 26.61,
+   "ended_at_dock": false,
+   "unexpected_obstacle_first_m": 9.8,
+   "survey_complete_and_right": false,
+   "events": [
+    "0.0 m: mission decided: aisle-03 -> aisle-07 -> dock (Rural Postman solver on the robot (exact RPP, 120.4 m))",
+    "0.0 m: plan checked before moving: HERMES approved the plan: The proposed plan covers all aisles once, ends at the dock, and is the shortest option at 190.1m.",
+    "9.8 m: unexpected obstacle at (4.5, -24.8), not on the map: marked it and planned around",
+    "10.3 m: unexpected obstacle at (4.0, -24.8), not on the map: marked it and planned around",
+    "12.0 m: unexpected obstacle at (5.0, -25.0), not on the map: marked it and planned around",
+    "42.1 m: a rival place fits the scans clearly better (margin 0.31): now believes (4.5, -30.7), error 3.6 m; relabelled 0 plant records",
+    "49.4 m: off the planned path by more than 1 m: planned again from here",
+    "54.2 m: believes it reached aisle-03/start (true error 0.0 m)",
+    "54.2 m: camera check at aisle-03/start: live view vs here vs rival (1.2, 4.9) -> A",
+    "95.6 m: believes it reached aisle-03/end (true error 0.0 m)",
+    "108.3 m: believes it reached aisle-07/start (true error 0.0 m)",
+    "148.0 m: believes it reached aisle-07/end (true error 0.0 m)",
+    "192.8 m: believes it reached dock (true error 0.0 m)",
+    "192.8 m: camera check at dock: live view vs here vs rival (-0.5, -36.5) -> B",
+    "192.8 m: this is not dock: now believes (-0.5, -36.5), error 41.6 m; relabelled 499 plant records; mission goals left 1 -> 5",
+    "201.6 m: believes it reached aisle-03/start (true error 44.3 m)",
+    "242.8 m: believes it reached aisle-03/end (true error 42.3 m)",
+    "255.5 m: believes it reached aisle-07/start (true error 37.1 m)",
+    "272.7 m: off the planned path by more than 1 m: planned again from here",
+    "295.1 m: believed place no longer fits the scans: searched the whole map again: now believes (0.1, -39.6), error 0.1 m; relabelled 667 plant records; mission goals left 2 -> 0",
+    "297.1 m: probe: moved 2.0 m into open space, searching again",
+    "297.1 m: after the probe: searched the whole map again: now believes (2.0, -40.1), error 0.1 m; relabelled 667 plant records",
+    "299.1 m: probe: moved 2.0 m into open space, searching again",
+    "299.1 m: after the probe: searched the whole map again: now believes (3.7, -39.2), error 0.0 m; relabelled 667 plant records",
+    "301.1 m: probe: moved 2.0 m into open space, searching again",
+    "301.1 m: after the probe: searched the whole map again: now believes (4.0, -37.2), error 0.0 m; relabelled 667 plant records",
+    "303.1 m: probe: moved 2.0 m into open space, searching again",
+    "303.1 m: after the probe: searched the whole map again (ambiguous): now believes (3.3, 6.8), error 45.2 m; relabelled 667 plant records; mission goals left 0 -> 3",
+    "309.2 m: believes it reached aisle-07/start (true error 38.1 m)",
+    "348.9 m: believes it reached aisle-07/end (true error 43.3 m)"
+   ]
+  }
+ ]
+}

@@ -184,7 +184,14 @@ dock is where it was switched on. The mission is decided from that structure - w
 agent's model (Nemotron 3 Super through Nebius Token Factory, with its reason kept) or by a nearest-first rule; every
 path is then planned on the free grid when it is needed (A* with a clearance cost, which is why the robot keeps to the
 middle of an aisle), from where the robot believes it is, and planned again whenever the belief changes or something
-unexpected appears. Figure: `media/gallery/30_free_nav_structure.png`.
+unexpected appears. Figure: `media/gallery/30_free_nav_structure.png`. Measured the same way as above, 40 near put-downs and 10 in the open, with an
+obstacle that is not on the map dropped on the planned path in every case and HERMES reviewing the plan on the map
+picture first: the survey was completed in 37 of 40 near cases (every row fully covered in 36, records right in 33;
+12 of the 13 wrong starts corrected) and in 9 of 10 far cases (8 right); the unexpected obstacle was driven around in
+39 of the 50; HERMES approved 29 plans and changed 12. The order came from the Rural Postman solver on the robot
+(every chosen aisle a required edge, A* distances between aisle ends and the dock, about 0.1 s), so the model decides
+which aisles and whether the plan is sound, never the geometry. Evidence: `docs/evidence/17_freenav_mission_survey.json`;
+figures `media/gallery/31_freenav_survey_each_case.png`, `32_freenav_survey_overview.png`.
 
 **Three ways to run a survey, from the same map.** (1) *Taught route*: the robot follows the corridors of the led
 drive, node to node, with the site graph deciding what is allowed; the simplest and the one every number above was
