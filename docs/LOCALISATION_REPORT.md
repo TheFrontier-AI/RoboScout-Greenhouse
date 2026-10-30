@@ -278,9 +278,9 @@ figures below.
 
 *Figure — Survey with no stored route, case by case: grey = the LiDAR map the robot built, ● = where it was really put down, blue = the path it really drove, ○ = where it worked out its real position (cases that started with a wrong guess), ★ = dock; the title of each panel is the verdict*
 
-![All 50 map-only surveys on one map](media/gallery/32_freenav_survey_overview.png)
+![All 50 surveys with no stored route on one map](media/gallery/32_freenav_survey_overview.png)
 
-*Figure — All 50 map-only surveys on one map: what the robot really drove, green = knew where it was, orange = wrong belief, ○ = where the belief was corrected*
+*Figure — All 50 surveys with no stored route on one map: what the robot really drove, green = knew where it was, orange = wrong belief, ○ = where the belief was corrected*
 
 **Three ways to run a survey, from the same map.** (1) *Taught route*: the robot follows the corridors of the led
 drive, node to node, with the site graph deciding what is allowed; the simplest and the one every number above was
