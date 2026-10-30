@@ -186,9 +186,14 @@ path is then planned on the free grid when it is needed (A* with a clearance cos
 middle of an aisle), from where the robot believes it is, and planned again whenever the belief changes or something
 unexpected appears. Figure: `media/gallery/30_free_nav_structure.png`. Measured the same way as above, 40 near put-downs and 10 in the open, with an
 obstacle that is not on the map dropped on the planned path in every case and HERMES reviewing the plan on the map
-picture first: the survey was completed in 37 of 40 near cases (every row fully covered in 36, records right in 33;
-12 of the 13 wrong starts corrected) and in 9 of 10 far cases (8 right); the unexpected obstacle was driven around in
-39 of the 50; HERMES approved 29 plans and changed 12. The order came from the Rural Postman solver on the robot
+picture first: the survey was completed in 39 of 40 near cases (every row fully covered in 38, records right in 36;
+12 of the 13 wrong starts corrected) and in 10 of 10 far cases (9 right); the unexpected obstacle was driven around in
+41 of the 50; HERMES approved 31 plans and changed 10. Inside a row the robot asks for no pictures, odometry carries
+its belief; at every doorway, when the LiDAR still keeps the twin place alive, the agent decides from the whole
+situation (both places with their LiDAR fit, the metres driven, the doors passed, the verdicts so far, the plan, and the
+live view against both reference views) and a move is accepted only after two doorways agree and the LiDAR fits the
+rival at least as well. Measured the other ways for the record: pictures every 10 m inside the rows gave 36 of 50 with
+88 belief changes, single doorway verdicts without the two-doorway rule 39 of 50, the camera at the dock alone 43 of 50. The order came from the Rural Postman solver on the robot
 (every chosen aisle a required edge, A* distances between aisle ends and the dock, about 0.1 s), so the model decides
 which aisles and whether the plan is sound, never the geometry. Evidence: `docs/evidence/17_freenav_mission_survey.json`;
 figures `media/gallery/31_freenav_survey_each_case.png`, `32_freenav_survey_overview.png`.

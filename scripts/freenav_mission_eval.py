@@ -22,7 +22,7 @@ from sim.scan_localizer import LIDAR_AHEAD_M                                    
 from scripts.free_nav import FreeSpace, build as build_structure                # noqa: E402
 from scripts.offpath_mission_eval import World, compose, inv, rel_motion, resample, nearest_ref, camera_pick  # noqa: E402
 
-STEP_M, NODE_M, STOP_PITCH, AWAY_M = 0.25, 1.5, 0.45, 3.0
+STEP_M, NODE_M, STOP_PITCH, AWAY_M, TWIN_M = 0.25, 1.5, 0.45, 3.0, 15.0   # TWIN_M: a camera rival must be a different place, not a spot nearby
 G: dict = {}
 
 
@@ -373,6 +373,38 @@ def run_case(case):
                             if goals and not recover("cannot plan after the camera check"):
                                 break
                         continue
+        inside_now = farm.where(belief)[0]
+        if "inside_prev" not in state:
+            state["inside_prev"] = inside_now
+        inside_prev = state["inside_prev"]
+        if inside_now != inside_prev:
+            state.setdefault("transitions", []).append({"m": round(metres, 1), "what": (f"entered {inside_now}" if inside_now else f"left {inside_prev} into the open")})
+            state["inside_prev"] = inside_now
+            if G.get("refs") and G.get("context_decide", True):
+                r = reloc.locate(scan_now)
+                rivals = [c for c in ([r.pose] if r.pose else []) + [a["pose"] for a in r.alternatives] if err(c, belief) >= TWIN_M]
+                for h in sorted([h for h in tr.hyps if err(h, belief) >= TWIN_M and h[4] >= 4], key=lambda h: -h[3] / max(h[4], 1))[:1]:
+                    if all(err(h, c) >= AWAY_M for c in rivals): rivals.insert(0, (h[0], h[1], h[2]))
+                if rivals:
+                    rv = rivals[0]; live = nearest_ref(true); ra = nearest_ref(belief, away_from_xy=live[2] if live else None); rb = nearest_ref(rv, away_from_xy=live[2] if live else None)
+                    if live and ra and rb:
+                        ctx = {"metres_driven": round(metres, 1), "mission_order": order, "goals_left": [g[0] for g in goals][:3],
+                               "believed_place_xy": [round(belief[0], 1), round(belief[1], 1)], "rival_place_xy": [round(rv[0], 1), round(rv[1], 1)],
+                               "lidar_fit_here": round(float(reloc._score(np.asarray(scan_now) + (LIDAR_AHEAD_M, 0.0), *belief)), 2), "lidar_fit_rival": round(float(reloc._score(np.asarray(scan_now) + (LIDAR_AHEAD_M, 0.0), *rv)), 2),
+                               "doors_passed": state["transitions"][-6:], "camera_verdicts_so_far": [e["what"] for e in log["events"] if "camera" in e["what"] or "agent decided" in e["what"]][-4:],
+                               "first_belief": log["first_belief"]}
+                        where, why = context_decide(live[1], ra[1], rb[1], ctx)
+                        log["events"].append({"m": round(metres, 1), "what": f"agent decided at the doorway: {where} ({why[:90]})"})
+                        # a move is accepted only when the agent says 'rival' at two doorways in a row AND the LiDAR
+                        # fits the rival place at least as well as the believed one; 'here' clears the count
+                        votes = state.setdefault("rival_votes", 0)
+                        state["rival_votes"] = votes + 1 if (where == "rival" and ctx["lidar_fit_rival"] >= ctx["lidar_fit_here"] - 0.05) else (0 if where == "here" else votes)
+                        if state["rival_votes"] >= 2:
+                            state["rival_votes"] = 0
+                            if not re_anchor((rv[0], rv[1], rv[2]), "the agent concluded from the whole situation that this is the rival place"):
+                                if goals and not recover("cannot plan after the agent's decision"):
+                                    break
+                            continue
         if state["wp"] is not None and state["k"] < len(state["wp"]) and math.dist(belief[:2], state["wp"][state["k"]]) > 1.0:
             log["events"].append({"m": round(metres, 1), "what": "off the planned path by more than 1 m: planned again from here"}); replan()
         if e < 1.0 and corrected_at is None:
@@ -385,13 +417,13 @@ def run_case(case):
         if goals and math.dist(belief[:2], goals[0][1]) < NODE_M:
             name = goals[0][0]
             log["events"].append({"m": round(metres, 1), "what": f"believes it reached {name} (true error {err(belief, true):.1f} m)"})
-            if (name == "dock" or name == all_goals[0][0]) and G.get("refs") and name not in state.setdefault("checked", set()):
+            if name == "dock" and G.get("refs") and name not in state.setdefault("checked", set()):
                 # before committing to a place that matters (an aisle to survey, the dock): is this really it?
                 # the camera compares the live view with this place and with each far-away place a fresh whole-map
                 # search still finds plausible (up to 3)
                 state["checked"].add(name); r = reloc.locate(scan_now)
-                rivals = [c for c in ([r.pose] if r.pose else []) + [a["pose"] for a in r.alternatives] if err(c, belief) >= AWAY_M][:3]
-                for h in sorted([h for h in tr.hyps if err(h, belief) >= AWAY_M], key=lambda h: -h[3] / max(h[4], 1))[:2]:
+                rivals = [c for c in ([r.pose] if r.pose else []) + [a["pose"] for a in r.alternatives] if err(c, belief) >= TWIN_M][:3]
+                for h in sorted([h for h in tr.hyps if err(h, belief) >= TWIN_M], key=lambda h: -h[3] / max(h[4], 1))[:2]:
                     if all(err(h, c) >= AWAY_M for c in rivals): rivals.append((h[0], h[1], h[2]))
                 live = nearest_ref(true); switched = False
                 for rv in rivals[:2]:
@@ -434,6 +466,30 @@ def far_cases(fs: FreeSpace, n, seed=7):
     return out
 
 
+def context_decide(live, ref_here, ref_rival, context: dict):
+    """The agent decides WHERE the robot is from everything it knows: the LiDAR's two candidate places with their
+    scores, how far it has driven, the doors it passed and when, the camera verdicts so far, what the plan expected,
+    plus the live view against the reference views of both places. Returns ('here'|'rival'|'undecided', reason)."""
+    import os
+    from openai import OpenAI
+    from scripts.vlm_place_check import b64
+    client = OpenAI(base_url=os.environ.get("EYES2_BASE_URL", "https://api.tokenfactory.nebius.com/v1/"), api_key=os.environ.get("EYES2_API_KEY") or os.environ.get("NEBIUS_API_KEY"), timeout=180)
+    msg = ("You are the navigator of a greenhouse robot. Two identical greenhouses stand side by side, so the LiDAR cannot tell them apart and single pictures "
+           "inside the rows look alike. The robot has just passed a doorway (rows look the same, yards and doorways do not). Decide where it really is from ALL of "
+           "the evidence below, not from one picture: the odometry history is reliable (if it entered a row 40 m ago it is still in that row), the plan says "
+           "what it expected to see, doors and yards are the places that differ between the two houses.\n"
+           "Image 1 = what the robot sees now. Image 2 = the reference view at the place it BELIEVES it is. Image 3 = the reference view at the RIVAL place.\n"
+           + json.dumps(context, ensure_ascii=False) +
+           "\nReply with JSON only: {\"where\": \"here\" | \"rival\" | \"undecided\", \"reason\": \"one sentence\"}. Say 'undecided' when the evidence does not settle it.")
+    content = [{"type": "text", "text": msg}] + [{"type": "image_url", "image_url": {"url": b64(f)}} for f in (live, ref_here, ref_rival)]
+    try:
+        r = client.chat.completions.create(model=os.environ.get("EYES2_MODEL", "nvidia/Nemotron-3.5-Super-VL"), temperature=0.1, max_tokens=6000, messages=[{"role": "user", "content": content}])
+        m = r.choices[0].message; txt = (m.content or getattr(m, "reasoning_content", None) or "").split("</think>")[-1].replace("```json", "").replace("```", "")
+        j = _last_json(txt); w = j.get("where"); return (w if w in ("here", "rival", "undecided") else "undecided"), str(j.get("reason", ""))[:160]
+    except Exception as e:
+        return "undecided", f"model unavailable: {str(e)[:60]}"
+
+
 def _run(i_case):
     i, c = i_case; t1 = time.time(); c = dict(c, seed=c.get("seed", i)); r = run_case(c)
     r["case"] = i + 1; r["tag"] = c.get("tag", "near"); r["start_belief_err_m"] = r["belief_err"][0]; r["seconds"] = round(time.time() - t1, 1); r["truth"] = c["truth"]
@@ -445,11 +501,11 @@ def main():
     ap.add_argument("--scans", type=Path, required=True); ap.add_argument("--rec", type=Path, required=True)
     ap.add_argument("--cases", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--only", type=str, default=None); ap.add_argument("--far", type=int, default=0); ap.add_argument("--surprise", action="store_true")
-    ap.add_argument("--decider", default="rpp", choices=["rpp", "nearest", "nemotron"]); ap.add_argument("--review", action="store_true", help="HERMES reviews the plan on the map picture before the robot moves"); ap.add_argument("--eyes-every", type=float, default=0.0, help="metres between camera checks while driving (0 = only at the first aisle and the dock)"); ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
+    ap.add_argument("--decider", default="rpp", choices=["rpp", "nearest", "nemotron"]); ap.add_argument("--review", action="store_true", help="HERMES reviews the plan on the map picture before the robot moves"); ap.add_argument("--eyes-every", type=float, default=0.0, help="metres between camera checks while driving (0 = off; the doorway decision and the dock check stay)"); ap.add_argument("--no-context", action="store_true", help="switch off the agent's doorway decision"); ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
     a = ap.parse_args(); teach = a.rec / "teach"
     fs, m, theta, aisles, dock = build_structure(a.scans, a.rec)
     G["world"] = World(m); G["reloc"] = Relocalizer(m, None, grid_m=0.5, grid_headings=24, refine_top=24); G["farm"] = FreeFarm(fs, aisles, dock)
-    G["decider"] = a.decider; G["surprise"] = a.surprise; G["review"] = a.review; G["eyes_every"] = a.eyes_every; G["free0"] = fs.free.copy()
+    G["decider"] = a.decider; G["surprise"] = a.surprise; G["review"] = a.review; G["eyes_every"] = a.eyes_every; G["context_decide"] = not a.no_context; G["free0"] = fs.free.copy()
     ys, xs = np.nonzero(fs.free & (fs.dist >= 1.2)); G["yard_cells"] = [fs.xy_of((i, j)) for i, j in zip(ys, xs) if G["farm"].where(fs.xy_of((i, j)) + (0,))[0] is None]
     ap_refs = teach / "offpath_images_map"; poses_f = teach / "offpath_scans" / "scan_poses.json"; G["refs"] = []
     if ap_refs.is_dir() and poses_f.exists():
@@ -476,7 +532,7 @@ def main():
                 "started_wrong": sum(r["start_belief_err_m"] >= 1.0 for r in rs), "wrong_corrected_by_end": sum(r["start_belief_err_m"] >= 1.0 and r["final_belief_err_m"] < 1.0 for r in rs),
                 "unexpected_obstacle_handled": sum(r.get("unexpected_obstacle") is not None and r["outcome"] == "mission_done" for r in rs),
                 "at_dock_at_end": sum(r["at_dock"] for r in rs), "stays_put": sum(r["outcome"] == "stays_put" for r in rs)}
-    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "hermes_review": a.review, "eyes_every_m": a.eyes_every, "surprise_obstacles": a.surprise,
+    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "hermes_review": a.review, "eyes_every_m": a.eyes_every, "agent_doorway_decision": not a.no_context, "surprise_obstacles": a.surprise,
             "structure": {"plant_aisles": [x["id"] for x in G["farm"].aisles], "aisle_lengths_m": [x["length_m"] for x in G["farm"].aisles], "dock": list(dock)}, "seconds": round(time.time() - t0, 1),
             "scans": "synthetic, ray-cast on the self-built map (taught + look-around), own-body returns removed; no stored route anywhere"}
     print(json.dumps(summ, indent=1))
