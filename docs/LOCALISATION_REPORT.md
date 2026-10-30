@@ -132,7 +132,7 @@ evidence is what a LiDAR cannot see — quoted from the model:
 - *"…a solid white greenhouse wall with a grey block at the base and the same distant building…"*
 
 **Step 3 — driving confirms.** Surviving candidates are carried along as the robot moves and refined on every scan; a
-candidate that stops fitting the map dies. Driving is not allowed to choose between symmetric rivals: left to the LiDAR
+candidate that stops fitting the map dies. Driving is not allowed to choose between symmetric candidate places: left to the LiDAR
 alone, driving on chose the wrong twin 9 times in 10 on run 3. The choice stays with the camera, or with reaching a
 place that is not symmetric — a door, the dock, the road.
 
@@ -159,11 +159,11 @@ viewpoint: with frames from the led drive as references the camera was right in 
 carry the right house and metre, so the test continues from the believed pose (right or wrong) through the whole
 mission: rejoin the taught path, the aisle of tunnel-09, the yard, the aisle of tunnel-10, the dock
 (`scripts/offpath_mission_eval.py`, LiDAR scans synthesised on the self-built map). While driving, the believed place
-is checked against every scan, a fresh whole-map search every 10 m keeps rival places alive, and a belief that stops
-fitting, an obstacle where the map says the way is free, or a rival that fits clearly better over 2 m of driving
+is checked against every scan, a fresh whole-map search every 10 m keeps other candidate places alive, and a belief that stops
+fitting, an obstacle where the map says the way is free, or another candidate place that fits clearly better over 2 m of driving
 becomes a new anchor: the whole odometry history is re-placed, the plant records made so far are relabelled, and the
 mission goals are re-derived from the corrected history. Before docking, Nemotron VL compares the view with the dock and
-with the strongest rival place. On the 40 near put-downs the survey was completed with every plant stop covered in 40
+with the strongest other candidate place. On the 40 near put-downs the survey was completed with every plant stop covered in 40
 of 40 and the records labelled right in 39 of 40; 13 had started with a wrong belief and 12 were corrected, 4 by the
 scans within 2 m and 8 by the camera at the dock after a complete, then relabelled, survey. On 10 further put-downs
 4–8 m from the path (LiDAR guess alone to start) the survey was complete in 10 of 10 and right in 9 of 10. Evidence:
@@ -192,7 +192,7 @@ picture first: the survey was completed in 39 of 40 near cases (every row fully 
 its belief; at every doorway, when the LiDAR still keeps the twin place alive, the agent decides from the whole
 situation (both places with their LiDAR fit, the metres driven, the doors passed, the verdicts so far, the plan, and the
 live view against both reference views) and a move is accepted only after two doorways agree and the LiDAR fits the
-rival at least as well. Measured the other ways for the record: pictures every 10 m inside the rows gave 36 of 50 with
+other candidate place at least as well. Measured the other ways for the record: pictures every 10 m inside the rows gave 36 of 50 with
 88 belief changes, single doorway verdicts without the two-doorway rule 39 of 50, the camera at the dock alone 43 of 50. The order came from the Rural Postman solver on the robot
 (every chosen aisle a required edge, A* distances between aisle ends and the dock, about 0.1 s), so the model decides
 which aisles and whether the plan is sound, never the geometry. Evidence: `docs/evidence/17_freenav_mission_survey.json`;
