@@ -209,7 +209,7 @@ ground plane that drops away or returns no depth within 2–3 m ahead, and a sma
 frames per second are enough: at 0.3 m/s that is a check every 15 cm, about 5 % of the Orin Nano's GPU, trained on
 the twin's render passes and real farm photographs. The vision-language models are too slow to be this brake; they
 reason, the ground layer stops. On "not drivable ahead" the robot stops, marks the place on its map and plans again,
-whatever the planner or HERMES asked for.
+whatever the planner or HERMES asked for. The same pass labels the plants: canopy, stems, fruit and yellowing leaves become a plant layer of the map (where the rows really hold plants, where to stop for the close look), while the fine grading of fruit and lesions stays with RT-DETRv2 at the stops and Nemotron VL.
 
 What the farmer sees: on the dashboard the robot reports "relocalised at tunnel-10, metre 14 (camera: the tree
 through the door)" or "ambiguous: tunnel-09 or tunnel-10 — moving to the door to check". It never silently guesses.
