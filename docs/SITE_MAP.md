@@ -33,6 +33,6 @@ python3 -m r1_nav.site_map confirm data/site_map_v18_draft.json --by "reviewer n
 R1_SITE_MAP=data/site_map_v18_draft.json python3 agent/robot_api.py ...             # the robot API uses this map
 ```
 
-## Limitations
+## Open points
 - The V18 draft uses the blueprint roads + short straight lines to the doors; every edge width is unknown, so a human must check and edit before confirming
-- Driving between houses (`exit_house`/`site_transit`/`enter_house`) is not yet simulated in Isaac (`sim/executor.py` skips these legs like `transit`)
+- Driving between houses is simulated and was driven in run 3 (the yard crossing between the back doors of tunnel-09 and tunnel-10); the V18 draft's road edges to the other blocks are unverified until a led drive covers them
