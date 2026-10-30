@@ -207,6 +207,15 @@ yards, dock, each with its meaning) and asked for the route as named places, Nem
 complete and drivable, 7 % longer than the Rural Postman + A* plan, in 8 s each (`docs/evidence/19_hermes_plans_on_scene_graph.json`,
 figure `media/gallery/34_hermes_plans_on_scene_graph.png`). Meaning first, then geometry.
 
+Two short animations show the order of travel, which a still picture of a tangle of lines cannot:
+`media/gallery/35_plan_on_scene_graph.gif` (HERMES's plan on the scene graph, the robot moving place to place with each
+place named as it is reached) and `media/gallery/36_survey_from_wrong_guess.gif` (a real put-down survey that started
+with a guess 45 m off, the moment it worked out its true position marked).
+
+![HERMES's plan on the scene graph, animated](media/gallery/35_plan_on_scene_graph.gif)
+
+![A survey from a wrong first guess, animated](media/gallery/36_survey_from_wrong_guess.gif)
+
 ## In plain words
 
 **Who draws the line the robot follows?** Nobody, in the map-only mode. The robot builds a map from its own LiDAR,
