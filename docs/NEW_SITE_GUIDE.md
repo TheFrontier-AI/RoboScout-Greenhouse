@@ -185,14 +185,20 @@ path is then planned on the free grid when it is needed (A* with a clearance cos
 middle of an aisle), from where the robot believes it is, and planned again whenever the belief changes or something
 unexpected appears. Figure: `media/gallery/30_free_nav_structure.png`. Measured the same way as above, 40 near put-downs and 10 in the open, with an
 obstacle that is not on the map dropped on the planned path in every case and HERMES reviewing the plan on the map
-picture first: the survey was completed in 39 of 40 near cases (every row fully covered in 38, records right in 36;
-12 of the 13 wrong starts corrected) and in 10 of 10 far cases (9 right); the unexpected obstacle was driven around in
-41 of the 50; HERMES approved 31 plans and changed 10. Inside a row the robot asks for no pictures, odometry carries
+picture first: the survey was completed in 39 of 40 near cases (every row fully covered in 39, records right in 38;
+13 of the 13 wrong starts corrected) and in 9 of 10 far cases (9 right); the unexpected obstacle was driven around in
+40 of the 50; HERMES approved 33 plans and changed 11. Inside a row the robot asks for no pictures, odometry carries
 its belief; at every doorway, when the LiDAR still keeps the twin place alive, the agent decides from the whole
-situation (both places with their LiDAR fit, the metres driven, the doors passed, the verdicts so far, the plan, and the
-live view against both reference views) and a move is accepted only after two doorways agree and the LiDAR fits the
-other candidate place at least as well. Measured the other ways for the record: pictures every 10 m inside the rows gave 36 of 50 with
-88 belief changes, single doorway verdicts without the two-doorway rule 39 of 50, the camera at the dock alone 43 of 50. A check that the side cameras see plants while the robot believes it is in a row was measured as well (41 of 50): in twin houses the wrong row has plants beside it too, so it cannot catch the swap, and its false alarms at the row ends cost surveys; it stays an option for farms with empty corridors.
+situation (both places with the fit of the current scan and of the whole drive so far, the metres driven, the doors passed, the
+verdicts so far, the plan, and the live view against both reference views). The whole-drive fit is the robot's own evidence: one scan
+inside a row fits both twin houses, the drive with its doorways, yards and row ends (the two rows differ by 1.6 m) fits one. A move
+is accepted after two doorways agree and the LiDAR fits the other candidate place at least as well, or at one doorway when the agent
+and the whole drive agree clearly; a camera verdict at the dock that the whole drive contradicts is set aside (3 times in the 50 runs).
+Wrong starts were corrected after 46 m of driving (median; 120 m with the current scan alone). A blocked way changes the mission, never
+the belief: a row whose mouth is blocked is entered from its other end, a goal that cannot be reached is left out and reported (once in
+the 50 runs), and a row counts as surveyed once the robot's own path has covered it. Measured the other ways for the record: pictures every 10 m inside the rows gave 36 of 50 with
+88 belief changes, single doorway verdicts without the two-doorway rule 39 of 50, the camera at the dock alone 43 of 50, the two-doorway rule with the current scan alone 45 of 50,
+the whole-drive fit added 47 of 50, moving at one doorway when the agent and the drive agree 48 of 50, and all of it with the blocked-way rules 47 of 50 and 49 of 50 in two runs of the same code (the agent's answers vary between runs; one near start 45 m off in the twin house failed in both). A check that the side cameras see plants while the robot believes it is in a row was measured as well (41 of 50): in twin houses the wrong row has plants beside it too, so it cannot catch the swap, and its false alarms at the row ends cost surveys; it stays an option for farms with empty corridors.
 
 **Can the agent draw the route itself?** Measured (`docs/evidence/18_hermes_draws_route.json`, figure
 `media/gallery/33_hermes_draws_route.png`): given the map picture with metre axes and the structure, Nemotron 3.5 Super VL
@@ -210,8 +216,8 @@ figure `media/gallery/34_hermes_plans_on_scene_graph.png`). Meaning first, then 
 Two short animations show the order of travel, which a still picture of a tangle of lines cannot:
 `media/gallery/35_plan_on_scene_graph.gif` (HERMES's plan on the scene graph, the robot moving place to place with each
 place named as it is reached) and `media/gallery/36_survey_from_wrong_guess.gif` (three surveys as they were really
-driven: one that knew where it was from the start, two that started with a wrong guess, 2 m and 45 m off, and worked
-out their true position within 2 m of driving).
+driven: one that knew where it was from the start, two that started with a wrong guess, 2 m and 46 m off, and worked
+out their true position within 1 m of driving).
 
 ![HERMES's plan on the scene graph, animated](media/gallery/35_plan_on_scene_graph.gif)
 
@@ -232,7 +238,9 @@ distance from the plants. It is not a decision the robot makes on its own.
 farm). Wheels and gyro carry the position between scans and tie the whole drive together; the stereo camera is an
 independent second witness; the front camera and the vision-language model are used only for the one thing a LiDAR
 cannot see: which of two identical houses it is in, and only at doorways and in the yards, never inside a row, because
-inside a row every picture looks the same and asking there made things worse (measured).
+inside a row every picture looks the same and asking there made things worse (measured). The strongest witness is the drive itself:
+the robot keeps a scan every 2 m and, at a doorway, places the last 80 m of its drive at each candidate place and asks how much of it lands on
+the map; the house it is really in fits, the twin does not, because the doorways, yards and row ends it already passed are not the same.
 
 **Who decides what?** HERMES decides the mission: which rows, in what order, whether a plan is sound, what to do when
 the robot reports a blocked row or a place that does not look like the map. The robot does the geometry: paths to the
@@ -242,7 +250,8 @@ idea with a metre of wobble that the planner had to repair (8 of 12). Meaning fi
 
 **What is guaranteed?** No module guarantees success in a changed world. What is guaranteed is behaviour: the robot
 never plans through ground it has not seen empty, stops for anything in its way, plans again when the world does not
-match its map, and asks before committing to a place that matters. Before field trials a live ground check (depth and a
+match its map, and asks before committing to a place that matters. A blocked way changes the mission and never the belief: a row whose mouth is blocked is
+entered from its other end, a goal that cannot be reached is left out and reported, a blocked dock means stopping short and saying where. Before field trials a live ground check (depth and a
 small segmentation model at two frames per second) will be able to veto every forward command, because a 2-D LiDAR sees
 neither a drop-off nor still water.
 

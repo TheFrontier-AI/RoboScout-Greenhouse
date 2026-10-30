@@ -53,14 +53,21 @@ class FreeFarm:
         is. A leg from an aisle's start to its end is the survey itself, so it is planned inside that aisle."""
         cur = tuple(pose[:2]); pts = [np.array(cur, float)]; prev = None
         for name, g in goals:
-            if name.endswith("/end") and prev == name[:-4] + "/start":
-                leg = self.astar_in_aisle(cur, g, name[:-4])
-            else:
+            aid = name[:-4] if name.endswith("/end") else None
+            # the leg to a row's end is the survey itself when the robot is already at that row (its start goal was
+            # reached and dropped, or it stands inside the row): planned inside the row, never around it
+            at_row = aid is not None and prev is None and (self.where((cur[0], cur[1], 0.0))[0] == aid or math.dist(cur, self.other_end(aid, g)) < 3.0)
+            leg = self.astar_in_aisle(cur, g, aid) if aid is not None and (prev == aid + "/start" or at_row) else None
+            if leg is None:
                 leg = self.fs.astar(cur, g)
             if leg is None:
                 return None
             pts.extend(np.array(leg[1:], float)); cur = tuple(g); prev = name
         return np.array(pts, float)
+
+    def other_end(self, aid, end_xy):
+        a = next(x for x in self.aisles if x["id"] == aid)
+        return tuple(a["a"]) if math.dist(end_xy, a["b"]) < math.dist(end_xy, a["a"]) else tuple(a["b"])
 
     def astar_in_aisle(self, start, goal, aid):
         """A* with the free grid masked to the aisle corridor (1.2 m either side of its centre line)."""
@@ -210,7 +217,17 @@ def run_case(case):
     tr = HypothesisTracker(reloc); odom = (0.0, 0.0, 0.0); tr.start(world.scan(*truth), odom)
     tr.hyps.sort(key=lambda r: err(r, belief)); tr.hyps[0][0:3] = list(belief)
     metres = 0.0; replans = 0; corrected_at = None; outcome = "ran_out"; hist = []
-    state = {"belief": belief, "wp": None, "k": 1}; local_blocks = []
+    state = {"belief": belief, "wp": None, "k": 1}; local_blocks = []; kept = []
+
+    def drive_fit(cand):
+        """Share of the LiDAR points of the whole drive so far (one scan every 2 m, the last 80 m) that land on the
+        map when that drive is placed so that it ends at `cand`. One scan inside a row fits both twin houses; the
+        whole drive, with its doorways, yards and the end walls of the rows (the two rows differ by 1.6 m), fits one
+        house and not the other."""
+        if not kept:
+            return None
+        T = compose(cand, inv(odom)); sc = [reloc._score(s, *compose(T, o)) for o, s in kept[-40:]]; sc = [v for v in sc if np.isfinite(v)]
+        return round(float(np.mean(sc)), 3) if sc else None
 
     def record(e):
         log["belief_err"].append(round(e, 2)); log["true_path"].append([round(v, 3) for v in true])
@@ -249,6 +266,26 @@ def run_case(case):
         tr.hyps.sort(key=lambda r: err(r, nb)); tr.hyps[0][0:3] = list(nb)
         e = err(nb, true); corrected_at = round(metres, 1) if e < 1.0 else None
         return bool(goals) and replan()
+
+    def reroute_blocked():
+        """The place is right (the scans fit) and the way to the next goal is closed by something new: the mission
+        is changed, not the belief. A row whose mouth is blocked is entered from its other end; a goal that cannot be
+        reached from anywhere is left out and reported, and the rest of the mission goes on."""
+        if goals and goals[0][0].endswith("/start") and len(goals) > 1:
+            aid = goals[0][0][:-6]; s, e = goals[0][1], goals[1][1]
+            goals[0:2] = [(f"{aid}/start", e), (f"{aid}/end", s)]
+            if replan():
+                log["events"].append({"m": round(metres, 1), "what": f"the way into {aid} from this end is blocked: mission changed, {aid} is entered from its other end"}); return True
+            goals[0:2] = [(f"{aid}/start", s), (f"{aid}/end", e)]
+        if goals and goals[0][0] != "dock":
+            dropped = goals.pop(0)
+            if dropped[0].endswith("/start") and goals and goals[0][0] == dropped[0][:-6] + "/end":
+                goals.pop(0)
+            log["events"].append({"m": round(metres, 1), "what": f"{dropped[0]} cannot be reached from here (blocked): left out and reported, the rest of the mission goes on"})
+            return replan()
+        if goals and goals[0][0] == "dock":
+            log["events"].append({"m": round(metres, 1), "what": f"the way to the dock is blocked {math.dist(state['belief'][:2], farm.dock[:2]):.1f} m from it: stopping here and reporting"}); goals.clear(); return True
+        return False
 
     def research(reason):
         old = state["belief"]; scan = world.scan(*true); r = reloc.locate(scan)
@@ -322,10 +359,15 @@ def run_case(case):
             if fit >= 0.7:
                 # the place fits the map well: this is a new obstacle, not a wrong belief -> mark it and plan around it
                 i, j = fs.cell_of(nxt_b[:2]); bi, bj = fs.cell_of(belief[:2]); keep = fs.free[bi, bj]
-                fs.free[max(0, i - 1):i + 2, max(0, j - 1):j + 2] = False; fs.free[bi, bj] = keep; local_blocks.append(nxt_b[:2])
+                sl = (slice(max(0, i - 1), i + 2), slice(max(0, j - 1), j + 2)); was = fs.free[sl].copy()
+                fs.free[sl] = False; fs.free[bi, bj] = keep; local_blocks.append(nxt_b[:2])
                 log["events"].append({"m": round(metres, 1), "what": f"unexpected obstacle at ({nxt_b[0]:.1f}, {nxt_b[1]:.1f}), not on the map: marked it and planned around"})
                 unexpected = unexpected or round(metres, 1)
-                if not replan() and not recover("no way round the obstacle from the believed place"):
+                ok = replan()
+                if not ok:
+                    # a wide mark can seal a narrow place around the robot: keep the obstacle cell itself and try again
+                    fs.free[sl] = was; fs.free[i, j] = False; fs.free[bi, bj] = keep; ok = replan()
+                if not ok and not reroute_blocked() and not recover("no way round the obstacle from the believed place"):
                     break
                 continue
             if not recover("obstacle where the map said free and the scans do not fit the believed place"):
@@ -333,6 +375,8 @@ def run_case(case):
             record(err(state["belief"], true)); continue
         true = nxt_t; odom = compose(odom, rel); metres += math.hypot(rel[0], rel[1]); state["k"] = k + 1
         scan_now = world.scan(*true); t = tr.update(scan_now, odom)
+        if G.get("drive_fit", True) and metres - state.get("last_keep_m", -1e9) >= 2.0 and len(scan_now) >= 20:
+            state["last_keep_m"] = metres; kept.append((odom, np.asarray(scan_now) + (LIDAR_AHEAD_M, 0.0)))
         if state["k"] % 40 == 0:
             r = reloc.locate(scan_now)
             for c in ([r.pose] if r.pose else []) + [a["pose"] for a in r.alternatives]:
@@ -410,15 +454,22 @@ def run_case(case):
                                "lidar_fit_here": round(float(reloc._score(np.asarray(scan_now) + (LIDAR_AHEAD_M, 0.0), *belief)), 2), "lidar_fit_rival": round(float(reloc._score(np.asarray(scan_now) + (LIDAR_AHEAD_M, 0.0), *rv)), 2),
                                "doors_passed": state["transitions"][-6:], "camera_verdicts_so_far": [e["what"] for e in log["events"] if "camera" in e["what"] or "agent decided" in e["what"]][-4:],
                                "first_belief": log["first_belief"]}
+                        dh, dr = (drive_fit(belief), drive_fit(rv)) if G.get("drive_fit", True) else (None, None)
+                        if dh is not None and dr is not None:
+                            ctx["whole_drive_fit"] = {"here": dh, "candidate": dr, "meaning": "share of the LiDAR points of the whole drive so far (last 80 m: rows, end walls, doorways, yards) that land on the map when the drive is placed at the believed place / at the candidate place"}
                         where, why = context_decide(live[1], ra[1], rb[1], ctx)
-                        log["events"].append({"m": round(metres, 1), "what": f"agent decided at the doorway: {where} ({why[:90]})"})
+                        log["events"].append({"m": round(metres, 1), "what": f"agent decided at the doorway: {where} ({why[:90]})" + (f"; whole drive fits here {dh:.2f} vs candidate {dr:.2f}" if dh is not None and dr is not None else "")})
                         # a move is accepted only when the agent says 'rival' at two doorways in a row AND the LiDAR
-                        # fits the rival place at least as well as the believed one; 'here' clears the count
-                        votes = state.setdefault("rival_votes", 0)
-                        state["rival_votes"] = votes + 1 if (where == "rival" and ctx["lidar_fit_rival"] >= ctx["lidar_fit_here"] - 0.05) else (0 if where == "here" else votes)
+                        # fits the rival place at least as well as the believed one (the current scan and the whole
+                        # drive); 'here' clears the count. A whole drive that fits the candidate place clearly better
+                        # counts as a vote on its own: the walls the robot already passed are evidence too.
+                        votes = state.setdefault("rival_votes", 0); drive_ok = dh is None or dr is None or dr >= dh - 0.05; drive_says_rival = dh is not None and dr is not None and dr >= dh + 0.15 and dr >= 0.85   # the candidate must itself fit the drive well; two poor fits mean 'neither', not 'the other one'
+                        state["rival_votes"] = votes + 1 if ((where == "rival" and ctx["lidar_fit_rival"] >= ctx["lidar_fit_here"] - 0.05 and drive_ok) or drive_says_rival) else (0 if where == "here" else votes)
+                        if G.get("one_doorway", True) and where == "rival" and drive_says_rival:
+                            state["rival_votes"] = 2                       # two independent witnesses at one doorway: the agent and the walls already passed
                         if state["rival_votes"] >= 2:
                             state["rival_votes"] = 0
-                            if not re_anchor((rv[0], rv[1], rv[2]), "the agent concluded from the whole situation that this is the rival place"):
+                            if not re_anchor((rv[0], rv[1], rv[2]), "the agent concluded from the whole situation that this is the rival place" + (" (the whole drive fits the candidate place better)" if drive_says_rival else "")):
                                 if goals and not recover("cannot plan after the agent's decision"):
                                     break
                             continue
@@ -465,6 +516,12 @@ def run_case(case):
                     if pick == "B":                                         # a verdict that moves the robot is asked twice
                         pick = "B" if camera_pick(live[1], ra[1], rb[1]) == "B" else "unsure"
                     log["events"].append({"m": round(metres, 1), "what": f"camera check at {name}: live view vs here vs rival ({rv[0]:.1f}, {rv[1]:.1f}) -> {pick or 'no answer'}"})
+                    if pick == "B" and G.get("drive_fit", True):
+                        dh, dr = drive_fit(belief), drive_fit(rv)
+                        if dh is not None and dr is not None and dr < dh - 0.10:
+                            # the camera alone does not move the robot when the whole drive (rows, end walls, doorways,
+                            # yards) fits the believed place clearly better than the candidate place
+                            log["events"].append({"m": round(metres, 1), "what": f"camera says the candidate place, but the whole drive fits here {dh:.2f} vs candidate {dr:.2f}: staying"}); pick = "unsure"
                     if pick == "B":
                         if not re_anchor((rv[0], rv[1], rv[2]), f"this is not {name}"):
                             if goals and not recover("cannot plan after the camera check"):
@@ -473,7 +530,19 @@ def run_case(case):
                 if switched:
                     continue
             if name.endswith("/end"):
-                state.setdefault("surveyed", set()).add(name[:-4])
+                # a row counts as surveyed only when the robot's own path (its odometry placed at its belief) covered
+                # the row's stops; a path that went around the row (a blocked mouth) is not a survey, so the row is
+                # driven again from this end, once
+                aid = name[:-4]; Tb = compose(belief, inv(odom)); hp = np.array([compose(Tb, o)[:2] for o in hist[-800:]]) if hist else np.zeros((0, 2))
+                covb = float((cKDTree(hp).query(farm.stops[aid])[0] < 1.0).mean()) if len(hp) else 0.0
+                if covb < 0.5 and aid not in state.setdefault("resurvey", set()):
+                    state["resurvey"].add(aid); g_here = goals[0][1]
+                    log["events"].append({"m": round(metres, 1), "what": f"reached {name} but its own path covered {covb * 100:.0f} % of the row's stops (it went around the row): surveying the row again from this end"})
+                    goals[0:1] = [(f"{aid}/start", g_here), (f"{aid}/end", farm.other_end(aid, g_here))]
+                    if not replan() and not recover("cannot plan the row again"):
+                        break
+                    continue
+                state.setdefault("surveyed", set()).add(aid)
             goals.pop(0)
             if not goals:
                 outcome = "mission_done"; break
@@ -535,10 +604,12 @@ def main():
     ap.add_argument("--cases", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--only", type=str, default=None); ap.add_argument("--far", type=int, default=0); ap.add_argument("--surprise", action="store_true")
     ap.add_argument("--decider", default="rpp", choices=["rpp", "nearest", "nemotron"]); ap.add_argument("--review", action="store_true", help="HERMES reviews the plan on the map picture before the robot moves"); ap.add_argument("--eyes-every", type=float, default=0.0, help="metres between camera checks while driving (0 = off; the doorway decision and the dock check stay)"); ap.add_argument("--no-context", action="store_true", help="switch off the agent's doorway decision"); ap.add_argument("--purpose", action="store_true", help="switch on the plants-beside-me check (measured: it cannot tell twin rows apart, both have plants, and its false alarms cost 4 of 50 surveys)"); ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
+    ap.add_argument("--no-drive-fit", action="store_true", help="switch off the whole-drive check (the LiDAR scans of the last 80 m placed at the believed place vs at the candidate place)")
+    ap.add_argument("--two-doorways", action="store_true", help="always wait for two doorways before moving the belief, even when the agent and the whole drive agree at one")
     a = ap.parse_args(); teach = a.rec / "teach"
     fs, m, theta, aisles, dock = build_structure(a.scans, a.rec)
     G["world"] = World(m); G["reloc"] = Relocalizer(m, None, grid_m=0.5, grid_headings=24, refine_top=24); G["farm"] = FreeFarm(fs, aisles, dock)
-    G["decider"] = a.decider; G["surprise"] = a.surprise; G["review"] = a.review; G["eyes_every"] = a.eyes_every; G["context_decide"] = not a.no_context; G["purpose_check"] = a.purpose; G["free0"] = fs.free.copy()
+    G["decider"] = a.decider; G["surprise"] = a.surprise; G["review"] = a.review; G["eyes_every"] = a.eyes_every; G["context_decide"] = not a.no_context; G["purpose_check"] = a.purpose; G["drive_fit"] = not a.no_drive_fit; G["one_doorway"] = not a.two_doorways; G["free0"] = fs.free.copy()
     ys, xs = np.nonzero(fs.free & (fs.dist >= 1.2)); G["yard_cells"] = [fs.xy_of((i, j)) for i, j in zip(ys, xs) if G["farm"].where(fs.xy_of((i, j)) + (0,))[0] is None]
     ap_refs = teach / "offpath_images_map"; poses_f = teach / "offpath_scans" / "scan_poses.json"; G["refs"] = []
     if ap_refs.is_dir() and poses_f.exists():
@@ -565,7 +636,7 @@ def main():
                 "started_wrong": sum(r["start_belief_err_m"] >= 1.0 for r in rs), "wrong_corrected_by_end": sum(r["start_belief_err_m"] >= 1.0 and r["final_belief_err_m"] < 1.0 for r in rs),
                 "unexpected_obstacle_handled": sum(r.get("unexpected_obstacle") is not None and r["outcome"] == "mission_done" for r in rs),
                 "at_dock_at_end": sum(r["at_dock"] for r in rs), "stays_put": sum(r["outcome"] == "stays_put" for r in rs)}
-    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "hermes_review": a.review, "eyes_every_m": a.eyes_every, "agent_doorway_decision": not a.no_context, "purpose_check": a.purpose, "surprise_obstacles": a.surprise,
+    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "hermes_review": a.review, "eyes_every_m": a.eyes_every, "agent_doorway_decision": not a.no_context, "purpose_check": a.purpose, "whole_drive_fit": not a.no_drive_fit, "move_at_one_doorway_when_agent_and_drive_agree": not a.two_doorways, "surprise_obstacles": a.surprise,
             "structure": {"plant_aisles": [x["id"] for x in G["farm"].aisles], "aisle_lengths_m": [x["length_m"] for x in G["farm"].aisles], "dock": list(dock)}, "seconds": round(time.time() - t0, 1),
             "scans": "synthetic, ray-cast on the self-built map (taught + look-around), own-body returns removed; no stored route anywhere"}
     print(json.dumps(summ, indent=1))

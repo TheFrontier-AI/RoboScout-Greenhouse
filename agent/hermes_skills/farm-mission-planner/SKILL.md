@@ -62,7 +62,11 @@ The robot turns each named leg into geometry (A* on its grid, the row's centre l
 
 | the robot reports | you decide |
 |---|---|
+| "the way into aisle X from this end is blocked: entering it from its other end" | nothing; the robot changed the mission itself, the row is still surveyed end to end |
 | "aisle X blocked at metre M, no way round" | skip X and continue, or wait and retry, or return to the dock; tell the farmer |
+| "aisle X cannot be reached from here: left out, going on with the rest" | tell the farmer which row is missing from today's records; decide whether to retry later |
+| "the way to the dock is blocked N m from it: stopped here" | tell the farmer where the robot stands; the records are complete |
+| "the whole drive so far fits the other house better: belief moved, records relabelled" | nothing; this is the robot's own evidence (the walls, doorways and yards it already passed), stronger than one picture |
 | "this does not look like aisle X, camera says it is aisle Y" | accept the relabel (the robot already did it) and let it continue, or stop and ask the farmer |
 | "obstacle not on the map at (x, y), planned around, +N m" | nothing, unless N is large: then re-plan the order with `/plan` |
 | "cannot plan from where I believe I am" | ask the robot to probe (it steps into open space and searches again); if it still fails, tell the farmer where it last knew it was |
@@ -74,6 +78,9 @@ The robot turns each named leg into geometry (A* on its grid, the row's centre l
 - Approve only a plan whose picture you have looked at and whose `aisles_missing_from_order` is empty (or the farmer
   said to skip them).
 - Never invent an aisle id; use the ids from `/structure`.
+- A blocked way changes the mission, never the belief: when the scans fit the believed place the robot keeps it and
+  routes around, enters from the other end, or leaves the goal out and reports. Evidence about the place alone (the
+  whole drive's fit, a doorway decision, the camera at a yard) moves the belief.
 - Say what you decided and why, in one sentence, every time (`reason`). The farmer reads it.
 - Offline check of the same loop (synthetic scans): `python3 scripts/freenav_mission_eval.py ... --decider nemotron`;
   its evidence is `docs/evidence/17_freenav_mission_survey.json`.
