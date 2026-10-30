@@ -294,8 +294,8 @@ def make_handler(hub: Hub):
                     if mp is None:
                         return self._json(400, {"error": "no structure"})
                     start = b.get("from") or hub.status.get("xy") or list(mp.dock[:2])
-                    order = b.get("order") or [a["id"] for a in mp.aisles]
-                    out = mp.plan(order, start); out["alternatives"] = mp.alternatives(start)[:6]
+                    rpp = mp.rpp_order(start, b.get("aisles")); order = b.get("order") or (rpp["order"] if rpp["ok"] else [a["id"] for a in mp.aisles])
+                    out = mp.plan(order, start); out["alternatives"] = mp.alternatives(start)[:6]; out["rural_postman"] = rpp
                     if b.get("picture", True):
                         out["picture"] = mp.picture_b64(order, start)
                     return self._json(200, out)

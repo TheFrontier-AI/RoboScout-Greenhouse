@@ -32,10 +32,13 @@ run on the robot's map (`R1_STRUCTURE` points the hub at its output).
 1. **Read what the robot found.** `curl $R1_HUB/structure` → plant aisles (id, both ends, length, width,
    reachable), the dock (where it was switched on), drivable area, aisles seen but not reachable. Tell the farmer in
    plain words: "I found 2 aisles I can drive, 40 and 41 m long; 2 side aisles are too narrow or unseen."
-2. **Ask for a plan.** `curl -X POST $R1_HUB/plan -d '{"order": ["aisle-03", "aisle-07"]}'` (omit `order` for every
-   reachable aisle, nearest first). You get every leg with its metres, `total_m`, `aisles_missing_from_order`, the
-   shortest `alternatives`, and `picture` (a JPEG of the map with the drivable space, the aisles, the dock, the robot
-   and the proposed path). **Look at the picture**: the path must stay inside the green area, pass every aisle end to
+2. **Ask for a plan.** `curl -X POST $R1_HUB/plan -d '{"aisles": ["aisle-03", "aisle-07"]}'` (omit `aisles` for every
+   reachable aisle). The robot solves the order itself as a Rural Postman Problem (every chosen aisle is a required
+   edge driven end to end, the connections are A* distances on its map, start = where it is, end = the dock; exact up
+   to 7 aisles, well under a second) and returns it as `rural_postman`. You get every leg with its metres, `total_m`,
+   `aisles_missing_from_order`, the shortest `alternatives`, and `picture` (a JPEG of the map with the drivable space,
+   the aisles, the dock, the robot and the proposed path). Pass `order` only to override the solver (the farmer wants
+   an aisle first); never invent a route of your own. **Look at the picture**: the path must stay inside the green area, pass every aisle end to
    end once, and finish at the dock.
 3. **Decide.** Choose the order by what the farmer asked (an aisle first, an aisle skipped), then by `total_m`. If a
    leg has `metres: null` the robot cannot reach that place from where it is: drop that aisle and say so.

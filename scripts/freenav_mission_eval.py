@@ -165,6 +165,11 @@ def decide_order(farm: FreeFarm, start_xy, decider="nearest"):
     while todo:
         k = min(range(len(todo)), key=lambda i: min(math.dist(cur, todo[i]["a"]), math.dist(cur, todo[i]["b"])))
         a = todo.pop(k); order.append(a["id"]); cur = a["b"] if math.dist(cur, a["a"]) <= math.dist(cur, a["b"]) else a["a"]
+    if decider == "rpp":
+        from agent.mission_planner import MissionPlanner
+        mp = MissionPlanner.__new__(MissionPlanner); mp.fs = farm.fs; mp.dock = farm.dock; mp.aisles = farm.aisles; mp.astar_in_aisle = farm.astar_in_aisle
+        r = mp.rpp_order(start_xy)
+        return (r["order"], f"Rural Postman solver on the robot ({r['method']}, {r['total_m']} m)") if r["ok"] else (order, "nearest first (RPP found no closed route)")
     if decider != "nemotron":
         return order, "nearest aisle first, then the next nearest, then the dock"
     try:
@@ -198,7 +203,7 @@ def run_case(case):
         r = reloc.locate(world.scan(*truth)); belief = tuple(r.pose) if r.pose else truth; how = "LiDAR best" + (" (ambiguous)" if r.ambiguous else "")
     true = truth
     order, why = decide_order(farm, belief[:2], G.get("decider", "nearest"))
-    order, verdict = plan_review(farm, belief[:2], order, G.get("decider", "nearest"))
+    order, verdict = plan_review(farm, belief[:2], order, "nemotron" if G.get("review") else "none")
     goals = farm.goal_points(order); all_goals = list(goals)
     log = {"true_path": [list(truth)], "belief_err": [round(err(belief, true), 2)], "events": [{"m": 0.0, "what": f"mission decided: {' -> '.join(order)} -> dock ({why})"}, {"m": 0.0, "what": f"plan checked before moving: {verdict}"}], "visits": [], "first_belief": how,
            "mission_order": order, "decider": why, "plan_review": verdict, "surprise_xy": surprise_xy}
@@ -411,11 +416,11 @@ def main():
     ap.add_argument("--scans", type=Path, required=True); ap.add_argument("--rec", type=Path, required=True)
     ap.add_argument("--cases", type=Path, required=True); ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--only", type=str, default=None); ap.add_argument("--far", type=int, default=0); ap.add_argument("--surprise", action="store_true")
-    ap.add_argument("--decider", default="nearest", choices=["nearest", "nemotron"]); ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
+    ap.add_argument("--decider", default="rpp", choices=["rpp", "nearest", "nemotron"]); ap.add_argument("--review", action="store_true", help="HERMES reviews the plan on the map picture before the robot moves"); ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
     a = ap.parse_args(); teach = a.rec / "teach"
     fs, m, theta, aisles, dock = build_structure(a.scans, a.rec)
     G["world"] = World(m); G["reloc"] = Relocalizer(m, None, grid_m=0.5, grid_headings=24, refine_top=24); G["farm"] = FreeFarm(fs, aisles, dock)
-    G["decider"] = a.decider; G["surprise"] = a.surprise; G["free0"] = fs.free.copy()
+    G["decider"] = a.decider; G["surprise"] = a.surprise; G["review"] = a.review; G["free0"] = fs.free.copy()
     ys, xs = np.nonzero(fs.free & (fs.dist >= 1.2)); G["yard_cells"] = [fs.xy_of((i, j)) for i, j in zip(ys, xs) if G["farm"].where(fs.xy_of((i, j)) + (0,))[0] is None]
     ap_refs = teach / "offpath_images_map"; poses_f = teach / "offpath_scans" / "scan_poses.json"; G["refs"] = []
     if ap_refs.is_dir() and poses_f.exists():
@@ -442,7 +447,7 @@ def main():
                 "started_wrong": sum(r["start_belief_err_m"] >= 1.0 for r in rs), "wrong_corrected_by_end": sum(r["start_belief_err_m"] >= 1.0 and r["final_belief_err_m"] < 1.0 for r in rs),
                 "unexpected_obstacle_handled": sum(r.get("unexpected_obstacle") is not None and r["outcome"] == "mission_done" for r in rs),
                 "at_dock_at_end": sum(r["at_dock"] for r in rs), "stays_put": sum(r["outcome"] == "stays_put" for r in rs)}
-    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "surprise_obstacles": a.surprise,
+    summ = {"near": summ_of([r for r in out if r["tag"] == "near"]), "far": summ_of([r for r in out if r["tag"] == "far"]), "decider": a.decider, "hermes_review": a.review, "surprise_obstacles": a.surprise,
             "structure": {"plant_aisles": [x["id"] for x in G["farm"].aisles], "aisle_lengths_m": [x["length_m"] for x in G["farm"].aisles], "dock": list(dock)}, "seconds": round(time.time() - t0, 1),
             "scans": "synthetic, ray-cast on the self-built map (taught + look-around), own-body returns removed; no stored route anywhere"}
     print(json.dumps(summ, indent=1))

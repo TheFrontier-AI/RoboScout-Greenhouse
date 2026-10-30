@@ -68,6 +68,63 @@ class MissionPlanner:
         finally:
             fs.free = saved
 
+    def rpp_order(self, start_xy, aisle_ids=None) -> dict:
+        """Rural Postman Problem on the small graph of aisle ends + dock: every chosen aisle is a REQUIRED edge
+        (driven end to end), the connections between ends are A* distances on the free grid, the robot starts where
+        it is and ends at the dock. Exact (every order and direction) up to 7 aisles, nearest-first + 2-opt beyond.
+        Runs in well under a second on the robot - no model call needed to choose the order."""
+        ids = aisle_ids or [a["id"] for a in self.aisles]; A = {a["id"]: a for a in self.aisles if a["id"] in ids}
+        ends = {"start": tuple(start_xy), "dock": self.dock[:2]}
+        for i, a in A.items():
+            ends[f"{i}/a"] = tuple(a["a"]); ends[f"{i}/b"] = tuple(a["b"])
+        keys = list(ends); D = {}
+        for u in keys:
+            for v in keys:
+                if u == v or (u, v) in D:
+                    continue
+                leg = self.fs.astar(ends[u], ends[v]); L = None if leg is None else sum(math.dist(p, q) for p, q in zip(leg, leg[1:]))
+                D[(u, v)] = D[(v, u)] = L
+        inside = {i: self.astar_in_aisle(ends[f"{i}/a"], ends[f"{i}/b"], i) for i in A}
+        inside = {i: (None if leg is None else sum(math.dist(p, q) for p, q in zip(leg, leg[1:]))) for i, leg in inside.items()}
+        def cost(seq):
+            """seq = [(aisle id, direction 'ab' or 'ba'), ...]"""
+            cur = "start"; total = 0.0
+            for i, d in seq:
+                first, last = (f"{i}/a", f"{i}/b") if d == "ab" else (f"{i}/b", f"{i}/a")
+                c1 = D.get((cur, first)) if cur != first else 0.0
+                if c1 is None or inside[i] is None:
+                    return None
+                total += c1 + inside[i]; cur = last
+            c = D.get((cur, "dock")); return None if c is None else total + c
+        import itertools
+        best = None
+        if len(A) <= 7:
+            for perm in itertools.permutations(A):
+                for dirs in itertools.product(("ab", "ba"), repeat=len(perm)):
+                    c = cost(list(zip(perm, dirs)))
+                    if c is not None and (best is None or c < best[0]):
+                        best = (c, list(zip(perm, dirs)))
+        else:
+            todo = set(A); cur = "start"; seq = []
+            while todo:
+                cand = [(D.get((cur, f"{i}/a")), i, "ab") for i in todo] + [(D.get((cur, f"{i}/b")), i, "ba") for i in todo]
+                cand = [c for c in cand if c[0] is not None]
+                if not cand:
+                    break
+                _, i, d = min(cand); seq.append((i, d)); todo.discard(i); cur = f"{i}/b" if d == "ab" else f"{i}/a"
+            improved = True
+            while improved and len(seq) > 2:
+                improved = False
+                for x in range(len(seq) - 1):
+                    for y in range(x + 1, len(seq)):
+                        alt = seq[:x] + [(i, "ba" if d == "ab" else "ab") for i, d in reversed(seq[x:y + 1])] + seq[y + 1:]
+                        if (cost(alt) or 1e18) < (cost(seq) or 1e18):
+                            seq = alt; improved = True
+            best = (cost(seq), seq)
+        if best is None or best[0] is None:
+            return {"ok": False, "error": "no closed route covers every chosen aisle"}
+        return {"ok": True, "order": [i for i, _ in best[1]], "directions": dict(best[1]), "total_m": round(best[0], 1), "method": "exact RPP" if len(A) <= 7 else "RPP heuristic (nearest + 2-opt)"}
+
     def alternatives(self, start_xy) -> list:
         out = []
         for o in itertools.permutations([a["id"] for a in self.aisles]):
