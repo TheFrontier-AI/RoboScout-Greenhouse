@@ -23,6 +23,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scans", type=Path, required=True); ap.add_argument("--images", type=Path, required=True)
     ap.add_argument("--rec", type=Path, required=True); ap.add_argument("--out", type=Path, default=None)
+    ap.add_argument("--ref-images", type=Path, default=None, help="look-around images rendered at the 'map' poses (offpath_images.py --tag map)")
+    ap.add_argument("--poses", type=Path, default=None, help="scan_poses.json (needed with --ref-images)")
     ap.add_argument("--model", default=os.environ.get("EYES2_MODEL", "nvidia/Nemotron-3.5-Super-VL"))
     ap.add_argument("--base-url", default=os.environ.get("EYES2_BASE_URL", "https://api.tokenfactory.nebius.com/v1/"))
     a = ap.parse_args(); teach = a.rec / "teach"
@@ -36,6 +38,30 @@ def main():
     site = SiteMap.load(teach / "site_map.json")
     S = [json.loads(l) for l in open(a.rec / "steps.jsonl")]; S = [s for s in S if s.get("xy")]
     ang = beam_angles(len(rows[0]["lidar"]))
+    refs_la = []                                               # look-around references: (x, y, heading, image path)
+    if a.ref_images and a.poses:
+        for i, p in enumerate(json.load(open(a.poses))):
+            img_p = a.ref_images / f"{i:05d}.jpg"
+            if p.get("tag") == "map" and img_p.exists():
+                refs_la.append((p["x"], p["y"], p["heading_deg"], img_p))
+        print(f"look-around reference images: {len(refs_la)}", flush=True)
+
+    def ref_for(c):
+        """Reference view for candidate pose c: nearest look-around image with a similar heading (<= 30 deg), else the
+        led drive's front frame ~1.5 m before the candidate."""
+        if refs_la:
+            best = None
+            for x, y, h, img_p in refs_la:
+                dh = abs((h - c[2] + 180) % 360 - 180)
+                if dh > 30:
+                    continue
+                d = math.hypot(x - c[0], y - c[1])
+                if best is None or d < best[0]:
+                    best = (d, img_p)
+            if best is not None and best[0] < 3.0:
+                return best[1]
+        j = int(np.argmin(np.hypot(path[:, 0] - c[0], path[:, 1] - c[1]))); st = S[min(j, len(S) - 1)]["step"]
+        return ref_frame(a.rec / "front", st)
     out = []; n_amb = n_dec = n_ok = n_lidar_ok = n_back = 0
     for i, r in off:
         img = a.images / f"{i:05d}.jpg"
@@ -49,16 +75,13 @@ def main():
         elif rl.pose and rl.ambiguous and img.exists():
             n_amb += 1
             cands = [rl.pose, rl.alternatives[0]["pose"]]
-            refs = []
-            for c in cands:
-                j = int(np.argmin(np.hypot(path[:, 0] - c[0], path[:, 1] - c[1]))); st = S[min(j, len(S) - 1)]["step"]
-                refs.append(ref_frame(a.rec / "front", st))
+            refs = [ref_for(c) for c in cands]
             if all(refs):
                 content = [{"type": "text", "text": PROMPT}, {"type": "image_url", "image_url": {"url": b64(img)}},
                            {"type": "image_url", "image_url": {"url": b64(refs[0])}}, {"type": "image_url", "image_url": {"url": b64(refs[1])}}]
                 t0 = time.time()
                 try:
-                    resp = client.chat.completions.create(model=a.model, temperature=0.1, max_tokens=4000, messages=[{"role": "user", "content": content}])
+                    resp = client.chat.completions.create(model=a.model, temperature=0.1, max_tokens=6000, messages=[{"role": "user", "content": content}])
                     msg = resp.choices[0].message
                     txt = (msg.content or getattr(msg, "reasoning_content", None) or "").split("</think>")[-1].replace("```json", "").replace("```", "")
                     j = json.loads(txt[txt.index("{"): txt.rindex("}") + 1]) if "{" in txt else {"match": "error", "evidence": txt[:120]}

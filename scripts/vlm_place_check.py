@@ -23,7 +23,7 @@ Images 2 (place A) and 3 (place B) are reference photos taken earlier on a led d
 same farm; the two places look alike because the greenhouses are identical, so look for what differs: what is visible
 through the door or at the end of the row, the growth stage and arrangement of the plants nearest the camera, any
 damaged or yellowing plants, objects, structures, light. Decide which reference shows the SAME place as image 1.
-Reply with ONLY this JSON: {"match": "A" | "B" | "unsure", "confidence": 0.0-1.0, "evidence": "one or two sentences"}"""
+Keep your reasoning short. Reply with ONLY this JSON: {"match": "A" | "B" | "unsure", "confidence": 0.0-1.0, "evidence": "one or two sentences"}"""
 
 
 def b64(p: Path) -> str:

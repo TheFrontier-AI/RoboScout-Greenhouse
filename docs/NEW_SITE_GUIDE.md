@@ -146,23 +146,30 @@ assume it is at the dock — it works out where it is, in three steps, and says 
    10) in identical houses — so the choice stays with the camera or with reaching a place that is not symmetric
    (a door, the dock, the road), and until then the robot drives only what both candidates allow.
 
-**Off the taught path - not yet.** The search can cover every free cell of the map (`Relocalizer(..., grid_m=0.5)`,
-47 028 hypotheses, 0.7 s), and with the path hypotheses kept the accuracy on recorded scans is unchanged. A test with
-scans synthesised from the robot's own map at 30 free cells 1-3 m off the path did not succeed (3 found, 19 ambiguous,
-8 wrong): the map holds only what the LiDAR saw from the path, so a viewpoint beside the path sees surfaces that were
-never recorded. Off-path starts therefore remain future work, with a clear plan: record a wider map on the led drive
-(look around at the yard edges), use the cuVSLAM 3-D map which sees more than a 2-D scan, add a "go to the nearest
-graph node" leg before the normal route, and test with real scans. Until then: put the robot down on a path it knows.
+**Off the taught path.** A robot put down beside a path sees surfaces the led drive never recorded, so the led drive
+records more: every 0.5 m along the path the robot also scans at eight headings, and those look-around scans are
+merged with the taught map (984 look-around poses, 32 967 → 37 436 map points on our farm). The search then covers
+every free cell of the map as well as the path (0.5 m grid × 24 headings, 95 172 hypotheses, 0.6 s per scan), and the
+chosen pose gets its way home by rejoining the nearest graph node and following the normal route
+(`SiteMap.route_from_xy`, refused beyond 6 m from the graph). Measured with LiDAR scans and front images rendered in
+the current twin at 40 poses 1–3 m beside the path, in the front and back yards: the LiDAR settles 3 outright and
+flags 35 as ambiguous (the right place leads in 24 of them); Nemotron 3.5 Super VL compares the front image with the
+look-around reference image of matching heading at each candidate place, decided 32 and was right in 26; the final
+pose is correct and a route to the dock is planned in **29 of 40 (72 %)**. The reference image must share the
+viewpoint: with frames from the led drive as references the camera was right in 13 of 40. Evidence:
+`docs/evidence/14_offpath_relocalisation_lidar.json` (LiDAR stage), `15_offpath_full_loop_summary.json` and
+`15_offpath_full_loop.jsonl` (the full loop, per case).
 
 What the farmer sees: on the dashboard the robot reports "relocalised at tunnel-10, metre 14 (camera: the tree
 through the door)" or "ambiguous: tunnel-09 or tunnel-10 — moving to the door to check". It never silently guesses.
 
-Evidence: `docs/evidence/13_relocalize_eval_run3.json`, `12_vlm_place_check.jsonl`.
+Evidence: `docs/evidence/13_relocalize_eval_run3.json`, `12_vlm_place_check.jsonl`; beside the path
+`14_offpath_relocalisation_lidar.json`, `15_offpath_full_loop_summary.json`.
 
 ## 7. What is and is not in this version
 
 In this version: the led drive, the map and site graph built from it, naming and confirmation, route planning on the
-graph, all commands above, and relocalisation from an unknown start (LiDAR candidates, camera tie-break, motion pruning) — verified offline on our farm's recorded drive; wiring relocalisation into the live start-up of the robot is the next step. Next: building the map from cuVSLAM poses as well
+graph, all commands above, and relocalisation from an unknown start (LiDAR candidates, camera tie-break, motion pruning, a route home from beside the path) — verified offline on our farm's recorded drive and on rendered put-down poses; wiring relocalisation into the live start-up of the robot is the next step. Next: building the map from cuVSLAM poses as well
 as LiDAR (tighter than the odometry that taught it), and the aisle map generated from the LiDAR bed walls for houses the
 recorder did not already know.
 

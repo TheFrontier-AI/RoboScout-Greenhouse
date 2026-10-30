@@ -247,6 +247,12 @@ LiDAR alone, driving on chose the wrong twin 9 times in 10 (`docs/evidence/13_re
 that follows is LiDAR for candidates, the camera for the decision, driving for confirmation; wiring it into the live
 start-up of the robot is the next step.
 
+Beside the path the map is thinner, so the led drive records look-around scans every 0.5 m (eight headings, 984 poses on
+our farm) and the search covers every free cell (0.5 m grid × 24 headings, 95 172 hypotheses, 0.6 s). On 40 put-down
+poses 1–3 m beside the path, with scans and front images rendered in the twin, the LiDAR candidates plus the Nemotron VL
+tie-break against look-around reference images of matching heading give a correct pose and a planned route home
+(rejoin the nearest graph node, then the normal route) in 29 of 40 (`docs/evidence/15_offpath_full_loop_summary.json`).
+
 ## 4. Perception
 
 ### 4.1 RT-DETRv2 for fruit, plant bases and leaf anomalies
@@ -400,10 +406,10 @@ Clean-clone verification at the time of writing: the **robot side** was installe
 
 ---
 
-## 8. Limitations and future work
+## 8. Open points and future work
 
-1. **Simulation only.** Every number comes from the Isaac twin; images are noise-free and perfectly calibrated. cuVSLAM's 6 cm and the detector's precision will be worse with real cameras, condensation on the film and real plants.
-2. **Jetson deployment pending.** The stack is sensors-only and the robot side installs on ARM64, but it has not run on a Jetson with ROS 2 drivers yet.
+1. **Every number is from simulation.** The figures come from the Isaac twin; images are noise-free and perfectly calibrated. cuVSLAM's 6 cm and the detector's precision will be worse with real cameras, condensation on the film and real plants.
+2. **Jetson: installed and benchmarked, the live loop is next.** The robot side installs and passes its tests on a real Jetson Orin Nano and cuVSLAM runs there at 188 fps (`docs/evidence/04`, `09`); the live sensor drivers (LiDAR, ZED, wheels) and the relocalisation start-up are the remaining wiring.
 3. **Disease recall.** 6/9 combined; wilting and defoliation are not detected. Planned: a whole-plant view (front camera or a CCTV-style camera at the aisle end) judged by the VLM, and real-photo fine-tuning of the detector.
 4. **Plant counting** must move to the LiDAR stem detector.
 5. **Cosmos prompt discipline.** Half the answers ran to the token limit; a stricter system prompt, a lower `max_tokens` and a JSON schema (guided decoding in vLLM) should bring every answer to ~1.5 s.

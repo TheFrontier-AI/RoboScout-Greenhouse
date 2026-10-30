@@ -1,0 +1,14 @@
+{
+ "off_path_cases": 40,
+ "lidar_unambiguous_correct": 3,
+ "ambiguous_sent_to_camera": 35,
+ "camera_decided": 32,
+ "camera_correct": 26,
+ "correct_final_pose_with_route_home": 29,
+ "model": "nvidia/Nemotron-3.5-Super-VL",
+ "camera_wrong": 6,
+ "camera_unsure_or_error": 3,
+ "lidar_ambiguous_with_right_place_leading": 24,
+ "setup": "40 poses 1-3 m beside the taught path in the front/back yards of the current twin; LiDAR scans and front images rendered in Isaac Sim; map = taught drive + look-around scans (984 poses); references = look-around images with matching heading; LiDAR search = path + 0.5 m grid x 24 headings, 24 places refined",
+ "route_home": "SiteMap.route_from_xy: straight rejoin to the nearest graph node (<= 6 m) then the normal route to the dock"
+}
