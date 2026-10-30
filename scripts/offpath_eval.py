@@ -41,7 +41,7 @@ def main():
         m = taught
     else:
         look = build_from_scans(maps_rows)
-        m = np.unique(np.round(np.vstack([taught, look]) / 0.05).astype(int), axis=0) * 0.05 + 0.025
+        m = np.unique(np.floor(np.vstack([taught, look]) / 0.05).astype(int), axis=0) * 0.05 + 0.025
     print(f"map points: taught {len(taught)}  look-around {0 if a.no_lookaround else len(look)}  merged {len(m)}", flush=True)
     ang = beam_angles(len(rows[0]["lidar"]))
     reloc = Relocalizer(m, path, grid_m=0.5, grid_headings=12)

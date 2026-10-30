@@ -30,3 +30,4 @@ All 3:2, ≤ 2 MB. Renders are from the NVIDIA Isaac Sim digital twin of our far
 | 24 | ![](24_teach_map_self_built.png) | Mapping by demonstration: the farm as the robot recorded it on one taught drive — map, dock and doors built by the robot, no distances typed |
 | 25 | ![](25_teach_site_graph.png) | The site graph the robot built from the led drive — dock, doors and measured path lengths on its own LiDAR map; anything off the graph is 'do not go' |
 | 26 | ![](26_relocalisation_map.png) | Put down anywhere: 60 random points on run 3 — where one LiDAR scan finds the place (green), where it is ambiguous between the twin houses (yellow), where it is wrong (magenta), and the camera's tie-break (blue correct / red wrong) |
+| 27 | ![](27_offpath_front_views.jpg) | What the robot sees when put down beside a path (six of the 40 off-path test poses rendered in the current twin): these front views go to Nemotron VL to decide between places the LiDAR cannot tell apart |

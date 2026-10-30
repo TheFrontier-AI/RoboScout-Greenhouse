@@ -1,0 +1,456 @@
+{
+ "n": 40,
+ "found_1m": 5,
+ "ambiguous": 26,
+ "ambiguous_best_correct": 9,
+ "wrong": 9,
+ "rejoin_ok": 5,
+ "rejoin_refused": 0,
+ "cases": [
+  {
+   "x": 11.0,
+   "y": -36.0,
+   "off_m": null,
+   "heading_deg": -18.5,
+   "result": "ambiguous",
+   "err_m": 27.27,
+   "score": 0.984,
+   "route_back": null
+  },
+  {
+   "x": -1.0,
+   "y": -39.0,
+   "off_m": null,
+   "heading_deg": 107.6,
+   "result": "wrong",
+   "err_m": 32.44,
+   "score": 0.926,
+   "route_back": null
+  },
+  {
+   "x": 10.5,
+   "y": -37.5,
+   "off_m": null,
+   "heading_deg": -95.2,
+   "result": "found",
+   "err_m": 0.0,
+   "score": 1.0,
+   "route_back": {
+    "nodes": [
+     "__here__",
+     "tunnel-10/door-1",
+     "tunnel-09/door-2",
+     "tunnel-09/door-1",
+     "dock"
+    ],
+    "length_m": 60.29
+   }
+  },
+  {
+   "x": -0.5,
+   "y": 7.0,
+   "off_m": null,
+   "heading_deg": -64.9,
+   "result": "ambiguous",
+   "err_m": 3.07,
+   "score": 0.991,
+   "route_back": null
+  },
+  {
+   "x": 8.0,
+   "y": -39.0,
+   "off_m": null,
+   "heading_deg": 108.0,
+   "result": "wrong",
+   "err_m": 46.86,
+   "score": 0.922,
+   "route_back": null
+  },
+  {
+   "x": 11.0,
+   "y": 5.0,
+   "off_m": null,
+   "heading_deg": 2.5,
+   "result": "ambiguous",
+   "err_m": 0.3,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 11.0,
+   "y": 5.5,
+   "off_m": null,
+   "heading_deg": 2.3,
+   "result": "ambiguous",
+   "err_m": 44.41,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 10.5,
+   "y": -36.5,
+   "off_m": null,
+   "heading_deg": -95.0,
+   "result": "found",
+   "err_m": 0.02,
+   "score": 1.0,
+   "route_back": {
+    "nodes": [
+     "__here__",
+     "tunnel-10/door-1",
+     "tunnel-09/door-2",
+     "tunnel-09/door-1",
+     "dock"
+    ],
+    "length_m": 60.12
+   }
+  },
+  {
+   "x": 7.0,
+   "y": 7.0,
+   "off_m": null,
+   "heading_deg": -174.8,
+   "result": "ambiguous",
+   "err_m": 0.2,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 4.5,
+   "y": 6.5,
+   "off_m": null,
+   "heading_deg": 156.0,
+   "result": "ambiguous",
+   "err_m": 6.81,
+   "score": 0.98,
+   "route_back": null
+  },
+  {
+   "x": -1.5,
+   "y": -39.5,
+   "off_m": null,
+   "heading_deg": -149.1,
+   "result": "ambiguous",
+   "err_m": 0.09,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 10.0,
+   "y": -38.5,
+   "off_m": null,
+   "heading_deg": 124.2,
+   "result": "found",
+   "err_m": 0.31,
+   "score": 1.0,
+   "route_back": {
+    "nodes": [
+     "__here__",
+     "tunnel-10/door-1",
+     "tunnel-09/door-2",
+     "tunnel-09/door-1",
+     "dock"
+    ],
+    "length_m": 60.54
+   }
+  },
+  {
+   "x": 3.5,
+   "y": 6.0,
+   "off_m": null,
+   "heading_deg": -47.6,
+   "result": "wrong",
+   "err_m": 36.83,
+   "score": 0.838,
+   "route_back": null
+  },
+  {
+   "x": 3.0,
+   "y": -37.5,
+   "off_m": null,
+   "heading_deg": 162.4,
+   "result": "ambiguous",
+   "err_m": 0.84,
+   "score": 0.884,
+   "route_back": null
+  },
+  {
+   "x": 0.0,
+   "y": 7.5,
+   "off_m": null,
+   "heading_deg": -36.2,
+   "result": "wrong",
+   "err_m": 45.47,
+   "score": 0.982,
+   "route_back": null
+  },
+  {
+   "x": -3.0,
+   "y": -37.5,
+   "off_m": null,
+   "heading_deg": 157.1,
+   "result": "ambiguous",
+   "err_m": 0.63,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 0.5,
+   "y": -38.5,
+   "off_m": null,
+   "heading_deg": 20.2,
+   "result": "ambiguous",
+   "err_m": 46.33,
+   "score": 0.896,
+   "route_back": null
+  },
+  {
+   "x": -1.5,
+   "y": -36.0,
+   "off_m": null,
+   "heading_deg": -93.6,
+   "result": "ambiguous",
+   "err_m": 41.8,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 4.0,
+   "y": 6.0,
+   "off_m": null,
+   "heading_deg": 86.9,
+   "result": "ambiguous",
+   "err_m": 43.28,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": -2.5,
+   "y": -36.5,
+   "off_m": null,
+   "heading_deg": 62.8,
+   "result": "ambiguous",
+   "err_m": 23.24,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 6.0,
+   "y": -38.5,
+   "off_m": null,
+   "heading_deg": 66.3,
+   "result": "wrong",
+   "err_m": 45.42,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 11.5,
+   "y": -37.0,
+   "off_m": null,
+   "heading_deg": -13.0,
+   "result": "ambiguous",
+   "err_m": 7.07,
+   "score": 0.969,
+   "route_back": null
+  },
+  {
+   "x": -1.0,
+   "y": -38.0,
+   "off_m": null,
+   "heading_deg": -100.1,
+   "result": "found",
+   "err_m": 0.71,
+   "score": 0.951,
+   "route_back": {
+    "nodes": [
+     "__here__",
+     "tunnel-09/door-2",
+     "tunnel-09/door-1",
+     "dock"
+    ],
+    "length_m": 46.54
+   }
+  },
+  {
+   "x": 7.5,
+   "y": -38.0,
+   "off_m": null,
+   "heading_deg": 50.7,
+   "result": "ambiguous",
+   "err_m": 44.88,
+   "score": 0.925,
+   "route_back": null
+  },
+  {
+   "x": 11.0,
+   "y": 6.5,
+   "off_m": null,
+   "heading_deg": -141.4,
+   "result": "ambiguous",
+   "err_m": 20.87,
+   "score": 0.981,
+   "route_back": null
+  },
+  {
+   "x": -1.5,
+   "y": -38.5,
+   "off_m": null,
+   "heading_deg": 69.2,
+   "result": "wrong",
+   "err_m": 46.62,
+   "score": 0.986,
+   "route_back": null
+  },
+  {
+   "x": 2.5,
+   "y": -37.5,
+   "off_m": null,
+   "heading_deg": 48.7,
+   "result": "ambiguous",
+   "err_m": 3.01,
+   "score": 0.901,
+   "route_back": null
+  },
+  {
+   "x": -2.5,
+   "y": 4.5,
+   "off_m": null,
+   "heading_deg": -44.5,
+   "result": "ambiguous",
+   "err_m": 0.65,
+   "score": 0.852,
+   "route_back": null
+  },
+  {
+   "x": 11.5,
+   "y": -37.5,
+   "off_m": null,
+   "heading_deg": 107.5,
+   "result": "ambiguous",
+   "err_m": 37.62,
+   "score": 0.951,
+   "route_back": null
+  },
+  {
+   "x": 8.0,
+   "y": -38.0,
+   "off_m": null,
+   "heading_deg": -110.2,
+   "result": "ambiguous",
+   "err_m": 0.62,
+   "score": 0.931,
+   "route_back": null
+  },
+  {
+   "x": -2.5,
+   "y": 6.5,
+   "off_m": null,
+   "heading_deg": -39.4,
+   "result": "found",
+   "err_m": 0.53,
+   "score": 0.89,
+   "route_back": {
+    "nodes": [
+     "__here__",
+     "tunnel-09/door-1",
+     "dock"
+    ],
+    "length_m": 6.49
+   }
+  },
+  {
+   "x": 2.0,
+   "y": -39.0,
+   "off_m": null,
+   "heading_deg": 107.3,
+   "result": "ambiguous",
+   "err_m": 4.05,
+   "score": 0.898,
+   "route_back": null
+  },
+  {
+   "x": -3.0,
+   "y": 5.5,
+   "off_m": null,
+   "heading_deg": -43.0,
+   "result": "ambiguous",
+   "err_m": 10.63,
+   "score": 0.953,
+   "route_back": null
+  },
+  {
+   "x": 5.5,
+   "y": -37.5,
+   "off_m": null,
+   "heading_deg": 76.8,
+   "result": "wrong",
+   "err_m": 43.82,
+   "score": 0.899,
+   "route_back": null
+  },
+  {
+   "x": 9.0,
+   "y": 6.5,
+   "off_m": null,
+   "heading_deg": 40.5,
+   "result": "wrong",
+   "err_m": 45.02,
+   "score": 0.924,
+   "route_back": null
+  },
+  {
+   "x": 2.0,
+   "y": 7.5,
+   "off_m": null,
+   "heading_deg": 158.8,
+   "result": "ambiguous",
+   "err_m": 46.58,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 0.0,
+   "y": 7.0,
+   "off_m": null,
+   "heading_deg": 177.0,
+   "result": "ambiguous",
+   "err_m": 0.39,
+   "score": 1.0,
+   "route_back": null
+  },
+  {
+   "x": 6.5,
+   "y": -37.0,
+   "off_m": null,
+   "heading_deg": 80.5,
+   "result": "wrong",
+   "err_m": 42.79,
+   "score": 0.967,
+   "route_back": null
+  },
+  {
+   "x": 6.5,
+   "y": -38.0,
+   "off_m": null,
+   "heading_deg": 111.2,
+   "result": "ambiguous",
+   "err_m": 44.79,
+   "score": 0.868,
+   "route_back": null
+  },
+  {
+   "x": 12.0,
+   "y": 5.0,
+   "off_m": null,
+   "heading_deg": -125.0,
+   "result": "ambiguous",
+   "err_m": 0.44,
+   "score": 1.0,
+   "route_back": null
+  }
+ ],
+ "median_err_m": 0.309,
+ "s_per_scan": 0.3,
+ "hypotheses": 48324
+}
