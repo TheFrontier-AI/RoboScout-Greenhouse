@@ -257,6 +257,16 @@ def make_handler(hub: Hub):
                 if mp is None:
                     return self._json(200, {"available": False, "why": "no structure built from the robot's map yet (scripts/free_nav.py; env R1_STRUCTURE)"})
                 return self._json(200, {"available": True} | mp.structure())
+            if u.path == "/scene_graph":
+                mp = hub.planner()
+                if mp is None or not (mp.dir / "scene_graph.json").exists():
+                    return self._json(200, {"available": False, "why": "no scene graph yet (scripts/free_nav.py writes scene_graph.json next to the structure)"})
+                g = json.load(open(mp.dir / "scene_graph.json"))
+                g["legend"] = {"house-X": "a greenhouse: a block of parallel walls the robot's LiDAR saw; corners_xy outline it", "house-X/row-N": "a plant row inside that house: a drivable corridor with plants on both sides; end_low/end_high are its two ends",
+                               "house-X/door-low|high": "where the drivable space crosses the house's end wall - the way in and out", "yard-low|yard-high": "open ground beyond the houses' ends; it connects the doors listed",
+                               "gap-N": "the open strip between two houses, connecting the two yards", "dock": "where the robot was switched on; the survey ends there",
+                               "not listed": "anything the robot has never seen empty - ponds, orchard, road - is not drivable and never planned through"}
+                return self._json(200, {"available": True} | g)
             if u.path == "/structure/picture":
                 mp = hub.planner()
                 if mp is None:

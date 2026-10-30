@@ -203,7 +203,13 @@ def main():
     back = fs.astar(cur, dock[:2]); plan += back or []
     L = sum(math.dist(p, q) for p, q in zip(plan, plan[1:]))
     print(f"mission from the dock: {' -> '.join(order)} -> dock, {L:.0f} m")
-    np.save(a.out / "free_grid.npy", fs.free); np.save(a.out / "map_xy.npy", m); json.dump({"x0": fs.x0, "y0": fs.y0, "cell": fs.cell, "wall_direction_deg": theta, "aisles": aisles, "dock": dock,
+    np.save(a.out / "free_grid.npy", fs.free); np.save(a.out / "map_xy.npy", m)
+    try:
+        from scripts.scene_graph import build_scene_graph
+        json.dump(build_scene_graph(fs, aisles, dock, theta), open(a.out / "scene_graph.json", "w"), indent=1); print("scene graph written")
+    except Exception as e:
+        print("scene graph not built:", e)
+    json.dump({"x0": fs.x0, "y0": fs.y0, "cell": fs.cell, "wall_direction_deg": theta, "aisles": aisles, "dock": dock,
                                                          "mission_order": order, "mission_length_m": round(L, 1)}, open(a.out / "structure.json", "w"), indent=1)
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(10, 15), facecolor="#0d1117"); ax.set_facecolor("#0d1117")

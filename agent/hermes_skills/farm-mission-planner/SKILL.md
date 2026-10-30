@@ -28,6 +28,17 @@ run on the robot's map (`R1_STRUCTURE` points the hub at its output).
 - The robot reports a situation during a mission (`/situations`): an aisle blocked, a place that does not look like
   the map, an obstacle that was not on the map, a camera verdict that it is not where it thought.
 
+## How to read the robot's map (the legend)
+`curl $R1_HUB/scene_graph` gives the farm the way a person understands it, built by the robot from its own LiDAR map:
+- **house-A, house-B …** - a greenhouse (a block of parallel walls); `corners_xy` outline it.
+- **house-A/row-1 …** - a plant row inside that house: a drivable corridor with plants on both sides, `end_low` / `end_high` its two ends.
+- **house-A/door-low / door-high** - where the drivable space crosses the house's end wall: the way in and out.
+- **yard-low / yard-high** - open ground beyond the houses' ends; `connects` lists the doors it joins. **gap-N** - the strip between two houses, joining the yards.
+- **dock** - where the robot was switched on; every survey ends there.
+- Anything not listed the robot has never seen empty (ponds, orchard, road): not drivable, never planned through.
+Plan in these names, never in metres: e.g. `yard-high → house-A/door-high → house-A/row-1 high->low → house-A/door-low → yard-low → house-B/door-low → house-B/row-1 low->high → house-B/door-high → dock`.
+The robot turns each named leg into geometry (A* on its grid, the row's centre line) and reports every leg's metres back.
+
 ## Steps
 1. **Read what the robot found.** `curl $R1_HUB/structure` → plant aisles (id, both ends, length, width,
    reachable), the dock (where it was switched on), drivable area, aisles seen but not reachable. Tell the farmer in
