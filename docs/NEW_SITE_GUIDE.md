@@ -271,7 +271,15 @@ side with what the LiDAR would see at each candidate place; that helps with most
 because at the two twin places the LiDAR sees the same thing - which is why the camera decides there. The order came from the Rural Postman solver on the robot
 (every chosen aisle a required edge, A* distances between aisle ends and the dock, about 0.1 s), so the model decides
 which aisles and whether the plan is sound, never the geometry. Evidence: `docs/evidence/17_freenav_mission_survey.json`;
-figures `media/gallery/31_freenav_survey_each_case.png`, `32_freenav_survey_overview.png`.
+figures below.
+
+![Survey with no stored route, case by case: the path really driven in each of the 50 put-downs](media/gallery/31_freenav_survey_each_case.png)
+
+*Figure — Survey with no stored route, case by case: grey = the LiDAR map the robot built, ● = where it was really put down, blue = the path it really drove, ○ = where it worked out its real position (cases that started with a wrong guess), ★ = dock; the title of each panel is the verdict*
+
+![All 50 map-only surveys on one map](media/gallery/32_freenav_survey_overview.png)
+
+*Figure — All 50 map-only surveys on one map: what the robot really drove, green = knew where it was, orange = wrong belief, ○ = where the belief was corrected*
 
 **Three ways to run a survey, from the same map.** (1) *Taught route*: the robot follows the corridors of the led
 drive, node to node, with the site graph deciding what is allowed; the simplest and the one every number above was
