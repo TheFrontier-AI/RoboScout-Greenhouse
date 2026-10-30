@@ -83,6 +83,24 @@ class FreeFarm:
         return None, None
 
 
+def _last_json(txt: str) -> dict:
+    """The last complete JSON object in a model reply (replies may carry reasoning text and quoted examples)."""
+    end = txt.rfind("}")
+    while end > 0:
+        depth = 0
+        for i in range(end, -1, -1):
+            if txt[i] == "}": depth += 1
+            elif txt[i] == "{":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(txt[i:end + 1])
+                    except Exception:
+                        break
+        end = txt.rfind("}", 0, end)
+    raise ValueError("no JSON object in the reply")
+
+
 def plan_review(farm: FreeFarm, start_xy, order, decider="nemotron"):
     """HERMES checks the concrete plan before the robot moves: it sees every leg the robot planned (from, to, metres),
     the alternatives (other orders with their total length) and a picture of the plan on the map, and approves or
@@ -131,7 +149,7 @@ def plan_review(farm: FreeFarm, start_xy, order, decider="nemotron"):
         r = client.chat.completions.create(model=os.environ.get("EYES2_MODEL", "nvidia/Nemotron-3.5-Super-VL"), temperature=0.1, max_tokens=6000,
                                            messages=[{"role": "user", "content": [{"type": "text", "text": msg}, {"type": "image_url", "image_url": {"url": img}}]}])
         m = r.choices[0].message; txt = (m.content or getattr(m, "reasoning_content", None) or "").split("</think>")[-1].replace("```json", "").replace("```", "")
-        j = json.loads(txt[txt.rindex("{\"approve\""): txt.rindex("}") + 1]) if "{\"approve\"" in txt else json.loads(txt[txt.rindex("{"): txt.rindex("}") + 1])
+        j = _last_json(txt)
         ids = {a["id"] for a in farm.aisles}; new = [x for x in j.get("order", []) if x in ids]
         if not j.get("approve", True) and len(new) == len(ids):
             return new, f"HERMES changed the plan: {str(j.get('reason', ''))[:140]}"
@@ -159,7 +177,7 @@ def decide_order(farm: FreeFarm, start_xy, decider="nearest"):
                "Reply with JSON only: {\"order\": [aisle ids in the order to survey], \"reason\": \"one sentence\"}.\n" + json.dumps(structure))
         r = client.chat.completions.create(model=os.environ.get("HERMES_MODEL", "nvidia/nemotron-3-super-120b-a12b"), temperature=0.1, max_tokens=6000, messages=[{"role": "user", "content": msg}])
         m = r.choices[0].message; txt = (m.content or getattr(m, "reasoning_content", None) or "").split("</think>")[-1].replace("```json", "").replace("```", "")
-        j = json.loads(txt[txt.rindex("{\"order\""): txt.rindex("}") + 1]) if "{\"order\"" in txt else json.loads(txt[txt.rindex("{"): txt.rindex("}") + 1])
+        j = _last_json(txt)
         ids = {a["id"] for a in farm.aisles}
         chosen = [x for x in j.get("order", []) if x in ids] + [x for x in order if x not in j.get("order", [])]
         return chosen, "Nemotron: " + str(j.get("reason", ""))[:160]
