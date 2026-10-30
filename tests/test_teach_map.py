@@ -53,3 +53,19 @@ def test_build_map_and_site_skeleton():
     from r1_nav.site_map import SiteMap
     sm = SiteMap.from_dict(site)
     assert sm.houses() == ["house-A"] and not sm.confirmed and not sm.validate()
+
+
+def test_route_from_off_path_position():
+    """A robot relocalised 2 m beside the taught path gets a 'rejoin' leg to the nearest node, then the normal route."""
+    import math
+    from r1_nav.site_map import NoRoute, SiteMap
+    site = site_skeleton(taught_drive(), "robot"); sm = SiteMap.from_dict(site)
+    door1 = next(n["id"] for n in site["nodes"] if n["id"].endswith("door-1")); door2 = next(n["id"] for n in site["nodes"] if n["id"].endswith("door-2"))
+    xy = (2.0, sm.nodes[door1].xy[1])                                 # 2 m to the side of door-1
+    r = sm.route_from_xy(xy, door2)
+    assert r.nodes[0] == "__here__" and r.nodes[1] == door1 and r.nodes[-1] == door2
+    assert abs(r.edges[0].length_m - 2.0) < 0.05 and r.length_m > 2.0
+    try:
+        sm.route_from_xy((40.0, 0.0), door2); assert False, "should refuse a far-away start"
+    except NoRoute:
+        pass

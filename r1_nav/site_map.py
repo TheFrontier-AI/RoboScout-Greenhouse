@@ -212,6 +212,21 @@ class SiteMap:
             comps.append(comp)
         return comps
 
+    def route_from_xy(self, xy, goal: str, max_rejoin_m: float = 6.0, **kw) -> Route:
+        """Route for a robot that is OFF the graph (put down beside a path, or relocalised there): a straight 'rejoin'
+        segment from `xy` to the nearest node, then the normal route from that node. Refuses when the nearest node is
+        farther than max_rejoin_m - the robot must not cross unknown ground to get back."""
+        n = self.nearest_node(xy)
+        d = math.hypot(self.nodes[n].xy[0] - xy[0], self.nodes[n].xy[1] - xy[1])
+        if d > max_rejoin_m:
+            raise NoRoute(f"nearest path node {n!r} is {d:.1f} m away (limit {max_rejoin_m} m); move the robot closer to a path")
+        rejoin = Edge("__here__", n, length_m=round(d, 2), width_m=None, surface="unknown",
+                      notes=[f"rejoin the path: straight to {n} from ({xy[0]:.2f}, {xy[1]:.2f})"])
+        if n == goal:
+            return Route(["__here__", n], round(d, 2), [rejoin])
+        r = self.route(n, goal, **kw)
+        return Route(["__here__"] + r.nodes, round(d + r.length_m, 2), [rejoin] + r.edges)
+
     def route(self, start: str, goal: str, robot_width_m: float = ROBOT_WIDTH_M, margin_m: float = SIDE_MARGIN_M) -> Route:
         """Dijkstra over open edges wide enough for the robot (unknown width is allowed). Raises NoRoute with a reason."""
         for n in (start, goal):
