@@ -241,6 +241,9 @@ def run_case(case):
         for v in log["visits"]:
             v[3], v[4] = farm.where(corrected[v[5]])
         before = len(goals); goals[:] = goals_left(corrected)
+        for g in goals:
+            if g[0].endswith("/start") and g[0][:-6] in state.get("surveyed", set()):
+                log["events"].append({"m": round(metres, 1), "what": f"{g[0][:-6]} must be surveyed again: after the correction its stops are no longer covered under the right name"})
         log["events"].append({"m": round(metres, 1), "what": f"{reason}: now believes ({nb[0]:.1f}, {nb[1]:.1f}), error {err(nb, true):.1f} m; relabelled {len(log['visits'])} plant records" + (f"; mission goals left {before} -> {len(goals)}" if len(goals) != before else "")})
         tr.hyps = [h for h in tr.hyps if err(h, old) >= AWAY_M] or tr.hyps
         tr.hyps.sort(key=lambda r: err(r, nb)); tr.hyps[0][0:3] = list(nb)
@@ -428,6 +431,20 @@ def run_case(case):
         bh, bm = farm.where(belief); th, tm = farm.where(true)
         if th is not None:
             log["visits"].append([round(metres, 1), th, tm, bh, bm, len(hist) - 1])
+        # knows when it is repeating: a row it believes it has surveyed is transit (no stops); a row that must be
+        # surveyed again is logged with the reason
+        surveyed = state.setdefault("surveyed", set()); goal_rows = {g[0][:-6] for g in goals if g[0].endswith("/start") or g[0].endswith("/end")}
+        if bh is not None and bh not in state.get("in_row_prev", [None]) :
+            if bh in surveyed and bh not in goal_rows:
+                log["events"].append({"m": round(metres, 1), "what": f"passing through {bh}, already surveyed: transit only, no plant stops"})
+            elif bh in surveyed and bh in goal_rows:
+                log["events"].append({"m": round(metres, 1), "what": f"surveying {bh} again on purpose: its earlier records were made under a wrong belief and were relabelled, so coverage must be redone"})
+        state["in_row_prev"] = [bh]
+        if goals and goals[0][0].endswith("/end") and bh == goals[0][0][:-4] and bm is not None:
+            cov_now = float((cKDTree(np.array([c[:2] for c in log["true_path"]])).query(farm.stops[goals[0][0][:-4]])[0] < 0.6).mean()) if False else None
+        for aid in list(farm.stops):
+            if aid not in surveyed and any(v[1] == aid for v in log["visits"][-3:]) and goals and not any(g[0].startswith(aid) for g in goals):
+                surveyed.add(aid)
         if goals and math.dist(belief[:2], goals[0][1]) < NODE_M:
             name = goals[0][0]
             log["events"].append({"m": round(metres, 1), "what": f"believes it reached {name} (true error {err(belief, true):.1f} m)"})
@@ -455,6 +472,8 @@ def run_case(case):
                         switched = True; break
                 if switched:
                     continue
+            if name.endswith("/end"):
+                state.setdefault("surveyed", set()).add(name[:-4])
             goals.pop(0)
             if not goals:
                 outcome = "mission_done"; break

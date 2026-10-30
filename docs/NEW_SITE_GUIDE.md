@@ -248,7 +248,18 @@ neither a drop-off nor still water.
 
 **Does it know what the areas are?** Yes, and it tells HERMES: house-A, house-A/row-1, house-A/door-high, yard-low,
 gap-1, dock, each with its meaning (`/scene_graph` on the hub, legend in the `farm-mission-planner` skill). Anything it
-has never seen empty is not in the description and is never driven on. The order came from the Rural Postman solver on the robot
+has never seen empty is not in the description and is never driven on.
+
+**Does it know when it is repeating a path?** Yes. A row it has already surveyed is transit only when it has to pass
+through it again on the way somewhere else: no plant stops, and the record says so. It surveys a row a second time
+only for a reason it states: after a correction of its position the earlier records of that row were made under a wrong
+house name and were relabelled, so the coverage must be redone. Without such a reason it never repeats a row, and
+HERMES sees every repeat with its reason.
+
+**Could the LiDAR picture itself be shown to HERMES?** It already is: the map picture HERMES checks plans on and the
+scene graph it plans with are both built from the LiDAR. The live scan at a decision point could be shown too, side by
+side with what the LiDAR would see at each candidate place; that helps with most confusions, not with the one we have,
+because at the two twin places the LiDAR sees the same thing - which is why the camera decides there. The order came from the Rural Postman solver on the robot
 (every chosen aisle a required edge, A* distances between aisle ends and the dock, about 0.1 s), so the model decides
 which aisles and whether the plan is sound, never the geometry. Evidence: `docs/evidence/17_freenav_mission_survey.json`;
 figures `media/gallery/31_freenav_survey_each_case.png`, `32_freenav_survey_overview.png`.
